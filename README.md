@@ -2,7 +2,7 @@
 
 Go 实现的业务任务与价目表管理，单二进制 + 内嵌 Web，便于部署在服务器上。
 
-**编译要求：Go 1.21 或更高**（`go version` 查看）。**生产部署以 Ubuntu 24.04 LTS 为准**（见下文）。若仅用 `apt install golang-go` 且版本偏旧，可能出现 `package slices is not in GOROOT` 等错误，请从 [Go 官方下载页](https://go.dev/dl/) 安装新版，并把 `/usr/local/go/bin` 放在 `PATH` 最前（或卸载/忽略系统自带的旧 `go`）。
+**编译要求：Go 1.22.2 或更高**（`go version` 查看；`go.mod` 中 `toolchain go1.22.2`）。**生产部署以 Ubuntu 24.04 LTS 为准**（见下文）。若仅用 `apt install golang-go` 且版本偏旧，请从 [Go 官方下载页](https://go.dev/dl/) 安装 **1.22.2+**，并把 `/usr/local/go/bin` 放在 `PATH` 最前（或卸载/忽略系统自带的旧 `go`）。
 
 ## 功能
 
@@ -44,11 +44,11 @@ chmod +x install.sh
 sudo ./install.sh
 ```
 
-脚本会在 **Go 版本低于 1.21 或未安装** 时从官方下载并安装到 `/usr/local/go`，随后编译、将二进制安装到 `/opt/tasktracker`、创建 `tasktracker` 用户并启用 **systemd** 服务。非 root 执行时**仅**在当前目录执行 `go build`（需本机已有 Go 1.21+，不校验发行版）。完整参数见 `./install.sh --help`。
+脚本会在 **Go 版本低于 1.22.2 或未安装** 时从官方下载并安装到 `/usr/local/go`，随后编译、将二进制安装到 `/opt/tasktracker`、创建 `tasktracker` 用户并启用 **systemd** 服务。非 root 执行时**仅**在当前目录执行 `go build`（需本机已有 **Go 1.22.2+**，不校验发行版）。完整参数见 `./install.sh --help`。
 
 ### 1. 安装 Go（用于在服务器上编译）
 
-**不要**只依赖 `apt install golang-go`（版本可能仍低于 1.21）。在 [go.dev/dl](https://go.dev/dl/) 下载 **Linux** 对应架构的 `.tar.gz`，然后安装到 `/usr/local/go`，例如：
+**不要**只依赖 `apt install golang-go`（版本可能低于 1.22.2）。在 [go.dev/dl](https://go.dev/dl/) 下载 **Linux** 对应架构的 **1.22.2 或更高** 的 `.tar.gz`，然后安装到 `/usr/local/go`，例如：
 
 ```bash
 sudo apt update
@@ -59,7 +59,7 @@ sudo rm -rf /usr/local/go
 sudo tar -C /usr/local -xzf go.tgz
 echo 'export PATH=/usr/local/go/bin:$PATH' >> ~/.profile
 source ~/.profile
-go version   # 应显示 go1.21 或更高
+go version   # 应显示 go1.22.2 或更高
 ```
 
 若已用 `apt` 装过旧版 `go`，请确保 `which go` 指向 `/usr/local/go/bin/go`。
@@ -68,7 +68,7 @@ go version   # 应显示 go1.21 或更高
 
 | 命令 | 说明 |
 |------|------|
-| `go version` | 应出现 `go1.21` 或更高（如 `go version go1.23.5 linux/amd64`）；若仍是 `go1.19` 等，说明 `PATH` 未指向新安装。 |
+| `go version` | 应出现 **go1.22.2** 或更高（如 `go version go1.22.2 linux/amd64`）；若低于 1.22.2，说明需升级或 `PATH` 未指向新安装。 |
 | `which go` | 建议为 `/usr/local/go/bin/go`；若为 `/usr/bin/go`，多半是系统旧包，需把 `/usr/local/go/bin` 放在 `PATH` 前面或新开终端。 |
 | `go env GOROOT` | 确认标准库来自新安装目录（一般为 `/usr/local/go`），避免混用旧 GOROOT。 |
 

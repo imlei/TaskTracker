@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TaskTracker 部署脚本：按需安装 Go（低于 1.21 时）、编译、可选安装 systemd 服务。
+# TaskTracker 部署脚本：按需安装 Go（低于 1.22.2 时）、编译、可选安装 systemd 服务。
 # root 完整安装仅验证为 Ubuntu 24.x（如 24.04 LTS）；用法见 ./install.sh --help
 
 set -euo pipefail
@@ -7,7 +7,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PREFIX="${PREFIX:-/opt/tasktracker}"
 LISTEN_ADDR="${LISTEN_ADDR:-:8088}"
-GO_MIN="1.21"
+GO_MIN="1.22.2"
 
 BUILD_ONLY=false
 WITH_SYSTEMD=true
@@ -17,7 +17,7 @@ usage() {
 	cat <<'EOF'
 Usage: install.sh [options]
 
-  非 root：在仓库根目录执行 go build（需已安装 Go 1.21+）。
+  非 root：在仓库根目录执行 go build（需已安装 Go 1.22.2 或更高）。
   root：仅在 Ubuntu 24.x 上执行；按需下载安装 Go 到 /usr/local/go，编译后将二进制部署到 PREFIX 并可选写入 systemd。
 
 Options:
@@ -25,7 +25,7 @@ Options:
   --prefix DIR     安装目录（默认 /opt/tasktracker）。
   --listen ADDR    服务监听地址（默认 :8088，写入 systemd）。
   --no-systemd     root 安装时不写入 systemd、不启用服务。
-  --go-version VER 指定要下载的 Go 版本号，如 1.23.5（默认从 go.dev 读取稳定版）。
+  --go-version VER 指定要下载的 Go 版本号，如 1.22.2（默认从 go.dev 读取稳定版；离线回退为 1.22.2）。
   -h, --help       显示本说明。
 
 环境变量（可选）:
@@ -82,7 +82,7 @@ detect_go_arch() {
 fetch_default_go_version() {
 	local v
 	v="$(curl -sfL 'https://go.dev/VERSION?m=text' 2>/dev/null | tr -d '\r\n' | sed 's/^go//')" || true
-	[[ -n "$v" ]] || v="1.23.5"
+	[[ -n "$v" ]] || v="1.22.2"
 	printf '%s' "$v"
 }
 
