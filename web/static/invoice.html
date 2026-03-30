@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Invoice</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f2f2f2; color: #0f172a; }
+    .page { width: 860px; margin: 20px auto; background: #fff; padding: 24px; box-sizing: border-box; }
+    .head { display: flex; justify-content: space-between; align-items: flex-start; }
+    .brand h1 { margin: 0 0 8px; font-size: 30px; color: #0891b2; font-weight: 500; }
+    .company { font-weight: 700; font-size: 28px; margin-bottom: 8px; }
+    .muted { color: #64748b; }
+    .logo { width: 100px; height: 100px; border-radius: 28px; background: linear-gradient(135deg,#63e1be,#3b82f6); }
+    .meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 24px; }
+    .box-title { color: #94a3b8; text-transform: uppercase; font-size: 12px; margin-bottom: 6px; }
+    .table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+    .table th { text-align: left; background: #dff4f6; color: #0e7490; padding: 8px; font-weight: 500; }
+    .table td { vertical-align: top; padding: 10px 8px; border-bottom: 1px dashed #cbd5e1; }
+    .num { text-align: right; white-space: nowrap; }
+    .summary { width: 340px; margin-left: auto; margin-top: 14px; }
+    .summary-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e2e8f0; }
+    .summary-row:last-child { border-bottom: 0; font-size: 28px; font-weight: 700; }
+    .toolbar { width: 860px; margin: 12px auto; display: flex; justify-content: flex-end; gap: 8px; }
+    button { padding: 8px 14px; border: 1px solid #64748b; background: white; border-radius: 6px; cursor: pointer; }
+    @media print { .toolbar { display: none; } body { background: white; } .page { margin: 0; width: auto; } }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button id="btn-back" type="button">返回系统</button>
+    <button id="btn-print" type="button">打印 / 导出 PDF</button>
+  </div>
+  <article class="page" id="page">
+    <div class="head">
+      <div class="brand">
+        <div class="company">AIRSWIFT TECHNOLOGY LIMITED</div>
+        <div>165-10271 Shellbridge Way</div>
+        <div>Richmond BC V6X 2W8</div>
+        <div>accounting@airswift.io</div>
+        <div>GST/HST Registration No.: 751512708</div>
+      </div>
+      <div class="logo"></div>
+    </div>
+    <h1>INVOICE</h1>
+    <div class="meta">
+      <div>
+        <div class="box-title">Bill To</div>
+        <div id="bill-name"></div>
+        <div id="bill-addr"></div>
+      </div>
+      <div>
+        <div class="box-title">Ship To</div>
+        <div id="ship-name"></div>
+        <div id="ship-addr"></div>
+      </div>
+      <div>
+        <div><span class="muted">Invoice</span> <strong id="invoice-no"></strong></div>
+        <div><span class="muted">Date</span> <strong id="invoice-date"></strong></div>
+        <div><span class="muted">Terms</span> <strong id="terms"></strong></div>
+        <div><span class="muted">Due Date</span> <strong id="due-date"></strong></div>
+      </div>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>DATE</th><th>DESCRIPTION</th><th>TAX</th><th class="num">QTY</th><th class="num">RATE</th><th class="num">AMOUNT</th>
+        </tr>
+      </thead>
+      <tbody id="items-body"></tbody>
+    </table>
+
+    <div class="summary">
+      <div class="summary-row"><span>SUBTOTAL</span><strong id="subtotal"></strong></div>
+      <div class="summary-row"><span id="tax-label"></span><strong id="tax-amount"></strong></div>
+      <div class="summary-row"><span>TOTAL</span><strong id="total"></strong></div>
+      <div class="summary-row"><span>BALANCE DUE</span><strong id="balance"></strong></div>
+    </div>
+  </article>
+  <script src="/invoice.js"></script>
+</body>
+</html>

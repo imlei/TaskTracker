@@ -3,19 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>业务追踪</title>
+  <title>TaskTracker</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header class="top">
     <div class="top-inner">
-      <h1>业务追踪</h1>
+      <h1>TaskTracker</h1>
       <button type="button" id="btn-logout" class="ghost" hidden>退出登录</button>
     </div>
     <nav class="tabs">
       <button type="button" class="tab active" data-tab="tasks">任务 Task</button>
       <button type="button" class="tab" data-tab="prices">价目表 Price list</button>
       <button type="button" class="tab" data-tab="report">报表 Report</button>
+      <button type="button" class="tab" data-tab="invoices">Invoices</button>
     </nav>
   </header>
 
@@ -27,6 +28,8 @@
             <option value="">全部</option>
             <option value="Pending">Pending</option>
             <option value="Done">Done</option>
+            <option value="Sent">Sent</option>
+            <option value="Paid">Paid</option>
           </select>
         </label>
         <button type="button" id="btn-new-task" class="primary">新建任务</button>
@@ -98,6 +101,41 @@
         </table>
       </div>
     </section>
+
+    <section id="panel-invoices" class="panel">
+      <div class="toolbar report-toolbar">
+        <label>状态
+          <select id="invoice-filter">
+            <option value="">全部</option>
+            <option value="Draft">Draft</option>
+            <option value="Sent">Sent</option>
+            <option value="Paid">Paid</option>
+          </select>
+        </label>
+        <button type="button" id="btn-invoices-load" class="primary">刷新</button>
+      </div>
+      <p class="report-summary" id="invoices-summary">已发送/已收款发票列表。</p>
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>Invoice</th>
+              <th>Task</th>
+              <th>Bill To</th>
+              <th>日期</th>
+              <th>到期</th>
+              <th>状态</th>
+              <th>总额</th>
+              <th>已收</th>
+              <th>未收</th>
+              <th>发送时间</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="invoices-body"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
   <dialog id="dlg-task" class="dlg-task-wide">
@@ -144,6 +182,50 @@
       <div class="dlg-actions">
         <button type="submit" class="primary">保存</button>
         <button type="button" id="price-cancel">取消</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-invoice" class="dlg-task-wide">
+    <form method="dialog" id="form-invoice">
+      <h2>生成 Invoice</h2>
+      <input type="hidden" id="inv-task-id" />
+      <label>Bill To 名称 <input id="inv-bill-name" required /></label>
+      <label>Bill To 地址 <input id="inv-bill-addr" /></label>
+      <label>Bill To Email（发送用） <input id="inv-bill-email" type="email" placeholder="name@example.com" /></label>
+      <label>Ship To 名称 <input id="inv-ship-name" /></label>
+      <label>Ship To 地址 <input id="inv-ship-addr" /></label>
+      <label>Invoice Date <input id="inv-date" type="date" /></label>
+      <label>Terms <input id="inv-terms" value="Net 30" /></label>
+      <label>Due Date <input id="inv-due-date" type="date" /></label>
+      <label>Currency
+        <select id="inv-currency">
+          <option value="USD">USD</option>
+          <option value="CAD">CAD</option>
+          <option value="CNY">CNY</option>
+        </select>
+      </label>
+      <label>Tax Rate(%) <input id="inv-tax-rate" type="number" step="0.01" min="0" value="0" /></label>
+      <label>Description <input id="inv-desc" value="Consulting Services" /></label>
+      <label>Detail <textarea id="inv-detail" rows="4"></textarea></label>
+      <label>Qty <input id="inv-qty" type="number" step="0.01" min="0.01" value="1" /></label>
+      <label>Rate <input id="inv-rate" type="number" step="0.01" min="0" value="0" /></label>
+      <div class="dlg-actions">
+        <button type="submit" class="primary">生成并打开</button>
+        <button type="button" id="invoice-cancel">取消</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-pay" class="dlg-task-wide">
+    <form method="dialog" id="form-pay">
+      <h2>登记收款</h2>
+      <input type="hidden" id="pay-invoice-id" />
+      <label>收款日期 <input id="pay-date" type="date" /></label>
+      <label>收款金额 <input id="pay-amount" type="number" step="0.01" min="0.01" /></label>
+      <div class="dlg-actions">
+        <button type="submit" class="primary">保存</button>
+        <button type="button" id="pay-cancel">取消</button>
       </div>
     </form>
   </dialog>

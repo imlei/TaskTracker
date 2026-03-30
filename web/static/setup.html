@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>创建管理员 — TaskTracker</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="login-page">
+  <main class="login-card">
+    <h1>创建管理员账户</h1>
+    <p class="login-sub">尚无登录账户，请设置用户名与密码（密码至少 6 位）。</p>
+    <form id="form-setup">
+      <label>用户名 <input id="setup-user" name="username" autocomplete="username" required /></label>
+      <label>密码 <input id="setup-pass" name="password" type="password" autocomplete="new-password" required minlength="6" /></label>
+      <label>确认密码 <input id="setup-pass2" type="password" autocomplete="new-password" required minlength="6" /></label>
+      <p id="setup-err" class="login-err" hidden></p>
+      <div class="dlg-actions login-actions">
+        <button type="submit" class="primary">创建并进入</button>
+      </div>
+    </form>
+  </main>
+  <script src="/setup.js"></script>
+</body>
+</html>

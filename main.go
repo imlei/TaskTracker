@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"os"
 
-	"biztracker/internal/api"
-	"biztracker/internal/auth"
-	"biztracker/internal/store"
+	"tasktracker/internal/api"
+	"tasktracker/internal/auth"
+	"tasktracker/internal/mail"
+	"tasktracker/internal/store"
 )
 
 //go:embed web/static
@@ -20,13 +21,27 @@ func main() {
 	if dataDir == "" {
 		dataDir = "./data"
 	}
-	st, err := store.New(dataDir)
+	db, err := store.Open(dataDir)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 
-	srv := &api.Server{Store: st}
-	authCfg := auth.ConfigFromEnv()
+	st := store.New(db)
+
+	var mailer *mail.Mailer
+	if os.Getenv("SMTP_HOST") != "" {
+		if cfg, err := mail.FromEnv(); err == nil {
+			mailer = mail.New(cfg)
+		}
+	}
+	baseURL := os.Getenv("BASE_URL")
+
+	srv := &api.Server{Store: st, Mail: mailer, BaseURL: baseURL}
+	authCfg, err := auth.NewAuth(db, dataDir)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	mux := http.NewServeMux()
 	api.Register(mux, srv)
@@ -42,12 +57,15 @@ func main() {
 
 	addr := os.Getenv("LISTEN_ADDR")
 	if addr == "" {
-		addr = ":8080"
+		addr = ":8088"
 	}
-	if authCfg.Enabled {
-		log.Printf("biztracker listening on %s (DATA_DIR=%s, AUTH_USER=%s)", addr, dataDir, authCfg.Username)
-	} else {
-		log.Printf("biztracker listening on %s (DATA_DIR=%s, auth disabled — set AUTH_PASSWORD to enable)", addr, dataDir)
+	switch {
+	case authCfg.Disabled:
+		log.Printf("TaskTracker listening on %s (DATA_DIR=%s, auth disabled via AUTH_DISABLE)", addr, dataDir)
+	case authCfg.NeedsSetup():
+		log.Printf("TaskTracker listening on %s (DATA_DIR=%s) — no user yet, open /setup.html to create admin", addr, dataDir)
+	default:
+		log.Printf("TaskTracker listening on %s (DATA_DIR=%s, user=%s)", addr, dataDir, authCfg.Store.Username())
 	}
 	if err := http.ListenAndServe(addr, handler); err != nil {
 		log.Fatal(err)

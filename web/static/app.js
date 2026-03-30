@@ -44,6 +44,7 @@ document.querySelectorAll(".tab").forEach((btn) => {
       if (rm && !rm.value) rm.value = currentMonthISO();
       loadReport();
     }
+    if (tab === "invoices") loadInvoices();
   });
 });
 
@@ -96,10 +97,12 @@ function renderTasks() {
       <td>${escapeHtml(t.note || "")}</td>
       <td class="row-actions">
         <button type="button" class="ghost" data-act="edit">编辑</button>
+        <button type="button" class="ghost" data-act="invoice">Invoice</button>
         <button type="button" class="ghost success" data-act="done" ${done ? "disabled" : ""}>Completed</button>
         <button type="button" class="ghost danger" data-act="del">删除</button>
       </td>`;
     tr.querySelector('[data-act="edit"]').addEventListener("click", () => openTaskDialog(t));
+    tr.querySelector('[data-act="invoice"]').addEventListener("click", () => openInvoiceDialog(t));
     const btnDone = tr.querySelector('[data-act="done"]');
     if (!done) {
       btnDone.addEventListener("click", () => markTaskCompleted(t));
@@ -296,6 +299,175 @@ async function deleteTask(id) {
     alert("删除失败: " + err.message);
   }
 }
+
+// --- Invoice ---
+const dlgInvoice = document.getElementById("dlg-invoice");
+const formInvoice = document.getElementById("form-invoice");
+
+function addDaysISO(base, days) {
+  const d = new Date(base);
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function openInvoiceDialog(task) {
+  const today = todayLocalISO();
+  document.getElementById("inv-task-id").value = task.id;
+  document.getElementById("inv-bill-name").value = task.companyName || "";
+  document.getElementById("inv-bill-addr").value = "";
+  document.getElementById("inv-bill-email").value = "";
+  document.getElementById("inv-ship-name").value = task.companyName || "";
+  document.getElementById("inv-ship-addr").value = "";
+  document.getElementById("inv-date").value = today;
+  document.getElementById("inv-terms").value = "Net 30";
+  document.getElementById("inv-due-date").value = addDaysISO(today, 30);
+  document.getElementById("inv-currency").value = "USD";
+  document.getElementById("inv-tax-rate").value = 0;
+  document.getElementById("inv-desc").value = "Consulting Services";
+  document.getElementById("inv-detail").value = task.service1 || "";
+  document.getElementById("inv-qty").value = 1;
+  document.getElementById("inv-rate").value = Number(task.price1 || 0);
+  dlgInvoice.showModal();
+}
+
+document.getElementById("invoice-cancel")?.addEventListener("click", () => dlgInvoice.close());
+
+formInvoice?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const qty = parseFloat(document.getElementById("inv-qty").value) || 1;
+  const rate = parseFloat(document.getElementById("inv-rate").value) || 0;
+  const taxRate = parseFloat(document.getElementById("inv-tax-rate").value) || 0;
+  const payload = {
+    taskId: document.getElementById("inv-task-id").value,
+    invoiceDate: document.getElementById("inv-date").value,
+    terms: document.getElementById("inv-terms").value.trim(),
+    dueDate: document.getElementById("inv-due-date").value,
+    billToName: document.getElementById("inv-bill-name").value.trim(),
+    billToAddr: document.getElementById("inv-bill-addr").value.trim(),
+    billToEmail: document.getElementById("inv-bill-email").value.trim(),
+    shipToName: document.getElementById("inv-ship-name").value.trim(),
+    shipToAddr: document.getElementById("inv-ship-addr").value.trim(),
+    currency: document.getElementById("inv-currency").value,
+    taxRate,
+    items: [
+      {
+        description: document.getElementById("inv-desc").value.trim(),
+        detail: document.getElementById("inv-detail").value.trim(),
+        taxLabel: taxRate === 0 ? "Zero-rated" : `GST @ ${taxRate}%`,
+        qty,
+        rate,
+        amount: qty * rate,
+      },
+    ],
+  };
+  try {
+    const created = await api("/api/invoices", { method: "POST", body: JSON.stringify(payload) });
+    dlgInvoice.close();
+    window.open(`/invoice.html?id=${encodeURIComponent(created.id)}`, "_blank");
+  } catch (err) {
+    alert("生成 Invoice 失败: " + err.message);
+  }
+});
+
+// --- Invoices list / send / payment ---
+let invoicesCache = [];
+
+async function loadInvoices() {
+  const filter = document.getElementById("invoice-filter")?.value || "";
+  try {
+    invoicesCache = await api(`/api/invoices?status=${encodeURIComponent(filter)}`);
+    renderInvoices();
+  } catch (e) {
+    console.error(e);
+    alert("加载发票失败: " + e.message);
+  }
+}
+
+function renderInvoices() {
+  const body = document.getElementById("invoices-body");
+  const sum = document.getElementById("invoices-summary");
+  if (!body || !sum) return;
+  body.innerHTML = "";
+  sum.textContent = `共 ${invoicesCache.length} 条发票。`;
+  for (const inv of invoicesCache) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(inv.invoiceNo || "")}</td>
+      <td>${escapeHtml(inv.taskId || "")}</td>
+      <td>${escapeHtml(inv.billToName || "")}</td>
+      <td>${escapeHtml(inv.invoiceDate || "")}</td>
+      <td>${escapeHtml(inv.dueDate || "")}</td>
+      <td>${escapeHtml(inv.status || "")}</td>
+      <td>${escapeHtml(fmtMoneySimple(inv.total, inv.currency))}</td>
+      <td>${escapeHtml(fmtMoneySimple(inv.paidAmount, inv.currency))}</td>
+      <td>${escapeHtml(fmtMoneySimple(inv.balanceDue, inv.currency))}</td>
+      <td>${escapeHtml(inv.sentAt || "")}</td>
+      <td class="row-actions">
+        <button type="button" class="ghost" data-act="open">打开</button>
+        <button type="button" class="ghost" data-act="send">Send</button>
+        <button type="button" class="ghost success" data-act="pay">收款</button>
+      </td>`;
+    tr.querySelector('[data-act="open"]').addEventListener("click", () => {
+      window.open(`/invoice.html?id=${encodeURIComponent(inv.id)}`, "_blank");
+    });
+    tr.querySelector('[data-act="send"]').addEventListener("click", () => openSendInvoice(inv.id));
+    tr.querySelector('[data-act="pay"]').addEventListener("click", () => openPayDialog(inv.id));
+    body.appendChild(tr);
+  }
+}
+
+function fmtMoneySimple(v, c) {
+  const n = Number(v || 0);
+  const cur = c || "";
+  return (cur ? cur + " " : "") + n.toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+document.getElementById("btn-invoices-load")?.addEventListener("click", () => loadInvoices());
+document.getElementById("invoice-filter")?.addEventListener("change", () => loadInvoices());
+
+async function openSendInvoice(id) {
+  const to = prompt("发送到邮箱（Bill To Email）：");
+  if (!to) return;
+  try {
+    await api(`/api/invoices/${encodeURIComponent(id)}/send`, { method: "POST", body: JSON.stringify({ to }) });
+    alert("已发送");
+    await loadInvoices();
+    await loadTasks(); // 同步任务状态为 Sent
+  } catch (e) {
+    alert("发送失败: " + e.message);
+  }
+}
+
+const dlgPay = document.getElementById("dlg-pay");
+const formPay = document.getElementById("form-pay");
+
+function openPayDialog(invoiceId) {
+  document.getElementById("pay-invoice-id").value = invoiceId;
+  document.getElementById("pay-date").value = todayLocalISO();
+  document.getElementById("pay-amount").value = "";
+  dlgPay.showModal();
+}
+
+document.getElementById("pay-cancel")?.addEventListener("click", () => dlgPay.close());
+
+formPay?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const id = document.getElementById("pay-invoice-id").value;
+  const date = document.getElementById("pay-date").value;
+  const amount = parseFloat(document.getElementById("pay-amount").value);
+  if (!amount || amount <= 0) {
+    alert("请输入收款金额");
+    return;
+  }
+  try {
+    await api(`/api/invoices/${encodeURIComponent(id)}/payment`, { method: "POST", body: JSON.stringify({ amount, date }) });
+    dlgPay.close();
+    await loadInvoices();
+    await loadTasks(); // 若 fully paid，会把 task 状态改为 Paid
+  } catch (err) {
+    alert("保存失败: " + err.message);
+  }
+});
 
 // --- Prices ---
 let pricesCache = [];
@@ -510,6 +682,10 @@ document.getElementById("btn-report-export")?.addEventListener("click", () => ex
       }
       window.location.href = "/login.html";
     });
+  }
+  if (me.authEnabled && me.needsSetup) {
+    window.location.href = "/setup.html";
+    return;
   }
   if (me.authEnabled && !me.authenticated) {
     window.location.href = "/login.html";

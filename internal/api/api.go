@@ -5,15 +5,19 @@ import (
 	"errors"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
-	"biztracker/internal/models"
-	"biztracker/internal/store"
+	"tasktracker/internal/mail"
+	"tasktracker/internal/models"
+	"tasktracker/internal/store"
 )
 
 type Server struct {
-	Store *store.Store
+	Store   *store.Store
+	Mail    *mail.Mailer
+	BaseURL string
 }
 
 func (s *Server) handleTasks(w http.ResponseWriter, r *http.Request) {
@@ -120,6 +124,159 @@ func (s *Server) handlePriceByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) handleInvoices(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		status := strings.TrimSpace(r.URL.Query().Get("status"))
+		list, err := s.Store.ListInvoices(status)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, http.StatusOK, list)
+	case http.MethodPost:
+		var inv models.Invoice
+		if err := json.NewDecoder(r.Body).Decode(&inv); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		created, err := s.Store.CreateInvoice(inv)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, http.StatusCreated, created)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (s *Server) handleInvoiceByID(w http.ResponseWriter, r *http.Request) {
+	id := strings.TrimPrefix(r.URL.Path, "/api/invoices/")
+	if id == "" {
+		http.NotFound(w, r)
+		return
+	}
+	// subroutes: /api/invoices/{id}, /api/invoices/{id}/send, /api/invoices/{id}/payment
+	rest := strings.TrimPrefix(r.URL.Path, "/api/invoices/")
+	parts := strings.Split(rest, "/")
+	invoiceID := parts[0]
+	if invoiceID == "" {
+		http.NotFound(w, r)
+		return
+	}
+	if len(parts) == 1 || parts[1] == "" {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		inv, err := s.Store.GetInvoice(invoiceID)
+		if errors.Is(err, store.ErrNotFound) {
+			http.NotFound(w, r)
+			return
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, http.StatusOK, inv)
+		return
+	}
+	switch parts[1] {
+	case "send":
+		s.handleInvoiceSend(w, r, invoiceID)
+		return
+	case "payment":
+		s.handleInvoicePayment(w, r, invoiceID)
+		return
+	default:
+		http.NotFound(w, r)
+		return
+	}
+}
+
+func (s *Server) handleInvoiceSend(w http.ResponseWriter, r *http.Request, id string) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	if s.Mail == nil {
+		http.Error(w, "mail not configured", http.StatusBadRequest)
+		return
+	}
+	var body struct {
+		To string `json:"to"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	to := strings.TrimSpace(body.To)
+	if to == "" {
+		http.Error(w, "missing to", http.StatusBadRequest)
+		return
+	}
+	inv, err := s.Store.GetInvoice(id)
+	if errors.Is(err, store.ErrNotFound) {
+		http.NotFound(w, r)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	link := s.BaseURL
+	if link == "" {
+		link = "http://" + r.Host
+	}
+	url := link + "/invoice.html?id=" + inv.ID
+	subject := "Invoice " + inv.InvoiceNo
+	html := "<p>Invoice: <strong>" + inv.InvoiceNo + "</strong></p>" +
+		"<p>Amount: <strong>" + inv.Currency + " " + fmtMoney(inv.Total) + "</strong></p>" +
+		"<p>View/Print: <a href=\"" + url + "\">" + url + "</a></p>"
+	if err := s.Mail.SendInvoice(to, subject, html); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	updated, err := s.Store.MarkInvoiceSent(inv.ID, to, time.Now().Format(time.RFC3339))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, http.StatusOK, updated)
+}
+
+func (s *Server) handleInvoicePayment(w http.ResponseWriter, r *http.Request, id string) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	var body struct {
+		Amount float64 `json:"amount"`
+		Date   string  `json:"date"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	updated, err := s.Store.AddInvoicePayment(id, body.Amount, strings.TrimSpace(body.Date))
+	if errors.Is(err, store.ErrNotFound) {
+		http.NotFound(w, r)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	writeJSON(w, http.StatusOK, updated)
+}
+
+func fmtMoney(v float64) string {
+	// 简单格式化，避免引入额外依赖
+	s := strconv.FormatFloat(v, 'f', 2, 64)
+	return s
+}
+
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
@@ -172,4 +329,6 @@ func Register(mux *http.ServeMux, s *Server) {
 	mux.HandleFunc("/api/prices", s.handlePrices)
 	mux.HandleFunc("/api/prices/", s.handlePriceByID)
 	mux.HandleFunc("/api/reports/completed", s.handleReportCompleted)
+	mux.HandleFunc("/api/invoices", s.handleInvoices)
+	mux.HandleFunc("/api/invoices/", s.handleInvoiceByID)
 }

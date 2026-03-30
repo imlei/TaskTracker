@@ -5,28 +5,35 @@
       window.location.replace("/");
       return;
     }
-    if (me.needsSetup) {
-      window.location.replace("/setup.html");
-      return;
-    }
-    if (me.authenticated) {
-      window.location.replace("/");
+    if (!me.needsSetup) {
+      window.location.replace(me.authenticated ? "/" : "/login.html");
       return;
     }
   } catch {
-    // 继续显示登录页
+    // 继续显示创建页
   }
 
-  const form = document.getElementById("form-login");
-  const errEl = document.getElementById("login-err");
+  const form = document.getElementById("form-setup");
+  const errEl = document.getElementById("setup-err");
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     errEl.hidden = true;
-    const username = document.getElementById("login-user").value.trim();
-    const password = document.getElementById("login-pass").value;
+    const username = document.getElementById("setup-user").value.trim();
+    const password = document.getElementById("setup-pass").value;
+    const pass2 = document.getElementById("setup-pass2").value;
+    if (password.length < 6) {
+      errEl.textContent = "密码至少 6 位";
+      errEl.hidden = false;
+      return;
+    }
+    if (password !== pass2) {
+      errEl.textContent = "两次输入的密码不一致";
+      errEl.hidden = false;
+      return;
+    }
     try {
-      const r = await fetch("/api/login", {
+      const r = await fetch("/api/setup", {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json; charset=utf-8" },
@@ -39,7 +46,7 @@
         /* ignore */
       }
       if (!r.ok) {
-        errEl.textContent = data.error || "登录失败";
+        errEl.textContent = data.error || "创建失败";
         errEl.hidden = false;
         return;
       }

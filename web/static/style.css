@@ -320,6 +320,16 @@ dialog select {
   font: inherit;
 }
 
+dialog textarea {
+  padding: 0.45rem 0.55rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 4px;
+  font: inherit;
+  resize: vertical;
+}
+
 dialog input[readonly] {
   opacity: 0.75;
 }

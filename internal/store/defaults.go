@@ -1,6 +1,6 @@
 package store
 
-import "biztracker/internal/models"
+import "tasktracker/internal/models"
 
 func f64(v float64) *float64 { return &v }
 
