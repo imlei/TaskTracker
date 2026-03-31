@@ -75,11 +75,7 @@ func (s *Store) nextTaskID(prefix string) string {
 	return prefix + fmt.Sprintf("%04d", s.taskSeq)
 }
 
-func scanTask(rows *sql.Rows) (models.Task, error) {
-	return scanTaskScanner(rows)
-}
-
-func scanTaskScanner(sc interface {
+func scanTaskCols(sc interface {
 	Scan(dest ...any) error
 }) (models.Task, error) {
 	var t models.Task
@@ -87,6 +83,7 @@ func scanTaskScanner(sc interface {
 	var sel string
 	err := sc.Scan(
 		&t.ID,
+		&t.CustomerID,
 		&t.CompanyName,
 		&t.Date,
 		&t.Service1,
@@ -97,6 +94,37 @@ func scanTaskScanner(sc interface {
 		&t.CompletedAt,
 		&t.Note,
 		&sel,
+	)
+	if err != nil {
+		return models.Task{}, err
+	}
+	t.Status = models.TaskStatus(status)
+	if sel != "" {
+		_ = json.Unmarshal([]byte(sel), &t.SelectedPriceIDs)
+	}
+	return t, nil
+}
+
+func scanTaskJoin(sc interface {
+	Scan(dest ...any) error
+}) (models.Task, error) {
+	var t models.Task
+	var status string
+	var sel string
+	err := sc.Scan(
+		&t.ID,
+		&t.CustomerID,
+		&t.CompanyName,
+		&t.Date,
+		&t.Service1,
+		&t.Service2,
+		&t.Price1,
+		&t.Price2,
+		&status,
+		&t.CompletedAt,
+		&t.Note,
+		&sel,
+		&t.CustomerName,
 	)
 	if err != nil {
 		return models.Task{}, err
@@ -153,13 +181,13 @@ func recomputeTaskPricesFromSelection(ids []string, priceMap map[string]models.P
 	return service1, price1
 }
 
-const taskCols = `id, company_name, date, service1, service2, price1, price2, status, completed_at, note, selected_price_ids`
+const taskCols = `id, customer_id, company_name, date, service1, service2, price1, price2, status, completed_at, note, selected_price_ids`
 
 func (s *Store) GetTask(id string) (models.Task, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	row := s.db.QueryRow(`SELECT `+taskCols+` FROM tasks WHERE id=?`, id)
-	t, err := scanTaskScanner(row)
+	row := s.db.QueryRow(`SELECT t.id, t.customer_id, t.company_name, t.date, t.service1, t.service2, t.price1, t.price2, t.status, t.completed_at, t.note, t.selected_price_ids, COALESCE(c.name,'') FROM tasks t LEFT JOIN customers c ON c.id = t.customer_id WHERE t.id=?`, id)
+	t, err := scanTaskJoin(row)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Task{}, ErrNotFound
@@ -170,14 +198,14 @@ func (s *Store) GetTask(id string) (models.Task, error) {
 }
 
 func (s *Store) ListTasks() []models.Task {
-	rows, err := s.db.Query(`SELECT ` + taskCols + ` FROM tasks ORDER BY id`)
+	rows, err := s.db.Query(`SELECT t.id, t.customer_id, t.company_name, t.date, t.service1, t.service2, t.price1, t.price2, t.status, t.completed_at, t.note, t.selected_price_ids, COALESCE(c.name,'') FROM tasks t LEFT JOIN customers c ON c.id = t.customer_id ORDER BY t.id`)
 	if err != nil {
 		return nil
 	}
 	defer rows.Close()
 	out := make([]models.Task, 0)
 	for rows.Next() {
-		t, err := scanTask(rows)
+		t, err := scanTaskJoin(rows)
 		if err != nil {
 			continue
 		}
@@ -199,8 +227,8 @@ func (s *Store) CreateTask(t models.Task) models.Task {
 	if sel == nil {
 		sel = []byte("[]")
 	}
-	_, err := s.db.Exec(`INSERT INTO tasks (`+taskCols+`) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-		t.ID, t.CompanyName, t.Date, t.Service1, t.Service2, t.Price1, t.Price2, string(t.Status), t.CompletedAt, t.Note, string(sel))
+	_, err := s.db.Exec(`INSERT INTO tasks (`+taskCols+`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+		t.ID, t.CustomerID, t.CompanyName, t.Date, t.Service1, t.Service2, t.Price1, t.Price2, string(t.Status), t.CompletedAt, t.Note, string(sel))
 	if err != nil {
 		return t
 	}
@@ -216,8 +244,8 @@ func (s *Store) updateTaskCore(id string, t models.Task) (models.Task, error) {
 		sel = []byte("[]")
 	}
 	t.ID = id
-	res, err := s.db.Exec(`UPDATE tasks SET company_name=?, date=?, service1=?, service2=?, price1=?, price2=?, status=?, completed_at=?, note=?, selected_price_ids=? WHERE id=?`,
-		t.CompanyName, t.Date, t.Service1, t.Service2, t.Price1, t.Price2, string(t.Status), t.CompletedAt, t.Note, string(sel), id)
+	res, err := s.db.Exec(`UPDATE tasks SET customer_id=?, company_name=?, date=?, service1=?, service2=?, price1=?, price2=?, status=?, completed_at=?, note=?, selected_price_ids=? WHERE id=?`,
+		t.CustomerID, t.CompanyName, t.Date, t.Service1, t.Service2, t.Price1, t.Price2, string(t.Status), t.CompletedAt, t.Note, string(sel), id)
 	if err != nil {
 		return models.Task{}, err
 	}
@@ -232,7 +260,7 @@ func (s *Store) updateTaskCore(id string, t models.Task) (models.Task, error) {
 func (s *Store) UpdateTask(id string, t models.Task, invoiceEdit bool) (models.Task, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	existing, err := scanTaskScanner(s.db.QueryRow(`SELECT `+taskCols+` FROM tasks WHERE id=?`, id))
+	existing, err := scanTaskCols(s.db.QueryRow(`SELECT `+taskCols+` FROM tasks WHERE id=?`, id))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Task{}, ErrNotFound
@@ -268,7 +296,7 @@ func (s *Store) SyncPendingTasksForPriceID(priceID string) (int, error) {
 	defer rows.Close()
 	n := 0
 	for rows.Next() {
-		t, err := scanTask(rows)
+		t, err := scanTaskCols(rows)
 		if err != nil {
 			continue
 		}
@@ -295,7 +323,7 @@ func (s *Store) SyncPendingTasksForPriceID(priceID string) (int, error) {
 func (s *Store) DeleteTask(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	existing, err := scanTaskScanner(s.db.QueryRow(`SELECT `+taskCols+` FROM tasks WHERE id=?`, id))
+	existing, err := scanTaskCols(s.db.QueryRow(`SELECT `+taskCols+` FROM tasks WHERE id=?`, id))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return ErrNotFound
@@ -314,6 +342,67 @@ func (s *Store) DeleteTask(id string) error {
 		return ErrNotFound
 	}
 	return nil
+}
+
+func (s *Store) ListCustomers() []models.Customer {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	rows, err := s.db.Query(`SELECT id, name FROM customers ORDER BY id`)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	out := make([]models.Customer, 0)
+	for rows.Next() {
+		var c models.Customer
+		if err := rows.Scan(&c.ID, &c.Name); err != nil {
+			continue
+		}
+		out = append(out, c)
+	}
+	return out
+}
+
+// CreateCustomer 新建客户（id 空则自动生成 C0001 形式）
+func (s *Store) CreateCustomer(c models.Customer) models.Customer {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	name := strings.TrimSpace(c.Name)
+	if name == "" {
+		return c
+	}
+	id := strings.TrimSpace(c.ID)
+	if id == "" {
+		id = s.nextCustomerIDLocked()
+	}
+	_, err := s.db.Exec(`INSERT INTO customers (id, name) VALUES (?,?)`, id, name)
+	if err != nil {
+		return c
+	}
+	c.ID = id
+	c.Name = name
+	return c
+}
+
+func (s *Store) nextCustomerIDLocked() string {
+	rows, err := s.db.Query(`SELECT id FROM customers WHERE id LIKE 'C%'`)
+	if err != nil {
+		return "C0001"
+	}
+	defer rows.Close()
+	max := 0
+	for rows.Next() {
+		var id string
+		if rows.Scan(&id) != nil {
+			continue
+		}
+		if strings.HasPrefix(id, "C") && len(id) > 1 {
+			if v, err := strconv.Atoi(strings.TrimPrefix(id, "C")); err == nil && v > max {
+				max = v
+			}
+		}
+	}
+	return fmt.Sprintf("C%04d", max+1)
 }
 
 func scanPrice(rows *sql.Rows) (models.PriceItem, error) {

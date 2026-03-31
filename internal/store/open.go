@@ -3,8 +3,11 @@ package store
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	_ "modernc.org/sqlite"
 
@@ -13,8 +16,13 @@ import (
 
 const (
 	schema = `
+CREATE TABLE IF NOT EXISTS customers (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL DEFAULT ''
+);
 CREATE TABLE IF NOT EXISTS tasks (
   id TEXT PRIMARY KEY,
+  customer_id TEXT NOT NULL DEFAULT '',
   company_name TEXT NOT NULL DEFAULT '',
   date TEXT NOT NULL DEFAULT '',
   service1 TEXT NOT NULL DEFAULT '',
@@ -107,11 +115,120 @@ func Open(dir string) (*sql.DB, error) {
 		_ = db.Close()
 		return nil, err
 	}
+	if err := ensureCustomersTable(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	if err := ensureTaskCustomerIDColumn(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
 	if err := migrateLegacyJSON(dir, db); err != nil {
 		_ = db.Close()
 		return nil, err
 	}
+	if err := migrateCustomersBackfill(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
 	return db, nil
+}
+
+func ensureCustomersTable(db *sql.DB) error {
+	_, err := db.Exec(`
+CREATE TABLE IF NOT EXISTS customers (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL DEFAULT ''
+);`)
+	return err
+}
+
+func ensureTaskCustomerIDColumn(db *sql.DB) error {
+	existing := map[string]bool{}
+	rows, err := db.Query(`PRAGMA table_info(tasks)`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var cid int
+		var name, ctype string
+		var notnull int
+		var dflt sql.NullString
+		var pk int
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk); err != nil {
+			continue
+		}
+		existing[name] = true
+	}
+	if !existing["customer_id"] {
+		if _, err := db.Exec(`ALTER TABLE tasks ADD COLUMN customer_id TEXT NOT NULL DEFAULT ''`); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// migrateCustomersBackfill 为旧任务按 company_name 生成客户并关联（同一公司名共用一客户）
+func migrateCustomersBackfill(db *sql.DB) error {
+	rows, err := db.Query(`SELECT id, company_name FROM tasks WHERE IFNULL(customer_id,'') = ''`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	type pair struct {
+		id, cn string
+	}
+	var list []pair
+	for rows.Next() {
+		var id, cn string
+		if err := rows.Scan(&id, &cn); err != nil {
+			continue
+		}
+		list = append(list, pair{id: id, cn: strings.TrimSpace(cn)})
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	nameToID := map[string]string{}
+	for _, p := range list {
+		if p.cn == "" {
+			continue
+		}
+		cid, ok := nameToID[p.cn]
+		if !ok {
+			cid = nextCustomerIDFromMax(db)
+			if _, err := db.Exec(`INSERT INTO customers (id, name) VALUES (?,?)`, cid, p.cn); err != nil {
+				return err
+			}
+			nameToID[p.cn] = cid
+		}
+		if _, err := db.Exec(`UPDATE tasks SET customer_id=? WHERE id=?`, cid, p.id); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func nextCustomerIDFromMax(db *sql.DB) string {
+	rows, err := db.Query(`SELECT id FROM customers WHERE id LIKE 'C%'`)
+	if err != nil {
+		return "C0001"
+	}
+	defer rows.Close()
+	max := 0
+	for rows.Next() {
+		var id string
+		if rows.Scan(&id) != nil {
+			continue
+		}
+		if strings.HasPrefix(id, "C") && len(id) > 1 {
+			if v, err := strconv.Atoi(strings.TrimPrefix(id, "C")); err == nil && v > max {
+				max = v
+			}
+		}
+	}
+	return fmt.Sprintf("C%04d", max+1)
 }
 
 func ensureAppSettings(db *sql.DB) error {
@@ -239,9 +356,9 @@ func insertTaskTx(tx *sql.Tx, t models.Task) error {
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(`INSERT INTO tasks (id, company_name, date, service1, service2, price1, price2, status, completed_at, note, selected_price_ids)
-		VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-		t.ID, t.CompanyName, t.Date, t.Service1, t.Service2, t.Price1, t.Price2, string(t.Status), t.CompletedAt, t.Note, string(sel))
+	_, err = tx.Exec(`INSERT INTO tasks (id, customer_id, company_name, date, service1, service2, price1, price2, status, completed_at, note, selected_price_ids)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+		t.ID, t.CustomerID, t.CompanyName, t.Date, t.Service1, t.Service2, t.Price1, t.Price2, string(t.Status), t.CompletedAt, t.Note, string(sel))
 	return err
 }
 

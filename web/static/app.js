@@ -55,11 +55,44 @@ document.querySelectorAll(".tab").forEach((btn) => {
 
 // --- Tasks ---
 let tasksCache = [];
+let customersCache = [];
 /** 当前编辑对话框打开时的任务快照（用于保留 completedAt 等未在表单展示的字段） */
 let lastOpenedTask = null;
 
+async function loadCustomers() {
+  customersCache = asArray(await api("/api/customers"));
+}
+
+async function ensureCustomersLoaded() {
+  try {
+    await loadCustomers();
+  } catch (e) {
+    console.error(e);
+    alert("加载客户列表失败: " + e.message);
+  }
+}
+
+function fillTaskCustomerSelect(selectedId) {
+  const sel = document.getElementById("task-customer");
+  if (!sel) return;
+  sel.innerHTML = "";
+  const empty = document.createElement("option");
+  empty.value = "";
+  empty.textContent = "请选择 Customer";
+  sel.appendChild(empty);
+  const sorted = [...customersCache].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  for (const c of sorted) {
+    const o = document.createElement("option");
+    o.value = c.id;
+    o.textContent = (c.name || c.id).trim() || c.id;
+    sel.appendChild(o);
+  }
+  if (selectedId) sel.value = selectedId;
+}
+
 function taskToPayload(t) {
   return {
+    customerId: t.customerId || "",
     companyName: t.companyName || "",
     date: t.date || "",
     service1: t.service1 || "",
@@ -100,10 +133,11 @@ function renderTasks() {
     const tr = document.createElement("tr");
     const done = t.status === "Done";
     const canDelete = t.status === "Pending";
-    const cn = escapeHtml(t.companyName);
+    const cust = escapeHtml(t.customerName || "");
+    const cn = escapeHtml(t.companyName || "");
     tr.innerHTML = `
       <td>${escapeHtml(t.id)}</td>
-      <td>${cn}</td>
+      <td>${cust}</td>
       <td>${cn}</td>
       <td>${escapeHtml(t.date || "")}</td>
       <td>${escapeHtml(t.service1 || "")}</td>
@@ -130,6 +164,18 @@ $("#filter-status").addEventListener("change", renderTasks);
 
 $("#btn-new-task").addEventListener("click", () => openTaskDialog(null));
 
+document.getElementById("btn-new-customer")?.addEventListener("click", async () => {
+  const name = prompt("新客户名称（将出现在 Customer 列表中）：");
+  if (!name || !String(name).trim()) return;
+  try {
+    const c = await api("/api/customers", { method: "POST", body: JSON.stringify({ name: String(name).trim() }) });
+    await loadCustomers();
+    fillTaskCustomerSelect(c.id);
+  } catch (e) {
+    alert("添加失败: " + e.message);
+  }
+});
+
 const dlgTask = $("#dlg-task");
 const formTask = $("#form-task");
 const taskPricePicks = $("#task-price-picks");
@@ -154,6 +200,8 @@ function setTaskFormLocked(locked) {
     if (el.type === "hidden") return;
     el.disabled = locked;
   });
+  const bn = document.getElementById("btn-new-customer");
+  if (bn) bn.disabled = locked;
 }
 
 dlgTask.addEventListener("close", () => {
@@ -289,11 +337,19 @@ async function openTaskDialog(t, opts = {}) {
   const locked =
     !!(t && (t.status === "Done" || t.status === "Sent" || t.status === "Paid") && !taskDialogInvoiceEdit);
   lastOpenedTask = t || null;
+  await ensureCustomersLoaded();
   await ensurePricesLoaded();
   setTaskFormLocked(false);
   $("#dlg-task-title").textContent = t ? "编辑任务" : "新建任务";
   $("#task-id").value = t?.id || "";
-  $("#task-no").value = t?.id || "";
+  fillTaskCustomerSelect(t?.customerId || "");
+  const hintNew = document.getElementById("task-no-new-hint");
+  const wrapEdit = document.getElementById("task-no-edit-wrap");
+  const valNo = document.getElementById("task-no-value");
+  const isNew = !t;
+  if (hintNew) hintNew.hidden = !isNew;
+  if (wrapEdit) wrapEdit.hidden = isNew;
+  if (valNo && t) valNo.textContent = t.id;
   $("#task-company").value = t?.companyName || "";
   $("#task-date").value = t ? (t.date || "") : todayLocalISO();
   $("#task-status").value = t?.status || "Pending";
@@ -317,6 +373,7 @@ formTask.addEventListener("submit", async (e) => {
   const submitBtn = document.getElementById("task-submit-btn");
   if (submitBtn && submitBtn.disabled) return;
   const payload = {
+    customerId: ($("#task-customer") && $("#task-customer").value) || "",
     companyName: $("#task-company").value.trim(),
     date: $("#task-date").value,
     service1: $("#task-s1").value.trim(),
@@ -590,9 +647,12 @@ function getDoneTasksForInvoice() {
   return asArray(tasksCache)
     .filter((t) => t.status === "Done")
     .sort((a, b) => {
-      const ca = (a.companyName || "").trim();
-      const cb = (b.companyName || "").trim();
+      const ca = (a.customerName || "").trim();
+      const cb = (b.customerName || "").trim();
       if (ca !== cb) return ca.localeCompare(cb);
+      const ga = (a.companyName || "").trim();
+      const gb = (b.companyName || "").trim();
+      if (ga !== gb) return ga.localeCompare(gb);
       return String(a.id).localeCompare(String(b.id));
     });
 }
@@ -607,8 +667,8 @@ function updateInvoicingButtonState() {
     btn.disabled = true;
     return;
   }
-  const companies = new Set(selected.map((t) => (t.companyName || "").trim()));
-  btn.disabled = companies.size !== 1;
+  const custIds = new Set(selected.map((t) => (t.customerId || "").trim()));
+  btn.disabled = custIds.size !== 1 || [...custIds][0] === "";
 }
 
 function onNewInvoiceCheckboxChange(e) {
@@ -621,9 +681,9 @@ function onNewInvoiceCheckboxChange(e) {
   const selected = [...document.querySelectorAll(".new-inv-cb:checked")]
     .map((x) => tasksCache.find((t) => t.id === x.dataset.taskId))
     .filter(Boolean);
-  const companies = new Set(selected.map((t) => (t.companyName || "").trim()));
-  if (companies.size > 1) {
-    alert("只能选择同一客户的任务。");
+  const custIds = new Set(selected.map((t) => (t.customerId || "").trim()));
+  if (custIds.size > 1) {
+    alert("只能选择同一 Customer 的任务。");
     cb.checked = false;
   }
   updateInvoicingButtonState();
@@ -647,8 +707,8 @@ function renderNewInvoiceView() {
     tr.innerHTML = `
       <td><input type="checkbox" class="new-inv-cb" data-task-id="${escapeHtml(t.id)}" /></td>
       <td>${escapeHtml(t.id)}</td>
-      <td>${escapeHtml(t.companyName)}</td>
-      <td>${escapeHtml(t.companyName)}</td>
+      <td>${escapeHtml(t.customerName || "")}</td>
+      <td>${escapeHtml(t.companyName || "")}</td>
       <td>${escapeHtml(t.date || "")}</td>
       <td>${escapeHtml(t.service1 || "")}</td>
       <td>${fmtNum(t.price1)}</td>
@@ -752,8 +812,8 @@ document.getElementById("btn-invoicing-go")?.addEventListener("click", () => {
     .map((x) => tasksCache.find((t) => t.id === x.dataset.taskId))
     .filter(Boolean);
   if (selected.length === 0) return;
-  const companies = new Set(selected.map((t) => (t.companyName || "").trim()));
-  if (companies.size !== 1) return;
+  const custIds = new Set(selected.map((t) => (t.customerId || "").trim()));
+  if (custIds.size !== 1 || [...custIds][0] === "") return;
   openInvoiceDialogMulti(selected);
 });
 
@@ -944,7 +1004,8 @@ async function loadReport() {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${escapeHtml(t.id)}</td>
-        <td>${escapeHtml(t.companyName)}</td>
+        <td>${escapeHtml(t.customerName || "")}</td>
+        <td>${escapeHtml(t.companyName || "")}</td>
         <td>${escapeHtml(t.date || "")}</td>
         <td>${escapeHtml(t.service1 || "")}</td>
         <td>${fmtNum(t.price1)}</td>
@@ -977,12 +1038,13 @@ function exportReportCSV() {
     alert("当前没有可导出的数据，请先查询。");
     return;
   }
-  const headers = ["No.", "公司名", "日期", "业务一", "价格一", "状态", "完成日期", "备注"];
+  const headers = ["No.", "Customer", "公司名", "日期", "业务一", "价格一", "状态", "完成日期", "备注"];
   const lines = [headers.join(",")];
   for (const t of rows) {
     lines.push(
       [
         csvEscape(t.id),
+        csvEscape(t.customerName),
         csvEscape(t.companyName),
         csvEscape(t.date),
         csvEscape(t.service1),

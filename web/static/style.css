@@ -228,6 +228,25 @@ body.login-page {
   flex-shrink: 0;
 }
 
+.task-customer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.35rem;
+}
+
+.task-customer-row .flex-grow {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.task-no-edit-wrap {
+  margin: 0 0 0.5rem;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
 button.primary:disabled {
   background: var(--border);
   color: var(--muted);

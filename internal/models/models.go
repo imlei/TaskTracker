@@ -10,10 +10,18 @@ const (
 	StatusPaid    TaskStatus = "Paid"
 )
 
+// Customer 客户（任务从客户中选择；公司名为任务上的具体名称）
+type Customer struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 // Task 对应任务表中的一行
 type Task struct {
 	ID               string     `json:"id"`
-	CompanyName      string     `json:"companyName"`
+	CustomerID       string     `json:"customerId"`
+	CustomerName     string     `json:"customerName,omitempty"` // 列表/详情展示，来自 customers 表
+	CompanyName      string     `json:"companyName"`            // 公司名（隶属于所选 Customer）
 	Date             string     `json:"date"` // ISO 日期字符串，如 2026-03-30
 	Service1         string     `json:"service1"`
 	Service2         string     `json:"service2"`

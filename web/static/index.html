@@ -74,6 +74,7 @@
           <thead>
             <tr>
               <th>No.</th>
+              <th>Customer</th>
               <th>公司名</th>
               <th>日期</th>
               <th>业务一</th>
@@ -210,7 +211,7 @@
               </table>
             </div>
             <div class="invoice-new-footer">
-              <span class="invoice-new-hint">勾选同一客户的 Done 任务后，可点击 Invoicing 生成发票。</span>
+              <span class="invoice-new-hint">勾选同一 Customer 的 Done 任务后，可点击 Invoicing 生成发票。</span>
               <button type="button" id="btn-invoicing-go" class="primary" disabled>Invoicing</button>
             </div>
           </div>
@@ -223,7 +224,14 @@
     <form method="dialog" id="form-task">
       <h2 id="dlg-task-title">任务</h2>
       <input type="hidden" id="task-id" />
-      <label>No. <input id="task-no" readonly placeholder="保存后自动生成" /></label>
+      <p id="task-no-new-hint" class="hint">任务编号将在保存后由系统自动生成。</p>
+      <p id="task-no-edit-wrap" class="task-no-edit-wrap" hidden>任务编号：<strong id="task-no-value"></strong></p>
+      <div class="task-customer-row">
+        <label class="flex-grow">Customer
+          <select id="task-customer" required></select>
+        </label>
+        <button type="button" class="ghost small" id="btn-new-customer" title="添加客户">+ 新建客户</button>
+      </div>
       <label>公司名 <input id="task-company" required /></label>
       <label>日期 <input id="task-date" type="date" /></label>
       <div class="price-pick-block">

@@ -36,6 +36,10 @@ func (s *Server) handleTasks(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		if strings.TrimSpace(t.CustomerID) == "" {
+			http.Error(w, "customerId is required", http.StatusBadRequest)
+			return
+		}
 		created := s.Store.CreateTask(t)
 		writeJSON(w, http.StatusCreated, created)
 	default:
@@ -65,6 +69,10 @@ func (s *Server) handleTaskByID(w http.ResponseWriter, r *http.Request) {
 		var t models.Task
 		if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if strings.TrimSpace(t.CustomerID) == "" {
+			http.Error(w, "customerId is required", http.StatusBadRequest)
 			return
 		}
 		invoiceEdit := r.URL.Query().Get("invoiceEdit") == "1"
@@ -372,9 +380,32 @@ func completedAtInMonth(completedAt, month string) bool {
 	return completedAt[:7] == month
 }
 
+func (s *Server) handleCustomers(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		list := s.Store.ListCustomers()
+		writeJSON(w, http.StatusOK, list)
+	case http.MethodPost:
+		var c models.Customer
+		if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if strings.TrimSpace(c.Name) == "" {
+			http.Error(w, "name is required", http.StatusBadRequest)
+			return
+		}
+		created := s.Store.CreateCustomer(c)
+		writeJSON(w, http.StatusCreated, created)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
 func Register(mux *http.ServeMux, s *Server) {
 	mux.HandleFunc("/api/settings/public", s.handleSettingsPublic)
 	mux.HandleFunc("/api/settings", s.handleSettings)
+	mux.HandleFunc("/api/customers", s.handleCustomers)
 	mux.HandleFunc("/api/tasks", s.handleTasks)
 	mux.HandleFunc("/api/tasks/", s.handleTaskByID)
 	mux.HandleFunc("/api/prices", s.handlePrices)
