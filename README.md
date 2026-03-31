@@ -42,8 +42,14 @@ go build -o tasktracker .
 在 **Ubuntu 24.x** 上克隆仓库后，在仓库根目录执行：
 
 ```bash
+
+sudo apt update
+sudo apt install -y git wget ca-certificates
+git clone https://github.com/imlei/TaskTracker.git
+cd TaskTracker
+
 chmod +x install.sh
-sudo ./install.sh
+sudo ./install.sh --with-nginx
 ```
 
 脚本会在 **Go 版本低于 1.22.2 或未安装** 时从官方下载并安装到 `/usr/local/go`，随后编译、将二进制安装到 `/opt/tasktracker`、创建 `tasktracker` 用户并启用 **systemd** 服务。非 root 执行时**仅**在当前目录执行 `go build`（需本机已有 **Go 1.22.2+**，不校验发行版）。完整参数见 `./install.sh --help`。

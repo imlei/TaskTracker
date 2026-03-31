@@ -437,6 +437,125 @@ func completedAtInMonth(completedAt, month string) bool {
 	return completedAt[:7] == month
 }
 
+func dateInMonth(dateStr, month string) bool {
+	if len(dateStr) < 7 {
+		return dateStr == month
+	}
+	return dateStr[:7] == month
+}
+
+type trendMonthlyPoint struct {
+	Month     string  `json:"month"`
+	TasksNew  int     `json:"tasksNew"`
+	AmountNew float64 `json:"amountNew"`
+}
+
+type trendReport struct {
+	Month                     string              `json:"month"`
+	MonthlyTasksTotal         int                 `json:"monthlyTasksTotal"`
+	MonthlyTasksDone          int                 `json:"monthlyTasksDone"`
+	MonthlyAmountTotal        float64             `json:"monthlyAmountTotal"`
+	MonthlyAmountDone         float64             `json:"monthlyAmountDone"`
+	PendingAmountTotal        float64             `json:"pendingAmountTotal"`
+	PendingAmountNewThisMonth float64             `json:"pendingAmountNewThisMonth"`
+	MonthlySeries             []trendMonthlyPoint `json:"monthlySeries"`
+	MonthlyInvoicedAmount     float64             `json:"monthlyInvoicedAmount"`
+}
+
+// GET /api/reports/trend?month=YYYY-MM
+func (s *Server) handleReportTrend(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	month := strings.TrimSpace(r.URL.Query().Get("month"))
+	if month == "" {
+		month = time.Now().Format("2006-01")
+	}
+	if _, err := time.Parse("2006-01", month); err != nil {
+		http.Error(w, "invalid month, use YYYY-MM", http.StatusBadRequest)
+		return
+	}
+
+	allTasks := s.Store.ListTasks()
+	// 生成最近 12 个月列表（含当前 month）
+	months := make([]string, 12)
+	base, _ := time.Parse("2006-01", month)
+	for i := 11; i >= 0; i-- {
+		m := base.AddDate(0, -(11-i), 0)
+		months[i] = m.Format("2006-01")
+	}
+	monthIdx := make(map[string]int, len(months))
+	for i, m := range months {
+		monthIdx[m] = i
+	}
+	series := make([]trendMonthlyPoint, len(months))
+	for i, m := range months {
+		series[i].Month = m
+	}
+
+	var (
+		monthlyTasksTotal         int
+		monthlyTasksDone          int
+		monthlyAmountTotal        float64
+		monthlyAmountDone         float64
+		pendingAmountTotal        float64
+		pendingAmountNewThisMonth float64
+	)
+	for _, t := range allTasks {
+		m := ""
+		if len(t.Date) >= 7 {
+			m = t.Date[:7]
+		}
+		if idx, ok := monthIdx[m]; ok {
+			series[idx].TasksNew++
+			series[idx].AmountNew += t.Price1
+		}
+		if dateInMonth(t.Date, month) {
+			monthlyTasksTotal++
+			monthlyAmountTotal += t.Price1
+			if t.Status != models.StatusPending {
+				monthlyTasksDone++
+				monthlyAmountDone += t.Price1
+			}
+		}
+		if t.Status == models.StatusPending {
+			pendingAmountTotal += t.Price1
+			if dateInMonth(t.Date, month) {
+				pendingAmountNewThisMonth += t.Price1
+			}
+		}
+	}
+
+	invs, err := s.Store.ListInvoices("")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var monthlyInvoicedAmount float64
+	for _, inv := range invs {
+		if !dateInMonth(inv.InvoiceDate, month) {
+			continue
+		}
+		if strings.EqualFold(inv.Currency, string(models.CAD)) {
+			monthlyInvoicedAmount += inv.Total
+		}
+	}
+
+	resp := trendReport{
+		Month:                     month,
+		MonthlyTasksTotal:         monthlyTasksTotal,
+		MonthlyTasksDone:          monthlyTasksDone,
+		MonthlyAmountTotal:        monthlyAmountTotal,
+		MonthlyAmountDone:         monthlyAmountDone,
+		PendingAmountTotal:        pendingAmountTotal,
+		PendingAmountNewThisMonth: pendingAmountNewThisMonth,
+		MonthlySeries:             series,
+		MonthlyInvoicedAmount:     monthlyInvoicedAmount,
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
 func (s *Server) handleCustomers(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -521,6 +640,7 @@ func Register(mux *http.ServeMux, s *Server) {
 	mux.HandleFunc("/api/prices", s.handlePrices)
 	mux.HandleFunc("/api/prices/", s.handlePriceByID)
 	mux.HandleFunc("/api/reports/completed", s.handleReportCompleted)
+	mux.HandleFunc("/api/reports/trend", s.handleReportTrend)
 	mux.HandleFunc("/api/invoices", s.handleInvoices)
 	mux.HandleFunc("/api/invoices/", s.handleInvoiceByID)
 }

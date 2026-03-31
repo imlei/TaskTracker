@@ -43,13 +43,14 @@ document.querySelectorAll(".tab").forEach((btn) => {
     document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b === btn));
     document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === `panel-${tab}`));
     if (tab === "tasks") loadTasks();
-    if (tab === "prices") loadPrices();
+    if (tab === "trend") loadTrend();
+    if (tab === "invoices") loadInvoices();
     if (tab === "report") {
       const rm = document.getElementById("report-month");
       if (rm && !rm.value) rm.value = currentMonthISO();
       loadReport();
     }
-    if (tab === "invoices") loadInvoices();
+    if (tab === "prices") loadPrices();
   });
 });
 
@@ -846,6 +847,140 @@ const dlgCustomer = document.getElementById("dlg-customer");
 const formCustomer = document.getElementById("form-customer");
 const phoneFormatRx = /^\+?\d{10,15}$/;
 const emailFormatRx = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+// --- Trend ---
+let trendPieTasksChart = null;
+let trendPieAmountChart = null;
+let trendPiePendingChart = null;
+let trendBarMonthlyChart = null;
+
+function destroyChart(ch) {
+  if (ch && typeof ch.destroy === "function") {
+    ch.destroy();
+  }
+}
+
+function renderDoughnutChart(ctx, value, total, label) {
+  const v = Number(value) || 0;
+  const t = Number(total) || 0;
+  const done = Math.max(0, Math.min(v, t));
+  const rest = Math.max(0, t - done);
+  return new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: [label, "其他"],
+      datasets: [
+        {
+          data: [done, rest],
+          backgroundColor: ["#3d8bfd", "#1f2933"],
+          borderWidth: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      cutout: "60%",
+      plugins: {
+        legend: {
+          display: false,
+        },
+      },
+    },
+  });
+}
+
+async function loadTrend() {
+  const month = currentMonthISO();
+  try {
+    const data = await api(`/api/reports/trend?month=${encodeURIComponent(month)}`);
+    const monthLabel = (data && data.month) || month;
+    // 更新文字
+    document.getElementById("trend-tasks-done").textContent = data.monthlyTasksDone ?? 0;
+    document.getElementById("trend-tasks-total").textContent = data.monthlyTasksTotal ?? 0;
+    document.getElementById("trend-amount-done").textContent = (data.monthlyAmountDone || 0).toFixed(2);
+    document.getElementById("trend-amount-total").textContent = (data.monthlyAmountTotal || 0).toFixed(2);
+    document.getElementById("trend-pending-new").textContent = (data.pendingAmountNewThisMonth || 0).toFixed(2);
+    document.getElementById("trend-pending-total").textContent = (data.pendingAmountTotal || 0).toFixed(2);
+    document.getElementById("trend-invoiced-amount").textContent = `CAD ${(data.monthlyInvoicedAmount || 0).toFixed(2)}`;
+    document.getElementById("trend-invoiced-month-label").textContent = `${monthLabel} 本月开票总额`;
+
+    // 圆图
+    const ctxTasks = document.getElementById("trend-pie-tasks")?.getContext("2d");
+    const ctxAmount = document.getElementById("trend-pie-amount")?.getContext("2d");
+    const ctxPending = document.getElementById("trend-pie-pending")?.getContext("2d");
+    if (ctxTasks && ctxAmount && ctxPending && window.Chart) {
+      destroyChart(trendPieTasksChart);
+      destroyChart(trendPieAmountChart);
+      destroyChart(trendPiePendingChart);
+      trendPieTasksChart = renderDoughnutChart(
+        ctxTasks,
+        data.monthlyTasksDone || 0,
+        data.monthlyTasksTotal || 0,
+        "已完成任务",
+      );
+      trendPieAmountChart = renderDoughnutChart(
+        ctxAmount,
+        data.monthlyAmountDone || 0,
+        data.monthlyAmountTotal || 0,
+        "已完成金额",
+      );
+      trendPiePendingChart = renderDoughnutChart(
+        ctxPending,
+        data.pendingAmountNewThisMonth || 0,
+        data.pendingAmountTotal || 0,
+        "本月新增 Pending",
+      );
+    }
+
+    // 柱状图
+    const barCtx = document.getElementById("trend-bar-monthly")?.getContext("2d");
+    if (barCtx && window.Chart && Array.isArray(data.monthlySeries)) {
+      const labels = data.monthlySeries.map((p) => p.month);
+      const tasks = data.monthlySeries.map((p) => p.tasksNew || 0);
+      const amounts = data.monthlySeries.map((p) => p.amountNew || 0);
+      destroyChart(trendBarMonthlyChart);
+      trendBarMonthlyChart = new Chart(barCtx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "新增任务数",
+              data: tasks,
+              backgroundColor: "rgba(61, 139, 253, 0.8)",
+            },
+            {
+              label: "新增金额 (CAD)",
+              data: amounts,
+              backgroundColor: "rgba(126, 91, 239, 0.8)",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              ticks: { color: "#8b9cb3" },
+              grid: { display: false },
+            },
+            y: {
+              ticks: { color: "#8b9cb3" },
+              grid: { color: "rgba(148, 163, 184, 0.25)" },
+            },
+          },
+          plugins: {
+            legend: {
+              labels: { color: "#e8edf4" },
+            },
+          },
+        },
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    alert("加载 Trend 失败: " + e.message);
+  }
+}
 
 async function openCustomerEditDialog(customerId) {
   if (!dlgCustomer || !formCustomer) return;
