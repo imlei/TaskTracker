@@ -949,11 +949,6 @@ async function loadTrend() {
           labels,
           datasets: [
             {
-              label: "新增任务数",
-              data: tasks,
-              backgroundColor: "rgba(61, 139, 253, 0.8)",
-            },
-            {
               label: "新增金额 (CAD)",
               data: amounts,
               backgroundColor: "rgba(126, 91, 239, 0.8)",
@@ -964,7 +959,7 @@ async function loadTrend() {
           responsive: true,
           maintainAspectRatio: false,
           layout: {
-            padding: { top: 4, bottom: 0, left: 8, right: 8 },
+            padding: { top: 18, bottom: 0, left: 8, right: 8 },
           },
           scales: {
             x: {
@@ -985,6 +980,40 @@ async function loadTrend() {
             },
           },
         },
+        plugins: [
+          {
+            id: "trendMonthlyTaskCountInBar",
+            afterDatasetsDraw(chart) {
+              const ctx = chart.ctx;
+              const meta = chart.getDatasetMeta(0);
+              if (!meta?.data?.length) return;
+              ctx.save();
+              ctx.textAlign = "center";
+              meta.data.forEach((el, i) => {
+                const n = tasks[i];
+                const { x, y, base } = el.getProps(["x", "y", "base"], true);
+                const top = Math.min(y, base);
+                const bottom = Math.max(y, base);
+                const h = bottom - top;
+                if (h < 1 && n === 0) return;
+                ctx.font =
+                  h >= 22
+                    ? "600 12px system-ui, 'Segoe UI', sans-serif"
+                    : "600 11px system-ui, 'Segoe UI', sans-serif";
+                if (h >= 16) {
+                  ctx.fillStyle = "rgba(255,255,255,0.92)";
+                  ctx.textBaseline = "middle";
+                  ctx.fillText(String(n), x, (top + bottom) / 2);
+                } else {
+                  ctx.fillStyle = "#e8edf4";
+                  ctx.textBaseline = "bottom";
+                  ctx.fillText(String(n), x, top - 4);
+                }
+              });
+              ctx.restore();
+            },
+          },
+        ],
       });
     }
   } catch (e) {
