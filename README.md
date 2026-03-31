@@ -1,6 +1,6 @@
 # TaskTracker
 
-当前版本：**0.0.1**（Git 标签 `v0.0.1`；程序启动日志中也会打印版本号）。
+当前版本：**0.0.2**（Git 标签 `v0.0.2`；程序启动日志中也会打印版本号）。
 
 Go 实现的业务任务与价目表管理，单二进制 + 内嵌 Web，便于部署在服务器上。
 
@@ -47,6 +47,14 @@ sudo ./install.sh
 ```
 
 脚本会在 **Go 版本低于 1.22.2 或未安装** 时从官方下载并安装到 `/usr/local/go`，随后编译、将二进制安装到 `/opt/tasktracker`、创建 `tasktracker` 用户并启用 **systemd** 服务。非 root 执行时**仅**在当前目录执行 `go build`（需本机已有 **Go 1.22.2+**，不校验发行版）。完整参数见 `./install.sh --help`。
+
+**一键附带 Nginx 反向代理（推荐生产）**：在同一 Ubuntu 24.x 上执行：
+
+```bash
+sudo ./install.sh --with-nginx
+```
+
+效果：`tasktracker` 仅监听 **`127.0.0.1:8088`**（不对外网暴露应用端口），**Nginx** 监听 **80** 并反代到本机；会安装 `nginx`、写入站点配置、禁用默认 `default` 站点（避免与 80 端口冲突）、`nginx -t` 后 reload。若需自定义应用端口，可再加 `--listen :9090`（脚本会将应用绑定为 `127.0.0.1:9090` 并同步写入 Nginx 的 `proxy_pass`）。
 
 ### 后续更新 /「自己升级」（推荐流程）
 
@@ -152,9 +160,33 @@ sudo systemctl status tasktracker
 
 查看日志：`journalctl -u tasktracker -f`。
 
-### 5. 防火墙（Ubuntu）
+### 5. Nginx 反向代理（手动配置）
 
-若使用 `ufw`，放行监听端口（默认 8088）：
+若未使用 `install.sh --with-nginx`，可自行安装 Nginx，并将模板 **`deploy/tasktracker.nginx.conf`** 中的 `@PORT@` 替换为应用端口（与 `LISTEN_ADDR` 一致，默认 `8088`），放到 `/etc/nginx/sites-available/tasktracker` 并启用：
+
+```bash
+sudo apt install -y nginx
+sudo sed "s/@PORT@/8088/g" deploy/tasktracker.nginx.conf | sudo tee /etc/nginx/sites-available/tasktracker >/dev/null
+sudo ln -sf /etc/nginx/sites-available/tasktracker /etc/nginx/sites-enabled/tasktracker
+sudo rm -f /etc/nginx/sites-enabled/default   # 若与默认站点冲突
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+同时把 **systemd** 里的 `LISTEN_ADDR` 改为仅本机，例如 **`127.0.0.1:8088`**（或与你替换的端口一致），避免外网直连应用：
+
+```bash
+sudo systemctl edit tasktracker
+# 在 [Service] 下写入：
+# Environment=LISTEN_ADDR=127.0.0.1:8088
+sudo systemctl daemon-reload
+sudo systemctl restart tasktracker
+```
+
+使用 **HTTPS** 时，在 Nginx 上配置 443 与证书（例如 `certbot --nginx`），并在环境中设置 **`AUTH_SECURE_COOKIE=true`**（见上表）。
+
+### 6. 防火墙（Ubuntu）
+
+**未使用 Nginx** 时，若使用 `ufw`，放行应用端口（默认 8088）：
 
 ```bash
 sudo apt install -y ufw
@@ -162,13 +194,23 @@ sudo ufw allow 8088/tcp
 sudo ufw enable
 ```
 
-生产环境建议在前面加 **Nginx** 或 **Caddy** 做反向代理与 HTTPS，对外只开放 80/443。
+**已使用 Nginx 反代**（`install.sh --with-nginx` 或按上一节配置）时，对外只需 **80/443**，不必再对公网开放 8088：
 
-### 6. 首次访问
+```bash
+sudo ufw allow 'Nginx HTTP'
+sudo ufw allow 'Nginx HTTPS'   # 配置 TLS 后
+# 若曾放行过 8088，可删除：sudo ufw delete allow 8088/tcp
+sudo ufw enable
+```
 
-浏览器打开 `http://服务器IP:8088`，按提示在 **`/setup.html`** 创建管理员；若已用环境变量预置 `AUTH_USER` / `AUTH_PASSWORD` 且数据库中已写入首个用户，则直接登录即可。
+### 7. 首次访问
 
-### 仅上传二进制（交叉编译示例）
+- **直连应用端口**：浏览器打开 `http://服务器IP:8088`。
+- **经 Nginx（80）**：打开 `http://服务器IP/` 或你的域名。
+
+按提示在 **`/setup.html`** 创建管理员；若已用环境变量预置 `AUTH_USER` / `AUTH_PASSWORD` 且数据库中已写入首个用户，则直接登录即可。
+
+### 8. 仅上传二进制（交叉编译示例）
 
 在开发机上：
 

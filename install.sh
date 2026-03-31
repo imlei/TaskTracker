@@ -11,6 +11,7 @@ GO_MIN="1.22.2"
 
 BUILD_ONLY=false
 WITH_SYSTEMD=true
+WITH_NGINX=false
 GO_VERSION="${GO_VERSION:-}"
 
 usage() {
@@ -25,6 +26,7 @@ Options:
   --prefix DIR     安装目录（默认 /opt/tasktracker）。
   --listen ADDR    服务监听地址（默认 :8088，写入 systemd）。
   --no-systemd     root 安装时不写入 systemd、不启用服务。
+  --with-nginx     root 安装时同时安装 Nginx 反代到本服务（应用仅监听 127.0.0.1:端口，需已启用 systemd）。
   --go-version VER 指定要下载的 Go 版本号，如 1.22.2（默认从 go.dev 读取稳定版；离线回退为 1.22.2）。
   -h, --help       显示本说明。
 
@@ -34,6 +36,7 @@ Options:
 示例:
   ./install.sh
   sudo ./install.sh
+  sudo ./install.sh --with-nginx
   sudo PREFIX=/srv/tasktracker ./install.sh --no-systemd
 EOF
 }
@@ -160,9 +163,54 @@ EOF
 	log "Check: systemctl status tasktracker"
 }
 
+# 从 LISTEN_ADDR 解析端口（如 :8088、127.0.0.1:8088）
+listen_port_from_addr() {
+	local a="${1:-}"
+	local p
+	if [[ "$a" =~ :([0-9]+)$ ]]; then
+		p="${BASH_REMATCH[1]}"
+		printf '%s' "$p"
+		return 0
+	fi
+	printf '%s' "8088"
+}
+
+# 使用 Nginx 时应用只应绑定本机回环，避免对外直接暴露应用端口
+apply_nginx_listen_addr() {
+	local port
+	port="$(listen_port_from_addr "$LISTEN_ADDR")"
+	LISTEN_ADDR="127.0.0.1:${port}"
+}
+
+install_nginx_site() {
+	local port tmpl avail enabled
+	port="$(listen_port_from_addr "$LISTEN_ADDR")"
+	tmpl="$ROOT/deploy/tasktracker.nginx.conf"
+	[[ -f "$tmpl" ]] || die "missing nginx template: $tmpl"
+	command -v nginx >/dev/null 2>&1 || die "nginx not installed (apt install nginx)"
+	avail="/etc/nginx/sites-available/tasktracker"
+	enabled="/etc/nginx/sites-enabled/tasktracker"
+	sed "s/@PORT@/${port}/g" "$tmpl" >"$avail"
+	chmod 0644 "$avail"
+	ln -sf "$avail" "$enabled"
+	# 默认站点与 tasktracker 同时 listen 80 会冲突，禁用 default
+	if [[ -e /etc/nginx/sites-enabled/default ]]; then
+		rm -f /etc/nginx/sites-enabled/default
+		log "nginx: disabled /etc/nginx/sites-enabled/default (conflicted with tasktracker on :80)"
+	fi
+	nginx -t
+	systemctl enable --now nginx
+	systemctl reload nginx
+	log "nginx: reverse proxy http://0.0.0.0:80 -> http://127.0.0.1:${port}"
+	log "Browse: http://$(hostname -I 2>/dev/null | awk '{print $1}')/  (or your server IP)"
+	log "If using ufw: sudo ufw allow 'Nginx HTTP' && sudo ufw status"
+	log "Optional: sudo ufw delete allow 8088/tcp   # if you previously exposed the app port"
+}
+
 deploy_as_root() {
 	build_binary
 	if [[ "$WITH_SYSTEMD" != true ]]; then
+		[[ "$WITH_NGINX" != true ]] || die "--with-nginx requires systemd (omit --no-systemd)"
 		install -d -m 0755 "$PREFIX"
 		install -d -m 0755 "$PREFIX/data"
 		install -m 0755 "$ROOT/tasktracker" "$PREFIX/tasktracker"
@@ -173,7 +221,15 @@ deploy_as_root() {
 		log "Installed to $PREFIX (no systemd). Run: sudo -u tasktracker DATA_DIR=$PREFIX/data $PREFIX/tasktracker"
 		return 0
 	fi
+	if [[ "$WITH_NGINX" == true ]]; then
+		apply_nginx_listen_addr
+	fi
 	install_system_files
+	if [[ "$WITH_NGINX" == true ]]; then
+		apt-get update -qq
+		DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+		install_nginx_site
+	fi
 }
 
 main() {
@@ -191,6 +247,7 @@ main() {
 			shift
 			;;
 		--no-systemd) WITH_SYSTEMD=false ;;
+		--with-nginx) WITH_NGINX=true ;;
 		--go-version)
 			GO_VERSION="${2:-}"
 			[[ -n "$GO_VERSION" ]] || die "--go-version needs an argument"
