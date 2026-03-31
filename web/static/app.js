@@ -583,18 +583,24 @@ async function loadInvoices() {
     }
     return;
   }
+  if (invoiceViewMode === "customers") {
+    try {
+      await loadCustomers();
+      renderCustomersList();
+    } catch (e) {
+      console.error(e);
+      alert("加载客户失败: " + e.message);
+    }
+    return;
+  }
   const filter = document.getElementById("invoice-filter")?.value || "";
   try {
-    if (invoiceViewMode === "customers" || invoiceViewMode === "payment") {
+    if (invoiceViewMode === "payment") {
       invoicesCache = asArray(await api(`/api/invoices?status=`));
     } else {
       invoicesCache = asArray(await api(`/api/invoices?status=${encodeURIComponent(filter)}`));
     }
-    if (invoiceViewMode === "customers") {
-      renderCustomersList();
-    } else {
-      renderInvoices();
-    }
+    renderInvoices();
   } catch (e) {
     console.error(e);
     alert("加载发票失败: " + e.message);
@@ -605,22 +611,17 @@ function renderCustomersList() {
   const ul = document.getElementById("invoices-customers-list");
   const hint = document.getElementById("invoices-customers-hint");
   if (!ul) return;
-  const names = new Set();
-  for (const inv of asArray(invoicesCache)) {
-    const n = (inv.billToName || "").trim();
-    if (n) names.add(n);
-  }
-  const sorted = [...names].sort((a, b) => a.localeCompare(b));
+  const rows = [...asArray(customersCache)].sort((a, b) => String(a.id).localeCompare(String(b.id)));
   ul.innerHTML = "";
-  for (const name of sorted) {
+  for (const c of rows) {
     const li = document.createElement("li");
-    li.textContent = name;
+    li.textContent = `${c.id} — ${(c.name || "").trim() || c.id}`;
     ul.appendChild(li);
   }
   if (hint) {
-    hint.textContent = sorted.length
-      ? `共 ${sorted.length} 个客户（Bill To）。`
-      : "暂无客户数据，请先在「发票列表」中创建发票。";
+    hint.textContent = rows.length
+      ? `共 ${rows.length} 个客户。`
+      : "暂无客户，请点击右下角 New Customer 添加。";
   }
 }
 
@@ -804,6 +805,20 @@ document.querySelectorAll(".invoices-nav-btn").forEach((btn) => {
 });
 
 document.getElementById("btn-invoices-back-customers")?.addEventListener("click", () => setInvoiceView("list"));
+
+document.getElementById("btn-invoices-new-customer")?.addEventListener("click", async () => {
+  const name = prompt("新客户名称：");
+  if (!name || !String(name).trim()) return;
+  try {
+    await api("/api/customers", { method: "POST", body: JSON.stringify({ name: String(name).trim() }) });
+    await loadCustomers();
+    if (invoiceViewMode === "customers") {
+      renderCustomersList();
+    }
+  } catch (e) {
+    alert("添加失败: " + e.message);
+  }
+});
 document.getElementById("btn-invoices-back-payment")?.addEventListener("click", () => setInvoiceView("list"));
 document.getElementById("btn-invoices-back-new")?.addEventListener("click", () => setInvoiceView("list"));
 

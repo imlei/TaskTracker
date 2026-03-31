@@ -186,6 +186,15 @@ body.login-page {
   border-bottom: none;
 }
 
+.invoices-customers-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
 .invoice-new-footer {
   display: flex;
   align-items: center;
