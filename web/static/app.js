@@ -879,7 +879,11 @@ function renderDoughnutChart(ctx, value, total, label) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       cutout: "60%",
+      layout: {
+        padding: { top: 4, bottom: 4, left: 4, right: 4 },
+      },
       plugins: {
         legend: {
           display: false,
@@ -958,19 +962,26 @@ async function loadTrend() {
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
+          layout: {
+            padding: { top: 4, bottom: 0, left: 8, right: 8 },
+          },
           scales: {
             x: {
-              ticks: { color: "#8b9cb3" },
+              ticks: { color: "#8b9cb3", maxRotation: 45, minRotation: 0, font: { size: 10 } },
               grid: { display: false },
             },
             y: {
-              ticks: { color: "#8b9cb3" },
+              beginAtZero: true,
+              ticks: { color: "#8b9cb3", maxTicksLimit: 6, font: { size: 10 } },
               grid: { color: "rgba(148, 163, 184, 0.25)" },
             },
           },
           plugins: {
             legend: {
-              labels: { color: "#e8edf4" },
+              position: "top",
+              align: "end",
+              labels: { color: "#e8edf4", boxWidth: 12, font: { size: 11 } },
             },
           },
         },

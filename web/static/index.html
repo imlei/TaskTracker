@@ -64,37 +64,37 @@
 
     <section id="panel-trend" class="panel">
       <div class="trend-page">
-        <div class="trend-card">
+        <div class="trend-card trend-card--pies">
           <h2 class="trend-title">本月完成进度</h2>
           <p class="trend-subtitle">以任务数与金额（CAD）衡量本月完成情况。</p>
           <div class="trend-grid-3">
             <div class="trend-pie">
               <h3>任务完成率</h3>
               <p class="trend-kpi"><span id="trend-tasks-done">0</span> / <span id="trend-tasks-total">0</span></p>
-              <canvas id="trend-pie-tasks" height="140"></canvas>
+              <div class="trend-pie-chart"><canvas id="trend-pie-tasks"></canvas></div>
             </div>
             <div class="trend-pie">
               <h3>金额完成率</h3>
               <p class="trend-kpi"><span id="trend-amount-done">0</span> / <span id="trend-amount-total">0</span> CAD</p>
-              <canvas id="trend-pie-amount" height="140"></canvas>
+              <div class="trend-pie-chart"><canvas id="trend-pie-amount"></canvas></div>
             </div>
             <div class="trend-pie">
               <h3>本月新增 Pending</h3>
               <p class="trend-kpi"><span id="trend-pending-new">0</span> / <span id="trend-pending-total">0</span> CAD</p>
-              <canvas id="trend-pie-pending" height="140"></canvas>
+              <div class="trend-pie-chart"><canvas id="trend-pie-pending"></canvas></div>
             </div>
           </div>
         </div>
 
-        <div class="trend-card">
+        <div class="trend-card trend-card--bar">
           <h2 class="trend-title">最近 12 个月新增任务与金额</h2>
           <p class="trend-subtitle">每月新增任务数与对应金额（CAD）。</p>
           <div class="trend-chart-wrap">
-            <canvas id="trend-bar-monthly" height="220"></canvas>
+            <div class="trend-chart-inner"><canvas id="trend-bar-monthly"></canvas></div>
           </div>
         </div>
 
-        <div class="trend-card">
+        <div class="trend-card trend-card--invoice">
           <h2 class="trend-title">本月开票金额</h2>
           <p class="trend-subtitle">按 Invoice Date 统计，币种为 CAD。</p>
           <div class="trend-summary-row">
