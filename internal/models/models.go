@@ -95,6 +95,18 @@ type Invoice struct {
 	CreatedAt   string        `json:"createdAt"`
 }
 
+// Expense 任务相关支出记录
+type Expense struct {
+	ID          string  `json:"id"`
+	TaskID      string  `json:"taskId"`
+	TaskName    string  `json:"taskName,omitempty"` // 列表/详情：来自 tasks.company_name
+	Description string  `json:"description"`        // 支出说明
+	AccountCode string  `json:"accountCode"`        // 费用科目 5XXX（四位、5 开头）
+	Amount      float64 `json:"amount"`
+	Currency    string  `json:"currency"`
+	CreatedAt   string  `json:"createdAt,omitempty"`
+}
+
 // BankAccount 支票打印 / MICR 银行账户（支持多账户）
 type BankAccount struct {
 	ID                   string `json:"id"`

@@ -148,6 +148,14 @@ func Open(dir string) (*sql.DB, error) {
 		_ = db.Close()
 		return nil, err
 	}
+	if err := ensureExpensesTable(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	if err := ensureExpenseAccountCodeColumn(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
 	return db, nil
 }
 
@@ -578,4 +586,44 @@ func insertPriceTx(tx *sql.Tx, p models.PriceItem) error {
 	_, err := tx.Exec(`INSERT INTO price_items (id, service_name, amount, currency, note) VALUES (?,?,?,?,?)`,
 		p.ID, p.ServiceName, amt, string(p.Currency), p.Note)
 	return err
+}
+
+func ensureExpensesTable(db *sql.DB) error {
+	_, err := db.Exec(`
+CREATE TABLE IF NOT EXISTS expenses (
+  id TEXT PRIMARY KEY,
+  task_id TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  account_code TEXT NOT NULL DEFAULT '',
+  amount REAL NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'CAD',
+  created_at TEXT NOT NULL DEFAULT ''
+);`)
+	return err
+}
+
+func ensureExpenseAccountCodeColumn(db *sql.DB) error {
+	existing := map[string]bool{}
+	rows, err := db.Query(`PRAGMA table_info(expenses)`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var cid int
+		var name, ctype string
+		var notnull, pk int
+		var dflt sql.NullString
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk); err != nil {
+			continue
+		}
+		existing[name] = true
+	}
+	if !existing["account_code"] {
+		_, err := db.Exec(`ALTER TABLE expenses ADD COLUMN account_code TEXT NOT NULL DEFAULT ''`)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

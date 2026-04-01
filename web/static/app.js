@@ -51,6 +51,7 @@ document.querySelectorAll(".tab").forEach((btn) => {
       loadReport();
     }
     if (tab === "prices") loadPrices();
+    if (tab === "expense") loadExpenses();
     if (tab === "cheque") {
       const fr = document.getElementById("iframe-cheque");
       if (fr && !fr.getAttribute("src")) {
@@ -1268,6 +1269,139 @@ async function deletePrice(id) {
   } catch (err) {
     alert("删除失败: " + err.message);
   }
+}
+
+// --- Expenses ---
+let expensesCache = [];
+
+async function loadExpenses() {
+  try {
+    await loadTasks();
+    expensesCache = asArray(await api("/api/expenses"));
+    renderExpenses();
+  } catch (e) {
+    console.error(e);
+    alert("加载 Expense 失败: " + e.message);
+  }
+}
+
+function fillExpenseTaskSelect(selectedId) {
+  const sel = document.getElementById("expense-task-id");
+  if (!sel) return;
+  sel.innerHTML = "";
+  const sorted = [...tasksCache].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  for (const t of sorted) {
+    const o = document.createElement("option");
+    o.value = t.id;
+    o.textContent = (t.companyName || t.id).trim() || t.id;
+    sel.appendChild(o);
+  }
+  if (selectedId) sel.value = selectedId;
+}
+
+/** 费用科目：四位、5 开头（5000–5999） */
+function ensureExpenseAccountOptions() {
+  const sel = document.getElementById("expense-account-code");
+  if (!sel || sel.dataset.filled === "1") return;
+  sel.dataset.filled = "1";
+  const ph = document.createElement("option");
+  ph.value = "";
+  ph.textContent = "— 选择科目 (5XXX) —";
+  sel.appendChild(ph);
+  for (let c = 5000; c <= 5999; c++) {
+    const o = document.createElement("option");
+    o.value = String(c);
+    o.textContent = String(c);
+    sel.appendChild(o);
+  }
+}
+
+function renderExpenses() {
+  const body = document.getElementById("expenses-body");
+  if (!body) return;
+  body.innerHTML = "";
+  for (const ex of asArray(expensesCache)) {
+    const tr = document.createElement("tr");
+    const amt = fmtNum(ex.amount);
+    const cur = ex.currency || "";
+    tr.innerHTML = `
+      <td>${escapeHtml(ex.taskName || "")}</td>
+      <td>${escapeHtml(ex.accountCode || "—")}</td>
+      <td>${escapeHtml(ex.description || "")}</td>
+      <td>${escapeHtml(amt)} ${escapeHtml(cur)}</td>
+      <td class="row-actions"><button type="button" class="ghost" data-act="edit">Edit</button></td>`;
+    tr.querySelector('[data-act="edit"]').addEventListener("click", () => openExpenseDialog(ex));
+    body.appendChild(tr);
+  }
+}
+
+const dlgExpense = document.getElementById("dlg-expense");
+const formExpense = document.getElementById("form-expense");
+
+function openExpenseDialog(ex) {
+  ensureExpenseAccountOptions();
+  const title = document.getElementById("dlg-expense-title");
+  if (title) title.textContent = ex ? "Edit expense" : "New expense";
+  const hid = document.getElementById("expense-id");
+  if (hid) hid.value = ex?.id || "";
+  fillExpenseTaskSelect(ex?.taskId || "");
+  const acc = document.getElementById("expense-account-code");
+  if (acc) {
+    const code = ex && ex.accountCode != null ? String(ex.accountCode).trim() : "";
+    acc.value = /^5\d{3}$/.test(code) ? code : "";
+  }
+  const desc = document.getElementById("expense-description");
+  if (desc) desc.value = ex?.description || "";
+  const amt = document.getElementById("expense-amount");
+  if (amt) amt.value = ex != null && ex.amount != null && !Number.isNaN(ex.amount) ? String(ex.amount) : "";
+  const cur = document.getElementById("expense-currency");
+  if (cur) cur.value = ex?.currency || "CAD";
+  if (dlgExpense) dlgExpense.showModal();
+}
+
+const btnNewExpense = document.getElementById("btn-new-expense");
+if (btnNewExpense) btnNewExpense.addEventListener("click", () => openExpenseDialog(null));
+
+const expenseCancel = document.getElementById("expense-cancel");
+if (expenseCancel) expenseCancel.addEventListener("click", () => dlgExpense && dlgExpense.close());
+
+if (formExpense) {
+  formExpense.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const id = document.getElementById("expense-id")?.value?.trim() || "";
+    const taskId = document.getElementById("expense-task-id")?.value?.trim() || "";
+    const accountCode = document.getElementById("expense-account-code")?.value?.trim() || "";
+    const payload = {
+      taskId,
+      accountCode,
+      description: document.getElementById("expense-description")?.value?.trim() || "",
+      amount: parseFloat(document.getElementById("expense-amount")?.value || "0"),
+      currency: document.getElementById("expense-currency")?.value || "CAD",
+    };
+    if (!taskId) {
+      alert("请选择 Task。");
+      return;
+    }
+    if (!/^5\d{3}$/.test(accountCode)) {
+      alert("请选择 Expense account：四位数字、以 5 开头（5XXX）。");
+      return;
+    }
+    if (Number.isNaN(payload.amount) || payload.amount < 0) {
+      alert("请输入有效金额。");
+      return;
+    }
+    try {
+      if (id) {
+        await api(`/api/expenses/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(payload) });
+      } else {
+        await api("/api/expenses", { method: "POST", body: JSON.stringify(payload) });
+      }
+      dlgExpense.close();
+      await loadExpenses();
+    } catch (err) {
+      alert("保存失败: " + err.message);
+    }
+  });
 }
 
 function escapeHtml(s) {
