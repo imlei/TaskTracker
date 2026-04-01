@@ -43,6 +43,15 @@ func (s *Server) handleExpenseCodes(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) handleExpenseCodesCatalog(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	list := s.Store.ListExpenseCatalogCodes()
+	writeJSON(w, http.StatusOK, list)
+}
+
 func (s *Server) handleExpenseCodeByCode(w http.ResponseWriter, r *http.Request) {
 	raw := strings.TrimPrefix(r.URL.Path, "/api/expense-codes/")
 	if raw == "" {

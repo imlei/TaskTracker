@@ -100,11 +100,18 @@ type Expense struct {
 	ID          string  `json:"id"`
 	TaskID      string  `json:"taskId"`
 	TaskName    string  `json:"taskName,omitempty"` // 列表/详情：来自 tasks.company_name
+	ExpenseDate string  `json:"expenseDate"`        // 业务日期 YYYY-MM-DD
 	Description string  `json:"description"`        // 支出说明
-	AccountCode string  `json:"accountCode"`        // 费用科目 5XXX（四位、5 开头）
+	AccountCode string  `json:"accountCode"`        // 费用科目 5XXX（须在 Settings 目录中）
 	Amount      float64 `json:"amount"`
 	Currency    string  `json:"currency"`
 	CreatedAt   string  `json:"createdAt,omitempty"`
+}
+
+// ExpenseCodeCatalogItem Expense 表单下拉：仅后台 expense_codes 表中的科目
+type ExpenseCodeCatalogItem struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
 }
 
 // ExpenseCodeRow Settings 中费用科目列表（含年内累计支出）

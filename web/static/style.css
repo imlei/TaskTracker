@@ -694,6 +694,24 @@ button.primary:hover {
   background: var(--accent-dim);
 }
 
+/** 与 primary 同尺寸与圆角，绿底白字（任务行 Expense 等） */
+button.primary-green {
+  padding: 0.45rem 1rem;
+  background: #22c55e;
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+}
+
+button.primary-green:hover {
+  background: #16a34a;
+}
+
+button.primary-green:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 button.ghost {
   padding: 0.35rem 0.65rem;
   background: transparent;

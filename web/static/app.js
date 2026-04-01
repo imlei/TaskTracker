@@ -168,6 +168,7 @@ function renderTasks() {
       <td>${escapeHtml(t.note || "")}</td>
       <td class="row-actions">
         <button type="button" class="ghost" data-act="edit">编辑</button>
+        <button type="button" class="primary-green" data-act="expense">Expense</button>
         <button type="button" class="ghost success" data-act="done" ${done ? "disabled" : ""}>Completed</button>
         <button type="button" class="ghost danger" data-act="del" ${canDelete ? "" : "disabled"}>删除</button>
       </td>`;
@@ -176,6 +177,7 @@ function renderTasks() {
     if (!done) {
       btnDone.addEventListener("click", () => markTaskCompleted(t));
     }
+    tr.querySelector('[data-act="expense"]').addEventListener("click", () => openNewExpenseForTask(t).catch((e) => alert(e.message)));
     tr.querySelector('[data-act="del"]').addEventListener("click", () => deleteTask(t.id));
     body.appendChild(tr);
   }
@@ -1273,10 +1275,21 @@ async function deletePrice(id) {
 
 // --- Expenses ---
 let expensesCache = [];
+let expenseCatalogCache = [];
+
+async function loadExpenseCatalog() {
+  try {
+    expenseCatalogCache = asArray(await api("/api/expense-codes/catalog"));
+  } catch (e) {
+    console.error(e);
+    expenseCatalogCache = [];
+  }
+}
 
 async function loadExpenses() {
   try {
     await loadTasks();
+    await loadExpenseCatalog();
     expensesCache = asArray(await api("/api/expenses"));
     renderExpenses();
   } catch (e) {
@@ -1299,21 +1312,31 @@ function fillExpenseTaskSelect(selectedId) {
   if (selectedId) sel.value = selectedId;
 }
 
-/** 费用科目：四位、5 开头（5000–5999） */
-function ensureExpenseAccountOptions() {
+/** Expense account：仅 Settings 中已添加的 expense_codes */
+function fillExpenseAccountSelect(selectedCode, allowOrphan) {
   const sel = document.getElementById("expense-account-code");
-  if (!sel || sel.dataset.filled === "1") return;
-  sel.dataset.filled = "1";
+  if (!sel) return;
+  sel.innerHTML = "";
   const ph = document.createElement("option");
   ph.value = "";
-  ph.textContent = "— 选择科目 (5XXX) —";
+  ph.textContent = expenseCatalogCache.length
+    ? "— 选择科目 —"
+    : "— 请先在 Settings → Expense Code 添加科目 —";
   sel.appendChild(ph);
-  for (let c = 5000; c <= 5999; c++) {
+  for (const row of expenseCatalogCache) {
     const o = document.createElement("option");
-    o.value = String(c);
-    o.textContent = String(c);
+    o.value = row.code;
+    o.textContent = row.name ? `${row.code} — ${row.name}` : row.code;
     sel.appendChild(o);
   }
+  const code = selectedCode != null ? String(selectedCode).trim() : "";
+  if (allowOrphan && /^5\d{3}$/.test(code) && !expenseCatalogCache.some((r) => String(r.code) === code)) {
+    const o = document.createElement("option");
+    o.value = code;
+    o.textContent = `${code}（未在目录，请先在 Settings 添加）`;
+    sel.appendChild(o);
+  }
+  if (code) sel.value = code;
 }
 
 function renderExpenses() {
@@ -1324,8 +1347,10 @@ function renderExpenses() {
     const tr = document.createElement("tr");
     const amt = fmtNum(ex.amount);
     const cur = ex.currency || "";
+    const d = ex.expenseDate || "";
     tr.innerHTML = `
       <td>${escapeHtml(ex.taskName || "")}</td>
+      <td>${escapeHtml(d || "—")}</td>
       <td>${escapeHtml(ex.accountCode || "—")}</td>
       <td>${escapeHtml(ex.description || "")}</td>
       <td>${escapeHtml(amt)} ${escapeHtml(cur)}</td>
@@ -1338,29 +1363,43 @@ function renderExpenses() {
 const dlgExpense = document.getElementById("dlg-expense");
 const formExpense = document.getElementById("form-expense");
 
-function openExpenseDialog(ex) {
-  ensureExpenseAccountOptions();
+/** 从任务行跳转：切到 Expense 标签并打开新建支出，Task 已选当前行 */
+async function openNewExpenseForTask(t) {
+  if (!t || !t.id) return;
+  document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === "expense"));
+  document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === "panel-expense"));
+  await loadExpenses();
+  await openExpenseDialog({ taskId: t.id });
+}
+
+async function openExpenseDialog(ex) {
+  await loadExpenseCatalog();
+  const isEdit = !!(ex && ex.id);
   const title = document.getElementById("dlg-expense-title");
-  if (title) title.textContent = ex ? "Edit expense" : "New expense";
+  if (title) title.textContent = isEdit ? "Edit expense" : "New expense";
   const hid = document.getElementById("expense-id");
-  if (hid) hid.value = ex?.id || "";
-  fillExpenseTaskSelect(ex?.taskId || "");
-  const acc = document.getElementById("expense-account-code");
-  if (acc) {
-    const code = ex && ex.accountCode != null ? String(ex.accountCode).trim() : "";
-    acc.value = /^5\d{3}$/.test(code) ? code : "";
+  if (hid) hid.value = isEdit ? ex.id : "";
+  fillExpenseTaskSelect((ex && ex.taskId) || "");
+  const accCode = ex && ex.accountCode != null ? String(ex.accountCode).trim() : "";
+  fillExpenseAccountSelect(accCode, isEdit);
+  const dateEl = document.getElementById("expense-date");
+  if (dateEl) {
+    dateEl.value =
+      ex && ex.expenseDate && /^\d{4}-\d{2}-\d{2}$/.test(String(ex.expenseDate))
+        ? String(ex.expenseDate)
+        : todayLocalISO();
   }
   const desc = document.getElementById("expense-description");
-  if (desc) desc.value = ex?.description || "";
+  if (desc) desc.value = (ex && ex.description) || "";
   const amt = document.getElementById("expense-amount");
   if (amt) amt.value = ex != null && ex.amount != null && !Number.isNaN(ex.amount) ? String(ex.amount) : "";
   const cur = document.getElementById("expense-currency");
-  if (cur) cur.value = ex?.currency || "CAD";
+  if (cur) cur.value = (ex && ex.currency) || "CAD";
   if (dlgExpense) dlgExpense.showModal();
 }
 
 const btnNewExpense = document.getElementById("btn-new-expense");
-if (btnNewExpense) btnNewExpense.addEventListener("click", () => openExpenseDialog(null));
+if (btnNewExpense) btnNewExpense.addEventListener("click", () => openExpenseDialog(null).catch((e) => alert(e.message)));
 
 const expenseCancel = document.getElementById("expense-cancel");
 if (expenseCancel) expenseCancel.addEventListener("click", () => dlgExpense && dlgExpense.close());
@@ -1371,9 +1410,11 @@ if (formExpense) {
     const id = document.getElementById("expense-id")?.value?.trim() || "";
     const taskId = document.getElementById("expense-task-id")?.value?.trim() || "";
     const accountCode = document.getElementById("expense-account-code")?.value?.trim() || "";
+    const expenseDate = document.getElementById("expense-date")?.value?.trim() || "";
     const payload = {
       taskId,
       accountCode,
+      expenseDate,
       description: document.getElementById("expense-description")?.value?.trim() || "",
       amount: parseFloat(document.getElementById("expense-amount")?.value || "0"),
       currency: document.getElementById("expense-currency")?.value || "CAD",
@@ -1382,8 +1423,12 @@ if (formExpense) {
       alert("请选择 Task。");
       return;
     }
+    if (!expenseDate) {
+      alert("请选择 Date。");
+      return;
+    }
     if (!/^5\d{3}$/.test(accountCode)) {
-      alert("请选择 Expense account：四位数字、以 5 开头（5XXX）。");
+      alert("请选择 Expense account（请先在 Settings → Expense Code 添加 5XXX 科目）。");
       return;
     }
     if (Number.isNaN(payload.amount) || payload.amount < 0) {

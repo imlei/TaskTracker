@@ -160,6 +160,10 @@ func Open(dir string) (*sql.DB, error) {
 		_ = db.Close()
 		return nil, err
 	}
+	if err := ensureExpenseDateColumn(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
 	return db, nil
 }
 
@@ -597,6 +601,7 @@ func ensureExpensesTable(db *sql.DB) error {
 CREATE TABLE IF NOT EXISTS expenses (
   id TEXT PRIMARY KEY,
   task_id TEXT NOT NULL DEFAULT '',
+  expense_date TEXT NOT NULL DEFAULT '',
   description TEXT NOT NULL DEFAULT '',
   account_code TEXT NOT NULL DEFAULT '',
   amount REAL NOT NULL DEFAULT 0,
@@ -639,4 +644,30 @@ CREATE TABLE IF NOT EXISTS expense_codes (
   name TEXT NOT NULL DEFAULT ''
 );`)
 	return err
+}
+
+func ensureExpenseDateColumn(db *sql.DB) error {
+	existing := map[string]bool{}
+	rows, err := db.Query(`PRAGMA table_info(expenses)`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var cid int
+		var name, ctype string
+		var notnull, pk int
+		var dflt sql.NullString
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk); err != nil {
+			continue
+		}
+		existing[name] = true
+	}
+	if !existing["expense_date"] {
+		if _, err := db.Exec(`ALTER TABLE expenses ADD COLUMN expense_date TEXT NOT NULL DEFAULT ''`); err != nil {
+			return err
+		}
+	}
+	_, _ = db.Exec(`UPDATE expenses SET expense_date = substr(created_at, 1, 10) WHERE IFNULL(expense_date,'') = '' AND length(created_at) >= 10`)
+	return nil
 }

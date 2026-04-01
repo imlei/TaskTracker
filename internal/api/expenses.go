@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"tasktracker/internal/models"
 	"tasktracker/internal/store"
 )
 
 var expenseAccountCodeRx = regexp.MustCompile(`^5[0-9]{3}$`)
+var expenseDateRx = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 
 func validateExpenseAccountCode(s string) error {
 	s = strings.TrimSpace(s)
@@ -20,6 +22,32 @@ func validateExpenseAccountCode(s string) error {
 	}
 	if !expenseAccountCodeRx.MatchString(s) {
 		return errors.New("accountCode must be 4 digits starting with 5 (5XXX)")
+	}
+	return nil
+}
+
+func normalizeExpenseDate(s string) (string, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return time.Now().Format("2006-01-02"), nil
+	}
+	if !expenseDateRx.MatchString(s) {
+		return "", errors.New("expenseDate must be YYYY-MM-DD")
+	}
+	return s, nil
+}
+
+func (s *Server) applyExpensePayload(e *models.Expense) error {
+	d, err := normalizeExpenseDate(e.ExpenseDate)
+	if err != nil {
+		return err
+	}
+	e.ExpenseDate = d
+	if err := validateExpenseAccountCode(e.AccountCode); err != nil {
+		return err
+	}
+	if !s.Store.ExpenseCodeInCatalog(e.AccountCode) {
+		return errors.New("accountCode must be added in Settings → Expense Code")
 	}
 	return nil
 }
@@ -35,7 +63,7 @@ func (s *Server) handleExpenses(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if err := validateExpenseAccountCode(e.AccountCode); err != nil {
+		if err := s.applyExpensePayload(&e); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -82,7 +110,7 @@ func (s *Server) handleExpenseByID(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if err := validateExpenseAccountCode(e.AccountCode); err != nil {
+		if err := s.applyExpensePayload(&e); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}

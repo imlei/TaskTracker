@@ -16,11 +16,11 @@ var ErrExpenseTaskNotFound = errors.New("task not found")
 
 func (s *Store) ListExpenses() []models.Expense {
 	rows, err := s.db.Query(`
-		SELECT e.id, e.task_id, e.description, COALESCE(e.account_code,''), e.amount, e.currency, e.created_at,
+		SELECT e.id, e.task_id, COALESCE(e.expense_date,''), e.description, COALESCE(e.account_code,''), e.amount, e.currency, e.created_at,
 		       COALESCE(t.company_name,'')
 		FROM expenses e
 		LEFT JOIN tasks t ON t.id = e.task_id
-		ORDER BY e.created_at DESC, e.id DESC`)
+		ORDER BY e.expense_date DESC, e.created_at DESC, e.id DESC`)
 	if err != nil {
 		return nil
 	}
@@ -39,7 +39,7 @@ func (s *Store) ListExpenses() []models.Expense {
 func scanExpense(rows interface{ Scan(dest ...any) error }) (models.Expense, error) {
 	var e models.Expense
 	var amt float64
-	err := rows.Scan(&e.ID, &e.TaskID, &e.Description, &e.AccountCode, &amt, &e.Currency, &e.CreatedAt, &e.TaskName)
+	err := rows.Scan(&e.ID, &e.TaskID, &e.ExpenseDate, &e.Description, &e.AccountCode, &amt, &e.Currency, &e.CreatedAt, &e.TaskName)
 	if err != nil {
 		return models.Expense{}, err
 	}
@@ -49,7 +49,7 @@ func scanExpense(rows interface{ Scan(dest ...any) error }) (models.Expense, err
 
 func (s *Store) GetExpense(id string) (models.Expense, error) {
 	row := s.db.QueryRow(`
-		SELECT e.id, e.task_id, e.description, COALESCE(e.account_code,''), e.amount, e.currency, e.created_at,
+		SELECT e.id, e.task_id, COALESCE(e.expense_date,''), e.description, COALESCE(e.account_code,''), e.amount, e.currency, e.created_at,
 		       COALESCE(t.company_name,'')
 		FROM expenses e
 		LEFT JOIN tasks t ON t.id = e.task_id
@@ -83,9 +83,13 @@ func (s *Store) CreateExpense(e models.Expense) (models.Expense, error) {
 		e.Currency = "CAD"
 	}
 	e.AccountCode = strings.TrimSpace(e.AccountCode)
+	e.ExpenseDate = strings.TrimSpace(e.ExpenseDate)
+	if e.ExpenseDate == "" {
+		e.ExpenseDate = time.Now().Format("2006-01-02")
+	}
 	now := time.Now().Format(time.RFC3339)
-	_, err := s.db.Exec(`INSERT INTO expenses (id, task_id, description, account_code, amount, currency, created_at) VALUES (?,?,?,?,?,?,?)`,
-		e.ID, e.TaskID, strings.TrimSpace(e.Description), e.AccountCode, e.Amount, e.Currency, now)
+	_, err := s.db.Exec(`INSERT INTO expenses (id, task_id, expense_date, description, account_code, amount, currency, created_at) VALUES (?,?,?,?,?,?,?,?)`,
+		e.ID, e.TaskID, e.ExpenseDate, strings.TrimSpace(e.Description), e.AccountCode, e.Amount, e.Currency, now)
 	if err != nil {
 		return models.Expense{}, err
 	}
@@ -108,10 +112,14 @@ func (s *Store) UpdateExpense(id string, e models.Expense) (models.Expense, erro
 		e.Currency = "CAD"
 	}
 	e.AccountCode = strings.TrimSpace(e.AccountCode)
+	e.ExpenseDate = strings.TrimSpace(e.ExpenseDate)
+	if e.ExpenseDate == "" {
+		e.ExpenseDate = time.Now().Format("2006-01-02")
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	res, err := s.db.Exec(`UPDATE expenses SET task_id=?, description=?, account_code=?, amount=?, currency=? WHERE id=?`,
-		e.TaskID, strings.TrimSpace(e.Description), e.AccountCode, e.Amount, e.Currency, id)
+	res, err := s.db.Exec(`UPDATE expenses SET task_id=?, expense_date=?, description=?, account_code=?, amount=?, currency=? WHERE id=?`,
+		e.TaskID, e.ExpenseDate, strings.TrimSpace(e.Description), e.AccountCode, e.Amount, e.Currency, id)
 	if err != nil {
 		return models.Expense{}, err
 	}

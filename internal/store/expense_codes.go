@@ -55,7 +55,9 @@ func (s *Store) ListExpenseCodeRows(year int) []models.ExpenseCodeRow {
 		var bal sql.NullFloat64
 		_ = s.db.QueryRow(`
 			SELECT COALESCE(SUM(amount), 0) FROM expenses
-			WHERE account_code = ? AND strftime('%Y', created_at) = ?`, code, yStr).Scan(&bal)
+			WHERE account_code = ? AND strftime('%Y',
+				CASE WHEN IFNULL(expense_date,'') != '' THEN expense_date ELSE substr(created_at,1,10) END) = ?`,
+			code, yStr).Scan(&bal)
 		v := 0.0
 		if bal.Valid {
 			v = bal.Float64
@@ -68,6 +70,40 @@ func (s *Store) ListExpenseCodeRows(year int) []models.ExpenseCodeRow {
 		})
 	}
 	return out
+}
+
+// ListExpenseCatalogCodes 仅 expense_codes 表（Expense 下拉用）
+func (s *Store) ListExpenseCatalogCodes() []models.ExpenseCodeCatalogItem {
+	rows, err := s.db.Query(`SELECT code, name FROM expense_codes ORDER BY code`)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	out := make([]models.ExpenseCodeCatalogItem, 0)
+	for rows.Next() {
+		var it models.ExpenseCodeCatalogItem
+		if rows.Scan(&it.Code, &it.Name) != nil {
+			continue
+		}
+		it.Code = strings.TrimSpace(it.Code)
+		it.Name = strings.TrimSpace(it.Name)
+		if it.Code == "" {
+			continue
+		}
+		out = append(out, it)
+	}
+	return out
+}
+
+// ExpenseCodeInCatalog 科目是否在后台目录中
+func (s *Store) ExpenseCodeInCatalog(code string) bool {
+	code = strings.TrimSpace(code)
+	if code == "" {
+		return false
+	}
+	var got string
+	err := s.db.QueryRow(`SELECT code FROM expense_codes WHERE code=? LIMIT 1`, code).Scan(&got)
+	return err == nil && strings.TrimSpace(got) != ""
 }
 
 // UpsertExpenseCode 写入或更新科目名称（catalog）

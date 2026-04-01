@@ -647,6 +647,7 @@ func Register(mux *http.ServeMux, s *Server) {
 	mux.HandleFunc("/api/reports/trend", s.handleReportTrend)
 	mux.HandleFunc("/api/invoices", s.handleInvoices)
 	mux.HandleFunc("/api/invoices/", s.handleInvoiceByID)
+	mux.HandleFunc("/api/expense-codes/catalog", s.handleExpenseCodesCatalog)
 	mux.HandleFunc("/api/expense-codes/", s.handleExpenseCodeByCode)
 	mux.HandleFunc("/api/expense-codes", s.handleExpenseCodes)
 	mux.HandleFunc("/api/expenses/", s.handleExpenseByID)
