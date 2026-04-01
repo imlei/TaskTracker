@@ -57,20 +57,35 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 			"smtpPassSet":     st.SMTPPassSet,
 			"envSmtpHost":     store.EnvSMTPHost(),
 			"envBaseUrl":      store.EnvBaseURL(),
+			"micrCountry":       st.MICRCountry,
+			"bankInstitution":   st.BankInstitution,
+			"bankTransit":       st.BankTransit,
+			"bankRoutingAba":    st.BankRoutingABA,
+			"bankAccount":       st.BankAccount,
+			"bankChequeNumber":      st.BankChequeNumber,
+			"micrLineOverride":      st.MICRLineOverride,
+			"defaultChequeCurrency": st.DefaultChequeCurrency,
 		}
 		writeJSON(w, http.StatusOK, out)
 	case http.MethodPut:
 		var body struct {
-			CompanyName     string `json:"companyName"`
-			LogoDataURL     string `json:"logoDataUrl"`
-			BaseURL         string `json:"baseUrl"`
-			SMTPHost        string `json:"smtpHost"`
-			SMTPPort        int    `json:"smtpPort"`
-			SMTPUser        string `json:"smtpUser"`
-			SMTPPass        string `json:"smtpPass"`
-			SMTPFrom        string `json:"smtpFrom"`
-			SMTPStartTLS    *bool  `json:"smtpStartTls"`
-			SMTPImplicitTLS *bool  `json:"smtpImplicitTls"`
+			CompanyName      string `json:"companyName"`
+			LogoDataURL      string `json:"logoDataUrl"`
+			BaseURL          string `json:"baseUrl"`
+			SMTPHost         string `json:"smtpHost"`
+			SMTPPort         int    `json:"smtpPort"`
+			SMTPUser         string `json:"smtpUser"`
+			SMTPPass         string `json:"smtpPass"`
+			SMTPFrom         string `json:"smtpFrom"`
+			SMTPStartTLS     *bool  `json:"smtpStartTls"`
+			SMTPImplicitTLS  *bool  `json:"smtpImplicitTls"`
+			MICRCountry      string `json:"micrCountry"`
+			BankInstitution  string `json:"bankInstitution"`
+			BankTransit      string `json:"bankTransit"`
+			BankRoutingABA   string `json:"bankRoutingAba"`
+			BankAccount      string `json:"bankAccount"`
+			BankChequeNumber string `json:"bankChequeNumber"`
+			MICRLineOverride string `json:"micrLineOverride"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -82,13 +97,21 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		in := store.AppSettings{
-			CompanyName: body.CompanyName,
-			LogoDataURL: body.LogoDataURL,
-			BaseURL:     body.BaseURL,
-			SMTPHost:    body.SMTPHost,
-			SMTPPort:    body.SMTPPort,
-			SMTPUser:    body.SMTPUser,
-			SMTPFrom:    body.SMTPFrom,
+			CompanyName:      body.CompanyName,
+			LogoDataURL:      body.LogoDataURL,
+			BaseURL:          body.BaseURL,
+			SMTPHost:         body.SMTPHost,
+			SMTPPort:         body.SMTPPort,
+			SMTPUser:         body.SMTPUser,
+			SMTPFrom:         body.SMTPFrom,
+			MICRCountry:      body.MICRCountry,
+			BankInstitution:  body.BankInstitution,
+			BankTransit:      body.BankTransit,
+			BankRoutingABA:   body.BankRoutingABA,
+			BankAccount:      body.BankAccount,
+			BankChequeNumber:      body.BankChequeNumber,
+			MICRLineOverride:      body.MICRLineOverride,
+			DefaultChequeCurrency: body.DefaultChequeCurrency,
 		}
 		if body.SMTPPort <= 0 {
 			in.SMTPPort = cur.SMTPPort

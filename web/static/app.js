@@ -779,6 +779,11 @@ function renderInvoices() {
         <button type="button" class="ghost" data-act="open">打开</button>
         <button type="button" class="ghost" data-act="send">Send</button>
         <button type="button" class="ghost success" data-act="pay">收款</button>
+        ${
+          Number(inv.balanceDue) > 0
+            ? `<button type="button" class="ghost small" data-act="check">支票</button>`
+            : ""
+        }
         <button type="button" class="ghost small" data-act="edit-task">编辑任务</button>
       </td>`;
     tr.querySelector('[data-act="open"]').addEventListener("click", () => {
@@ -786,6 +791,12 @@ function renderInvoices() {
     });
     tr.querySelector('[data-act="send"]').addEventListener("click", () => openSendInvoice(inv.id));
     tr.querySelector('[data-act="pay"]').addEventListener("click", () => openPayDialog(inv.id));
+    const chkBtn = tr.querySelector('[data-act="check"]');
+    if (chkBtn) {
+      chkBtn.addEventListener("click", () => {
+        window.open(`/check.html?id=${encodeURIComponent(inv.id)}`, "_blank");
+      });
+    }
     tr.querySelector('[data-act="edit-task"]').addEventListener("click", async () => {
       const tid = (inv.taskId || "").trim();
       if (!tid) return;

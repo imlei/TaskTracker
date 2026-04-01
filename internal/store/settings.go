@@ -9,6 +9,9 @@ import (
 
 const maxLogoDataLen = 600000 // ~450KB base64
 
+const maxBankStrLen = 80
+const maxMICROverrideLen = 500
+
 // AppSettings 存于 app_settings 单行（id=1）
 type AppSettings struct {
 	CompanyName     string `json:"companyName"`
@@ -22,6 +25,15 @@ type AppSettings struct {
 	SMTPImplicitTLS bool   `json:"smtpImplicitTls"`
 	// 仅 GET 返回：是否已保存过密码（不明文）
 	SMTPPassSet bool `json:"smtpPassSet"`
+	// 支票 MICR / 银行账户（仅登录后 Settings 与支票页使用，不对外公开）
+	MICRCountry       string `json:"micrCountry"`       // CA | US
+	BankInstitution   string `json:"bankInstitution"`   // CA: 3-digit institution
+	BankTransit       string `json:"bankTransit"`       // CA: 5-digit branch / transit
+	BankRoutingABA    string `json:"bankRoutingAba"`    // US: 9-digit routing
+	BankAccount       string `json:"bankAccount"`
+	BankChequeNumber       string `json:"bankChequeNumber"`
+	MICRLineOverride       string `json:"micrLineOverride"` // 非空则直接使用该行，不自动拼装
+	DefaultChequeCurrency  string `json:"defaultChequeCurrency"` // 支票金额显示币种，与 micrCountry 独立（如加拿大行 + USD）
 }
 
 func (s *Store) loadSettingsRow() (AppSettings, error) {
@@ -30,10 +42,14 @@ func (s *Store) loadSettingsRow() (AppSettings, error) {
 	var startTLS, implicitTLS int
 	var port int
 	err := s.db.QueryRow(`SELECT company_name, logo_data_url, base_url,
-		smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, smtp_starttls, smtp_tls
+		smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, smtp_starttls, smtp_tls,
+		micr_country, bank_institution, bank_transit, bank_routing_aba, bank_account, bank_cheque_number, micr_line_override,
+		default_cheque_currency
 		FROM app_settings WHERE id=1`).Scan(
 		&st.CompanyName, &st.LogoDataURL, &st.BaseURL,
 		&st.SMTPHost, &port, &st.SMTPUser, &pass, &st.SMTPFrom, &startTLS, &implicitTLS,
+		&st.MICRCountry, &st.BankInstitution, &st.BankTransit, &st.BankRoutingABA, &st.BankAccount, &st.BankChequeNumber, &st.MICRLineOverride,
+		&st.DefaultChequeCurrency,
 	)
 	if err != nil {
 		return st, err
@@ -45,6 +61,12 @@ func (s *Store) loadSettingsRow() (AppSettings, error) {
 	st.SMTPStartTLS = startTLS != 0
 	st.SMTPImplicitTLS = implicitTLS != 0
 	st.SMTPPassSet = pass != ""
+	if strings.TrimSpace(st.MICRCountry) == "" {
+		st.MICRCountry = "CA"
+	}
+	if strings.TrimSpace(st.DefaultChequeCurrency) == "" {
+		st.DefaultChequeCurrency = "CAD"
+	}
 	return st, nil
 }
 
@@ -79,6 +101,28 @@ func (s *Store) UpdateSettings(in AppSettings, updateSMTPPass bool, smtpPassNew 
 	if len(in.LogoDataURL) > maxLogoDataLen {
 		return fmt.Errorf("logo too large (max ~450KB)")
 	}
+	mc := strings.ToUpper(strings.TrimSpace(in.MICRCountry))
+	if mc != "US" {
+		mc = "CA"
+	}
+	in.MICRCountry = mc
+	in.BankInstitution = clampLen(strings.TrimSpace(in.BankInstitution), maxBankStrLen)
+	in.BankTransit = clampLen(strings.TrimSpace(in.BankTransit), maxBankStrLen)
+	in.BankRoutingABA = clampLen(strings.TrimSpace(in.BankRoutingABA), maxBankStrLen)
+	in.BankAccount = clampLen(strings.TrimSpace(in.BankAccount), maxBankStrLen)
+	in.BankChequeNumber = clampLen(strings.TrimSpace(in.BankChequeNumber), maxBankStrLen)
+	if in.BankChequeNumber == "" {
+		in.BankChequeNumber = "000001"
+	}
+	in.MICRLineOverride = clampLen(strings.TrimSpace(in.MICRLineOverride), maxMICROverrideLen)
+	cc := strings.ToUpper(strings.TrimSpace(in.DefaultChequeCurrency))
+	if cc == "" {
+		cc = "CAD"
+	}
+	if len(cc) > 8 {
+		cc = cc[:8]
+	}
+	in.DefaultChequeCurrency = cc
 	if in.SMTPPort <= 0 {
 		in.SMTPPort = 587
 	}
@@ -94,21 +138,36 @@ func (s *Store) UpdateSettings(in AppSettings, updateSMTPPass bool, smtpPassNew 
 	if updateSMTPPass {
 		_, err := s.db.Exec(`UPDATE app_settings SET
 			company_name=?, logo_data_url=?, base_url=?,
-			smtp_host=?, smtp_port=?, smtp_user=?, smtp_pass=?, smtp_from=?, smtp_starttls=?, smtp_tls=?
+			smtp_host=?, smtp_port=?, smtp_user=?, smtp_pass=?, smtp_from=?, smtp_starttls=?, smtp_tls=?,
+			micr_country=?, bank_institution=?, bank_transit=?, bank_routing_aba=?, bank_account=?, bank_cheque_number=?, micr_line_override=?,
+			default_cheque_currency=?
 			WHERE id=1`,
 			in.CompanyName, in.LogoDataURL, in.BaseURL,
 			strings.TrimSpace(in.SMTPHost), in.SMTPPort, strings.TrimSpace(in.SMTPUser), smtpPassNew, strings.TrimSpace(in.SMTPFrom), start, tls,
+			in.MICRCountry, in.BankInstitution, in.BankTransit, in.BankRoutingABA, in.BankAccount, in.BankChequeNumber, in.MICRLineOverride,
+			in.DefaultChequeCurrency,
 		)
 		return err
 	}
 	_, err := s.db.Exec(`UPDATE app_settings SET
 		company_name=?, logo_data_url=?, base_url=?,
-		smtp_host=?, smtp_port=?, smtp_user=?, smtp_from=?, smtp_starttls=?, smtp_tls=?
+		smtp_host=?, smtp_port=?, smtp_user=?, smtp_from=?, smtp_starttls=?, smtp_tls=?,
+		micr_country=?, bank_institution=?, bank_transit=?, bank_routing_aba=?, bank_account=?, bank_cheque_number=?, micr_line_override=?,
+		default_cheque_currency=?
 		WHERE id=1`,
 		in.CompanyName, in.LogoDataURL, in.BaseURL,
 		strings.TrimSpace(in.SMTPHost), in.SMTPPort, strings.TrimSpace(in.SMTPUser), strings.TrimSpace(in.SMTPFrom), start, tls,
+		in.MICRCountry, in.BankInstitution, in.BankTransit, in.BankRoutingABA, in.BankAccount, in.BankChequeNumber, in.MICRLineOverride,
+		in.DefaultChequeCurrency,
 	)
 	return err
+}
+
+func clampLen(s string, max int) string {
+	if len(s) <= max {
+		return s
+	}
+	return s[:max]
 }
 
 // MailConfiguredInDB 是否在库中配置了 SMTP 主机

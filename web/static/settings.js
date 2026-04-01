@@ -74,7 +74,80 @@ async function loadSettings() {
   }
   logoDataUrl = s.logoDataUrl || "";
   showLogoPreview(logoDataUrl);
+  const micrC = (s.micrCountry || "CA").toUpperCase();
+  document.getElementById("set-micr-country").value = micrC === "US" ? "US" : "CA";
+  document.getElementById("set-bank-institution").value = s.bankInstitution || "";
+  document.getElementById("set-bank-transit").value = s.bankTransit || "";
+  document.getElementById("set-bank-routing").value = s.bankRoutingAba || "";
+  document.getElementById("set-bank-account").value = s.bankAccount || "";
+  document.getElementById("set-bank-cheque").value = s.bankChequeNumber || "";
+  document.getElementById("set-micr-override").value = s.micrLineOverride || "";
+  const cur = (s.defaultChequeCurrency || "CAD").toUpperCase();
+  const sel = document.getElementById("set-default-cheque-currency");
+  if (sel) {
+    sel.querySelectorAll("option[data-custom]").forEach((o) => o.remove());
+    const allowed = ["CAD", "USD", "CNY", "EUR"];
+    if (allowed.includes(cur)) {
+      sel.value = cur;
+    } else if (cur) {
+      const opt = document.createElement("option");
+      opt.value = cur;
+      opt.textContent = `${cur}（自定义）`;
+      opt.setAttribute("data-custom", "1");
+      sel.appendChild(opt);
+      sel.value = cur;
+    } else {
+      sel.value = "CAD";
+    }
+  }
+  updateMicrCountryUI();
 }
+
+/** 切换加拿大 / 美国专用字段显示 */
+function updateMicrCountryUI() {
+  const sel = document.getElementById("set-micr-country");
+  if (!sel) return;
+  const isUS = sel.value === "US";
+  const ca = document.getElementById("set-group-ca");
+  const us = document.getElementById("set-group-us");
+  if (ca) ca.hidden = isUS;
+  if (us) us.hidden = !isUS;
+}
+
+/** ABA routing 9 位校验（美国） */
+function abaRoutingChecksumOk(d9) {
+  if (!d9 || d9.length !== 9) return false;
+  const a = d9.split("").map((c) => parseInt(c, 10));
+  if (a.some((x) => Number.isNaN(x))) return false;
+  const sum = 3 * (a[0] + a[3] + a[6]) + 7 * (a[1] + a[4] + a[7]) + 1 * (a[2] + a[5] + a[8]);
+  return sum % 10 === 0;
+}
+
+function checkAbaRoutingInput() {
+  const msg = document.getElementById("set-routing-aba-msg");
+  const inp = document.getElementById("set-bank-routing");
+  if (!msg || !inp) return;
+  const d = inp.value.replace(/\D/g, "");
+  msg.textContent = "";
+  if (d.length === 0) {
+    msg.hidden = true;
+    return;
+  }
+  if (d.length !== 9) {
+    msg.hidden = false;
+    msg.textContent = "ABA Routing 应为 9 位数字。";
+    return;
+  }
+  if (!abaRoutingChecksumOk(d)) {
+    msg.hidden = false;
+    msg.textContent = "校验位与 ABA 算法不符，请核对支票或银行资料。";
+    return;
+  }
+  msg.hidden = true;
+}
+
+document.getElementById("set-micr-country")?.addEventListener("change", updateMicrCountryUI);
+document.getElementById("set-bank-routing")?.addEventListener("blur", checkAbaRoutingInput);
 
 document.getElementById("btn-save-settings")?.addEventListener("click", async () => {
   const msg = document.getElementById("save-msg");
@@ -90,6 +163,14 @@ document.getElementById("btn-save-settings")?.addEventListener("click", async ()
     smtpFrom: document.getElementById("set-smtp-from").value.trim(),
     smtpStartTls: document.getElementById("set-smtp-starttls").checked,
     smtpImplicitTls: document.getElementById("set-smtp-tls").checked,
+    micrCountry: document.getElementById("set-micr-country").value.trim() || "CA",
+    bankInstitution: document.getElementById("set-bank-institution").value.trim(),
+    bankTransit: document.getElementById("set-bank-transit").value.trim(),
+    bankRoutingAba: document.getElementById("set-bank-routing").value.trim(),
+    bankAccount: document.getElementById("set-bank-account").value.trim(),
+    bankChequeNumber: document.getElementById("set-bank-cheque").value.trim(),
+    micrLineOverride: document.getElementById("set-micr-override").value.trim(),
+    defaultChequeCurrency: document.getElementById("set-default-cheque-currency").value.trim() || "CAD",
   };
   try {
     await api("/api/settings", { method: "PUT", body: JSON.stringify(body) });

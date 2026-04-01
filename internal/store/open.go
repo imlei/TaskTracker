@@ -115,6 +115,10 @@ func Open(dir string) (*sql.DB, error) {
 		_ = db.Close()
 		return nil, err
 	}
+	if err := ensureAppSettingsMICRColumns(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
 	if err := ensureCustomersTable(db); err != nil {
 		_ = db.Close()
 		return nil, err
@@ -286,11 +290,62 @@ CREATE TABLE IF NOT EXISTS app_settings (
   smtp_pass TEXT NOT NULL DEFAULT '',
   smtp_from TEXT NOT NULL DEFAULT '',
   smtp_starttls INTEGER NOT NULL DEFAULT 1,
-  smtp_tls INTEGER NOT NULL DEFAULT 0
+  smtp_tls INTEGER NOT NULL DEFAULT 0,
+  micr_country TEXT NOT NULL DEFAULT 'CA',
+  bank_institution TEXT NOT NULL DEFAULT '',
+  bank_transit TEXT NOT NULL DEFAULT '',
+  bank_routing_aba TEXT NOT NULL DEFAULT '',
+  bank_account TEXT NOT NULL DEFAULT '',
+  bank_cheque_number TEXT NOT NULL DEFAULT '000001',
+  micr_line_override TEXT NOT NULL DEFAULT '',
+  default_cheque_currency TEXT NOT NULL DEFAULT 'CAD'
 );
 INSERT OR IGNORE INTO app_settings (id) VALUES (1);
 `)
 	return err
+}
+
+func ensureAppSettingsMICRColumns(db *sql.DB) error {
+	type colDef struct {
+		Name string
+		DDL  string
+	}
+	want := []colDef{
+		{Name: "micr_country", DDL: "ALTER TABLE app_settings ADD COLUMN micr_country TEXT NOT NULL DEFAULT 'CA'"},
+		{Name: "bank_institution", DDL: "ALTER TABLE app_settings ADD COLUMN bank_institution TEXT NOT NULL DEFAULT ''"},
+		{Name: "bank_transit", DDL: "ALTER TABLE app_settings ADD COLUMN bank_transit TEXT NOT NULL DEFAULT ''"},
+		{Name: "bank_routing_aba", DDL: "ALTER TABLE app_settings ADD COLUMN bank_routing_aba TEXT NOT NULL DEFAULT ''"},
+		{Name: "bank_account", DDL: "ALTER TABLE app_settings ADD COLUMN bank_account TEXT NOT NULL DEFAULT ''"},
+		{Name: "bank_cheque_number", DDL: "ALTER TABLE app_settings ADD COLUMN bank_cheque_number TEXT NOT NULL DEFAULT '000001'"},
+		{Name: "micr_line_override", DDL: "ALTER TABLE app_settings ADD COLUMN micr_line_override TEXT NOT NULL DEFAULT ''"},
+		{Name: "default_cheque_currency", DDL: "ALTER TABLE app_settings ADD COLUMN default_cheque_currency TEXT NOT NULL DEFAULT 'CAD'"},
+	}
+	existing := map[string]bool{}
+	rows, err := db.Query(`PRAGMA table_info(app_settings)`)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var cid int
+		var name, ctype string
+		var notnull int
+		var dflt sql.NullString
+		var pk int
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk); err != nil {
+			continue
+		}
+		existing[name] = true
+	}
+	for _, c := range want {
+		if existing[c.Name] {
+			continue
+		}
+		if _, err := db.Exec(c.DDL); err != nil {
+			continue
+		}
+	}
+	return nil
 }
 
 func ensureInvoiceColumns(db *sql.DB) error {
