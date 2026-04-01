@@ -15,8 +15,23 @@ type ExchangeRateWatchItem struct {
 	SortOrder int    `json:"sortOrder"`
 }
 
+func (s *Store) seedDefaultExchangeWatchlistIfEmpty() error {
+	var n int
+	if err := s.db.QueryRow(`SELECT COUNT(*) FROM exchange_rate_watchlist`).Scan(&n); err != nil {
+		return err
+	}
+	if n > 0 {
+		return nil
+	}
+	_, err := s.db.Exec(`INSERT OR IGNORE INTO exchange_rate_watchlist (code, sort_order) VALUES ('USD', 0), ('CNY', 1)`)
+	return err
+}
+
 // ListExchangeRateWatchlist 按 sort_order、code 排序
 func (s *Store) ListExchangeRateWatchlist() ([]ExchangeRateWatchItem, error) {
+	if err := s.seedDefaultExchangeWatchlistIfEmpty(); err != nil {
+		return nil, err
+	}
 	rows, err := s.db.Query(`SELECT code, sort_order FROM exchange_rate_watchlist ORDER BY sort_order ASC, code ASC`)
 	if err != nil {
 		return nil, err
