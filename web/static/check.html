@@ -140,6 +140,9 @@
       gap: 8px;
       align-items: center;
     }
+    .toolbar-spacer {
+      flex: 1;
+    }
     .form-panel {
       margin: 0 0 16px;
       padding: 16px 20px;
@@ -429,6 +432,8 @@
         <button type="button" id="btn-back">返回系统</button>
         <button type="button" id="btn-cheque-next">将支票号 +1 写回设置</button>
         <button type="button" class="primary" id="btn-print">打印 / 导出 PDF</button>
+        <span class="toolbar-spacer"></span>
+        <a href="/check.html" target="_blank" rel="noopener" class="ghost">新窗口打开</a>
       </div>
       <div class="form-panel no-print">
         <h2>打印前可修改（下方为 8.5×11 坐标版式）</h2>
