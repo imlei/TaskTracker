@@ -122,10 +122,8 @@ function updateBankMicrCountryUI() {
 document.getElementById("bank-micr-country")?.addEventListener("change", updateBankMicrCountryUI);
 document.getElementById("bank-routing")?.addEventListener("blur", () => checkAbaRoutingInput("bank-routing-aba-msg", "bank-routing"));
 
-document.getElementById("btn-save-settings")?.addEventListener("click", async () => {
-  const msg = document.getElementById("save-msg");
-  msg.textContent = "";
-  const body = {
+function collectSettingsBody() {
+  return {
     companyName: document.getElementById("set-company").value.trim(),
     baseUrl: document.getElementById("set-baseurl").value.trim(),
     logoDataUrl: logoDataUrl,
@@ -137,13 +135,37 @@ document.getElementById("btn-save-settings")?.addEventListener("click", async ()
     smtpStartTls: document.getElementById("set-smtp-starttls").checked,
     smtpImplicitTls: document.getElementById("set-smtp-tls").checked,
   };
+}
+
+async function submitSettings(msgElId) {
+  const msg = document.getElementById(msgElId || "save-msg");
+  if (msg) msg.textContent = "";
+  const body = collectSettingsBody();
   try {
     await api("/api/settings", { method: "PUT", body: JSON.stringify(body) });
-    msg.textContent = "已保存。";
+    if (msg) msg.textContent = "已保存。";
     await loadSettings();
   } catch (e) {
     alert("保存失败: " + e.message);
   }
+}
+
+document.getElementById("btn-save-settings")?.addEventListener("click", () => submitSettings("save-msg"));
+document.getElementById("btn-save-smtp")?.addEventListener("click", () => submitSettings("save-msg-smtp"));
+
+function showSettingsView(view) {
+  const ids = ["company", "password", "expense-code", "smtp"];
+  for (const v of ids) {
+    const el = document.getElementById(`settings-view-${v}`);
+    if (el) el.hidden = v !== view;
+  }
+  document.querySelectorAll("[data-settings-view]").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.settingsView === view);
+  });
+}
+
+document.querySelectorAll("[data-settings-view]").forEach((btn) => {
+  btn.addEventListener("click", () => showSettingsView(btn.dataset.settingsView));
 });
 
 async function loadBankAccounts() {
@@ -327,6 +349,7 @@ document.getElementById("btn-save-password")?.addEventListener("click", async ()
     }
     await loadSettings();
     clearBankForm();
+    showSettingsView("company");
   } catch {
     window.location.href = "/login.html";
   }

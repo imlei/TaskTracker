@@ -9,7 +9,9 @@
 <body>
   <header class="top">
     <div class="top-inner">
-      <h1>Settings</h1>
+      <div class="top-brand">
+        <h1>Settings</h1>
+      </div>
       <div class="top-actions">
         <a href="/" class="top-nav-link">← 返回</a>
         <button type="button" id="btn-logout" class="ghost" hidden>退出登录</button>
@@ -17,95 +19,124 @@
     </div>
   </header>
   <main class="settings-page">
-    <section class="settings-card">
-      <h2>公司与展示</h2>
-      <label>公司名称 <input id="set-company" type="text" placeholder="显示在登录页等" /></label>
-      <label>访问域名（对外链接）
-        <input id="set-baseurl" type="url" placeholder="https://invoice.example.com" />
-      </label>
-      <p class="hint">邮件中发票链接、回调地址等会优先使用此处；不填则使用环境变量 BASE_URL 或当前访问主机。</p>
-      <label>Logo（PNG/JPG，建议正方形）
-        <input id="set-logo-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
-      </label>
-      <div id="set-logo-preview" class="settings-logo-preview" hidden></div>
-      <button type="button" class="ghost small" id="set-logo-clear" hidden>清除 Logo</button>
-    </section>
+    <div class="invoices-layout settings-layout">
+      <aside class="invoices-sidebar" aria-label="Settings menu">
+        <button type="button" class="invoices-nav-btn active" data-settings-view="company">Company Profile</button>
+        <button type="button" class="invoices-nav-btn" data-settings-view="password">Change Password</button>
+        <button type="button" class="invoices-nav-btn" data-settings-view="expense-code">Expense Code</button>
+        <button type="button" class="invoices-nav-btn" data-settings-view="smtp">SMTP Setting</button>
+      </aside>
+      <div class="invoices-main settings-main">
+        <div id="settings-view-company" class="invoices-view settings-view">
+          <div class="settings-card">
+            <h2>公司与展示</h2>
+            <label>公司名称 <input id="set-company" type="text" placeholder="显示在登录页等" /></label>
+            <label>访问域名（对外链接）
+              <input id="set-baseurl" type="url" placeholder="https://invoice.example.com" />
+            </label>
+            <p class="hint">邮件中发票链接、回调地址等会优先使用此处；不填则使用环境变量 BASE_URL 或当前访问主机。</p>
+            <label>Logo（PNG/JPG，建议正方形）
+              <input id="set-logo-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+            </label>
+            <div id="set-logo-preview" class="settings-logo-preview" hidden></div>
+            <button type="button" class="ghost small" id="set-logo-clear" hidden>清除 Logo</button>
+          </div>
 
-    <section class="settings-card">
-      <h2>银行账户（支票 / MICR）</h2>
-      <p class="hint">已改为<strong>独立</strong>的「银行账户」列表，支持添加多个，并可设置默认账户供「支票打印」使用。</p>
+          <section class="settings-card">
+            <h2>银行账户（支票 / MICR）</h2>
+            <p class="hint">已改为<strong>独立</strong>的「银行账户」列表，支持添加多个，并可设置默认账户供「支票打印」使用。</p>
 
-      <div id="bank-list" class="settings-micr-group"></div>
+            <div id="bank-list" class="settings-micr-group"></div>
 
-      <div class="settings-micr-group">
-        <h3 class="settings-subh">添加 / 编辑银行账户</h3>
-        <input type="hidden" id="bank-id" value="" />
-        <label>名称（用于区分多个账户） <input id="bank-label" type="text" maxlength="80" autocomplete="off" placeholder="如 RBC CAD Chequing" /></label>
-        <label>国家格式
-          <select id="bank-micr-country">
-            <option value="CA">加拿大 (Canada — CPA)</option>
-            <option value="US">美国 (United States — ABA)</option>
-          </select>
-        </label>
+            <div class="settings-micr-group">
+              <h3 class="settings-subh">添加 / 编辑银行账户</h3>
+              <input type="hidden" id="bank-id" value="" />
+              <label>名称（用于区分多个账户） <input id="bank-label" type="text" maxlength="80" autocomplete="off" placeholder="如 RBC CAD Chequing" /></label>
+              <label>国家格式
+                <select id="bank-micr-country">
+                  <option value="CA">加拿大 (Canada — CPA)</option>
+                  <option value="US">美国 (United States — ABA)</option>
+                </select>
+              </label>
 
-        <div id="bank-group-ca" class="settings-micr-group">
-          <h3 class="settings-subh">加拿大银行</h3>
-          <label>Institution number（FI，3 位） <input id="bank-institution" type="text" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="如 003" /></label>
-          <label>Transit / Branch number（5 位） <input id="bank-transit" type="text" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="如 45678" /></label>
+              <div id="bank-group-ca" class="settings-micr-group">
+                <h3 class="settings-subh">加拿大银行</h3>
+                <label>Institution number（FI，3 位） <input id="bank-institution" type="text" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="如 003" /></label>
+                <label>Transit / Branch number（5 位） <input id="bank-transit" type="text" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="如 45678" /></label>
+              </div>
+
+              <div id="bank-group-us" class="settings-micr-group" hidden>
+                <h3 class="settings-subh">美国银行</h3>
+                <label>ABA Routing number（9 位） <input id="bank-routing" type="text" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="9 位数字" /></label>
+                <p class="hint" id="bank-routing-aba-msg" hidden></p>
+              </div>
+
+              <label>支票金额默认币种
+                <select id="bank-default-cheque-currency">
+                  <option value="CAD">CAD — 加元</option>
+                  <option value="USD">USD — 美元</option>
+                  <option value="CNY">CNY — 人民币</option>
+                  <option value="EUR">EUR — 欧元</option>
+                </select>
+              </label>
+              <label>Account number（账号） <input id="bank-account" type="text" maxlength="80" autocomplete="off" /></label>
+              <label>当前支票号码 <input id="bank-cheque" type="text" maxlength="20" autocomplete="off" placeholder="CA 如 00123；US 如 000123" /></label>
+              <label style="display:block;">MICR 行完全覆盖（可选）
+                <textarea id="bank-micr-override" rows="2" maxlength="500" placeholder="非空则忽略自动拼装"></textarea>
+              </label>
+
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="ghost" id="btn-bank-clear">清空表单</button>
+                <button type="button" class="primary" id="btn-bank-save">保存银行账户</button>
+              </div>
+            </div>
+          </section>
+
+          <div class="settings-actions">
+            <button type="button" class="primary" id="btn-save-settings">保存公司与展示</button>
+            <span id="save-msg" class="hint"></span>
+          </div>
         </div>
 
-        <div id="bank-group-us" class="settings-micr-group" hidden>
-          <h3 class="settings-subh">美国银行</h3>
-          <label>ABA Routing number（9 位） <input id="bank-routing" type="text" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="9 位数字" /></label>
-          <p class="hint" id="bank-routing-aba-msg" hidden></p>
+        <div id="settings-view-password" class="invoices-view settings-view" hidden>
+          <section class="settings-card">
+            <h2>修改密码</h2>
+            <label>当前密码 <input id="pwd-old" type="password" autocomplete="current-password" /></label>
+            <label>新密码 <input id="pwd-new" type="password" autocomplete="new-password" minlength="6" /></label>
+            <label>确认新密码 <input id="pwd-new2" type="password" autocomplete="new-password" minlength="6" /></label>
+            <button type="button" class="primary" id="btn-save-password">更新密码</button>
+            <p id="pwd-msg" class="login-err" hidden></p>
+          </section>
         </div>
 
-        <label>支票金额默认币种
-          <select id="bank-default-cheque-currency">
-            <option value="CAD">CAD — 加元</option>
-            <option value="USD">USD — 美元</option>
-            <option value="CNY">CNY — 人民币</option>
-            <option value="EUR">EUR — 欧元</option>
-          </select>
-        </label>
-        <label>Account number（账号） <input id="bank-account" type="text" maxlength="80" autocomplete="off" /></label>
-        <label>当前支票号码 <input id="bank-cheque" type="text" maxlength="20" autocomplete="off" placeholder="CA 如 00123；US 如 000123" /></label>
-        <label style="display:block;">MICR 行完全覆盖（可选）
-          <textarea id="bank-micr-override" rows="2" maxlength="500" placeholder="非空则忽略自动拼装"></textarea>
-        </label>
+        <div id="settings-view-expense-code" class="invoices-view settings-view" hidden>
+          <section class="settings-card">
+            <h2>Expense Code（费用科目）</h2>
+            <p class="hint">在主页 <strong>Expense</strong> 标签中录入支出时，需选择 <strong>Expense account</strong>：四位数字、以 <strong>5</strong> 开头，即 <strong>5XXX</strong>（范围 <strong>5000–5999</strong>），与常见总账中费用类科目编号一致。</p>
+            <p class="hint">录入时从下拉列表中选择具体科目代码；列表包含 5000–5999 全部可选值。</p>
+            <p class="hint"><a href="/" class="top-nav-link">← 返回主页打开 Expense</a></p>
+          </section>
+        </div>
 
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button type="button" class="ghost" id="btn-bank-clear">清空表单</button>
-          <button type="button" class="primary" id="btn-bank-save">保存银行账户</button>
+        <div id="settings-view-smtp" class="invoices-view settings-view" hidden>
+          <section class="settings-card">
+            <h2>邮件 SMTP</h2>
+            <p class="hint">若下方填写 SMTP 主机，将<strong>优先于</strong>服务器环境变量。留空密码表示不修改已保存的密码。</p>
+            <p class="hint" id="set-env-hint"></p>
+            <label>SMTP Host <input id="set-smtp-host" type="text" placeholder="smtp.example.com" /></label>
+            <label>端口 <input id="set-smtp-port" type="number" min="1" max="65535" value="587" /></label>
+            <label>用户名 <input id="set-smtp-user" type="text" autocomplete="off" /></label>
+            <label>密码 <input id="set-smtp-pass" type="password" autocomplete="new-password" placeholder="留空则不修改" /></label>
+            <label>发件人 From <input id="set-smtp-from" type="email" placeholder="默认与用户名相同" /></label>
+            <label class="inline-check"><input type="checkbox" id="set-smtp-starttls" checked /> STARTTLS（常见 587）</label>
+            <label class="inline-check"><input type="checkbox" id="set-smtp-tls" /> 隐式 TLS / SMTPS（常见 465）</label>
+          </section>
+          <div class="settings-actions">
+            <button type="button" class="primary" id="btn-save-smtp">保存 SMTP</button>
+            <span id="save-msg-smtp" class="hint"></span>
+          </div>
         </div>
       </div>
-    </section>
-
-    <section class="settings-card">
-      <h2>邮件 SMTP</h2>
-      <p class="hint">若下方填写 SMTP 主机，将<strong>优先于</strong>服务器环境变量。留空密码表示不修改已保存的密码。</p>
-      <p class="hint" id="set-env-hint"></p>
-      <label>SMTP Host <input id="set-smtp-host" type="text" placeholder="smtp.example.com" /></label>
-      <label>端口 <input id="set-smtp-port" type="number" min="1" max="65535" value="587" /></label>
-      <label>用户名 <input id="set-smtp-user" type="text" autocomplete="off" /></label>
-      <label>密码 <input id="set-smtp-pass" type="password" autocomplete="new-password" placeholder="留空则不修改" /></label>
-      <label>发件人 From <input id="set-smtp-from" type="email" placeholder="默认与用户名相同" /></label>
-      <label class="inline-check"><input type="checkbox" id="set-smtp-starttls" checked /> STARTTLS（常见 587）</label>
-      <label class="inline-check"><input type="checkbox" id="set-smtp-tls" /> 隐式 TLS / SMTPS（常见 465）</label>
-    </section>
-
-    <section class="settings-card">
-      <h2>修改密码</h2>
-      <label>当前密码 <input id="pwd-old" type="password" autocomplete="current-password" /></label>
-      <label>新密码 <input id="pwd-new" type="password" autocomplete="new-password" minlength="6" /></label>
-      <label>确认新密码 <input id="pwd-new2" type="password" autocomplete="new-password" minlength="6" /></label>
-      <button type="button" class="primary" id="btn-save-password">更新密码</button>
-      <p id="pwd-msg" class="login-err" hidden></p>
-    </section>
-
-    <div class="settings-actions">
-      <button type="button" class="primary" id="btn-save-settings">保存设置</button>
-      <span id="save-msg" class="hint"></span>
     </div>
   </main>
   <script src="/settings.js"></script>

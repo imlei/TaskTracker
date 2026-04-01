@@ -358,9 +358,18 @@ button.ghost.small {
 }
 
 .settings-page {
-  max-width: 640px;
+  max-width: min(1100px, 100%);
   margin: 0 auto;
   padding: 0 1.25rem 2rem;
+  box-sizing: border-box;
+}
+
+.settings-layout {
+  align-items: stretch;
+}
+
+.settings-main .settings-view {
+  min-width: 0;
 }
 
 .settings-card {
