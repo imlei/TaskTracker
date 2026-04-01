@@ -51,6 +51,12 @@ document.querySelectorAll(".tab").forEach((btn) => {
       loadReport();
     }
     if (tab === "prices") loadPrices();
+    if (tab === "cheque") {
+      const fr = document.getElementById("iframe-cheque");
+      if (fr && !fr.getAttribute("src")) {
+        fr.src = "/check.html?embed=1";
+      }
+    }
   });
 });
 

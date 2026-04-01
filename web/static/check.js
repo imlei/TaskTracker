@@ -2,6 +2,14 @@ function qs(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
 
+(function applyChequeEmbed() {
+  if (qs("embed") !== "1") return;
+  document.body.classList.add("check-embed");
+  document.querySelectorAll('a[href="/settings.html"]').forEach((a) => {
+    a.target = "_top";
+  });
+})();
+
 /** E13B 字段间分隔符（显示用；具体字形以 MICR 字体为准） */
 const MICR_DELIM = "\u2446";
 
@@ -156,13 +164,31 @@ function syncOutputs() {
   const amount = parseFloat(document.getElementById("fld-amount").value);
   const currency = document.getElementById("fld-currency").value.trim() || "CAD";
   const memo = document.getElementById("fld-memo").value.trim();
+  const chq = document.getElementById("fld-cheque")?.value?.trim() || "";
+  const company = (appSettings && appSettings.companyName ? String(appSettings.companyName) : "").trim();
 
-  document.getElementById("out-date").textContent = formatDisplayDate(date);
-  document.getElementById("out-payee").textContent = payee;
-  document.getElementById("out-memo").textContent = memo;
+  const setText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+
+  setText("out-date", formatDisplayDate(date));
+  setText("out-payee", payee);
+  setText("out-memo", memo);
+  setText("out-company-main", company);
+  setText("out-check-no", chq);
+  setText("stub-company-1", company);
+  setText("stub-company-2", company);
+  setText("stub-chq-1", chq);
+  setText("stub-chq-2", chq);
+  const stubLines = [payee && `Payee: ${payee}`, memo && `Memo: ${memo}`].filter(Boolean);
+  const stubText = stubLines.length ? stubLines.join("\n") : "—";
+  setText("stub-memo-1", stubText);
+  setText("stub-memo-2", stubText);
+
   const words = Number.isFinite(amount) ? amountToChequeWords(amount) : "";
-  document.getElementById("out-words").textContent = words;
-  document.getElementById("out-amount").textContent = Number.isFinite(amount) ? fmtAmountBox(amount, currency) : "";
+  setText("out-words", words);
+  setText("out-amount", Number.isFinite(amount) ? fmtAmountBox(amount, currency) : "");
   syncMicr();
 }
 
@@ -180,7 +206,7 @@ async function loadSettingsForCheck() {
     }
   }
   updateMicrFormatBanner();
-  syncMicr();
+  syncOutputs();
 }
 
 async function loadFromInvoice() {
@@ -263,7 +289,7 @@ async function saveChequeNextToSettings() {
   appSettings = { ...appSettings, ...body };
   document.getElementById("fld-cheque").value = next;
   document.getElementById("fld-cheque").dataset.userEdited = "";
-  syncMicr();
+  syncOutputs();
 }
 
 ["fld-date", "fld-payee", "fld-amount", "fld-currency", "fld-memo", "fld-cheque"].forEach((id) => {

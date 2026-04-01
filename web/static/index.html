@@ -25,6 +25,7 @@
       <button type="button" class="tab" data-tab="invoices">Invoicing</button>
       <button type="button" class="tab" data-tab="report">报表 Report</button>
       <button type="button" class="tab" data-tab="prices">价目表 Price list</button>
+      <button type="button" class="tab" data-tab="cheque">支票打印 Cheque</button>
     </nav>
   </header>
 
@@ -154,6 +155,16 @@
           <tbody id="prices-body"></tbody>
         </table>
       </div>
+    </section>
+
+    <section id="panel-cheque" class="panel">
+      <div class="toolbar cheque-panel-toolbar">
+        <p class="report-summary cheque-panel-intro">
+          独立支票打印：填写收款人、金额与 MICR；银行账户与币种在 <a href="/settings.html">Settings</a>。从 <strong>Invoicing</strong> 发票列表的「支票」可带入发票金额。
+        </p>
+        <a href="/check.html" target="_blank" rel="noopener" class="ghost">新窗口打开</a>
+      </div>
+      <iframe id="iframe-cheque" class="cheque-iframe" title="Print cheque"></iframe>
     </section>
 
     <section id="panel-invoices" class="panel">

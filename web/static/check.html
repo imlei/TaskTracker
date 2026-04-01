@@ -15,6 +15,8 @@
     }
     * { box-sizing: border-box; }
     body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: #e8ecf1; color: #0f172a; }
+    body.check-embed .toolbar #btn-back { display: none !important; }
+    body.check-embed { padding-bottom: 8px; }
     .toolbar {
       max-width: 920px;
       margin: 12px auto;
@@ -51,92 +53,189 @@
     .form-grid input { padding: 8px 10px; border: 1px solid #94a3b8; border-radius: 6px; font-size: 14px; }
     .form-panel .hint { margin: 12px 0 0; font-size: 12px; color: #64748b; }
     .check-wrap { max-width: 920px; margin: 0 auto; padding: 0 16px 24px; }
-    .check-slip {
-      width: 100%;
-      max-width: 8.5in;
+
+    /* US Letter 整页；支票区 8.5×3.5；折痕约 3.5 / 7.25（距顶） */
+    .check-sheet {
+      width: 8.5in;
+      min-height: 11in;
       margin: 0 auto;
-      min-height: 3.25in;
-      padding: 0.35in 0.45in 0.4in;
       background: #fff;
-      border: 2px solid #0f172a;
-      border-radius: 4px;
+      border: 1px solid #94a3b8;
+      position: relative;
     }
-    .check-slip .chk-date {
+    /* 支票正面：原点为支票区左上角 (0,0)，尺寸 8.5in × 3.5in */
+    .check-face {
+      position: relative;
+      width: 8.5in;
+      height: 3.5in;
+      overflow: visible;
+    }
+    .check-face .abs {
+      position: absolute;
+    }
+    /* 公司名称：左上（预印纸可留空，由 Settings 填充） */
+    .abs-company {
+      top: 0.12in;
+      left: 0.5in;
+      max-width: 4in;
+      font-size: 10pt;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    /* 支票号码 右上 ~0.5 / 7.5 */
+    .abs-check-no {
+      top: 0.5in;
+      left: 7.5in;
+      width: 0.85in;
       text-align: right;
-      font-size: 13px;
-      margin-bottom: 0.2in;
+      font-size: 10pt;
+      font-weight: 600;
     }
-    .check-slip .chk-date span { border-bottom: 1px solid #0f172a; min-width: 2.2in; display: inline-block; padding: 0 4px 2px; }
-    .check-slip .chk-label { font-size: 11px; color: #334155; text-transform: uppercase; letter-spacing: 0.04em; }
-    .check-slip .pay-line {
-      display: flex;
-      align-items: flex-end;
-      gap: 8px;
-      margin-bottom: 0.14in;
-      font-size: 15px;
+    /* 日期 ~1.25 / 6.75 */
+    .abs-date {
+      top: 1.25in;
+      left: 6.75in;
+      width: 1.35in;
+      text-align: right;
+      font-size: 10pt;
     }
-    .check-slip .pay-line .line { flex: 1; border-bottom: 1px solid #0f172a; min-height: 1.35em; padding: 0 4px 2px; word-break: break-word; }
-    .check-slip .words-row {
-      display: flex;
-      align-items: flex-end;
-      gap: 10px;
-      margin-bottom: 0.18in;
+    /* 收款人 ~1.7 / 0.75 */
+    .abs-payee {
+      top: 1.7in;
+      left: 0.75in;
+      width: 6.2in;
     }
-    .check-slip .words-box {
-      flex: 1;
+    .abs-payee .chk-label { font-size: 8pt; color: #334155; text-transform: uppercase; letter-spacing: 0.04em; }
+    .payee-line {
+      border-bottom: 1px solid #0f172a;
+      min-height: 1.15em;
+      font-size: 11pt;
+      padding: 0 2px 1px;
+      word-break: break-word;
+    }
+    /* 金额数字 ~1.7 / 7.1 */
+    .abs-amount {
+      top: 1.7in;
+      left: 7.1in;
+      width: 1.15in;
+      border: 2px solid #0f172a;
+      padding: 2px 6px;
+      font-size: 11pt;
+      font-weight: 700;
+      text-align: right;
+      white-space: nowrap;
+    }
+    /* 金额大写 ~2.1 / 0.5 */
+    .abs-words {
+      top: 2.1in;
+      left: 0.5in;
+      width: 6.55in;
+      min-height: 0.38in;
       border: 1px solid #0f172a;
-      min-height: 2.2em;
-      padding: 6px 8px;
-      font-size: 12px;
-      line-height: 1.35;
+      padding: 0.06in 0.1in;
+      font-size: 8pt;
+      line-height: 1.25;
       text-transform: uppercase;
       letter-spacing: 0.02em;
     }
-    .check-slip .amount-box {
-      border: 2px solid #0f172a;
-      padding: 4px 10px;
-      font-size: 16px;
-      font-weight: 600;
-      white-space: nowrap;
-      min-width: 1.4in;
-      text-align: right;
+    /* Memo：规范未列坐标，置于大写金额下方偏左 */
+    .abs-memo {
+      top: 2.55in;
+      left: 0.5in;
+      width: 4.2in;
     }
-    .check-slip .memo-sig {
+    .abs-memo .chk-label { font-size: 7pt; color: #475569; }
+    .memo-line {
+      border-bottom: 1px solid #0f172a;
+      min-height: 1em;
+      font-size: 9pt;
+      padding: 0 2px;
+    }
+    /* 签名线 ~2.8 / 5.5 */
+    .abs-sig {
+      top: 2.8in;
+      left: 5.5in;
+      width: 2.5in;
+    }
+    .abs-sig .sig-box {
+      border-bottom: 1px solid #0f172a;
+      min-height: 1.5em;
+    }
+    .abs-sig .sig-label {
+      font-size: 8pt;
+      color: #475569;
+      text-align: center;
+      margin-top: 2px;
+    }
+    /* MICR：底边向上约 0.25；底部 5/8 为银行扫描保留区，勿再印其他内容 */
+    .abs-micr {
+      left: 0.25in;
+      right: 0.25in;
+      bottom: 0.25in;
+      height: 0.35in;
       display: flex;
-      justify-content: space-between;
       align-items: flex-end;
-      gap: 16px;
-      margin-top: 0.12in;
-      font-size: 13px;
+      justify-content: center;
+      padding-bottom: 0;
     }
-    .check-slip .memo-line { flex: 1; border-bottom: 1px solid #0f172a; min-height: 1.3em; padding: 0 4px 2px; }
-    .check-slip .sig-box { width: 42%; border-bottom: 1px solid #0f172a; min-height: 2em; }
-    .check-slip .sig-label { font-size: 10px; color: #475569; margin-top: 2px; text-align: center; }
-    .check-slip .micr-zone {
-      margin-top: 0.28in;
-      padding-top: 0.1in;
-      border-top: 1px dashed #94a3b8;
-    }
-    .check-slip .micr-line {
+    .micr-line {
       font-family: "MicrE13B", "Courier New", Courier, monospace;
-      font-size: 12pt;
+      font-size: 11pt;
       letter-spacing: 0.03em;
       text-align: center;
       white-space: nowrap;
+      line-height: 1;
+      width: 100%;
       overflow-x: auto;
-      min-height: 1.35em;
-      line-height: 1.35;
+    }
+
+    .perf-line {
+      height: 0;
+      border: none;
+      border-top: 2px dashed #64748b;
+      margin: 0;
+    }
+    .check-stub {
+      height: 3.75in;
+      padding: 0.2in 0.45in;
+      box-sizing: border-box;
+    }
+    .check-stub.stub-2 {
+      height: 3.75in;
+    }
+    .stub-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10pt;
+      margin-bottom: 0.2in;
+    }
+    .stub-company { font-weight: 700; max-width: 70%; }
+    .stub-no { font-weight: 600; }
+    .stub-caption { font-size: 8pt; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
+    .stub-body {
+      min-height: 2.5in;
+      border: 1px dashed #cbd5e1;
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-size: 10pt;
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+
+    @page {
+      size: letter;
+      margin: 0;
     }
     @media print {
       body { background: #fff; }
       .no-print { display: none !important; }
       .check-wrap { padding: 0; max-width: none; }
-      .check-slip {
+      .check-sheet {
         border: none;
-        border-radius: 0;
-        max-width: none;
+        margin: 0;
+      }
+      .check-face {
         page-break-inside: avoid;
-        box-shadow: none;
       }
     }
   </style>
@@ -148,7 +247,7 @@
     <button type="button" class="primary" id="btn-print">打印 / 导出 PDF</button>
   </div>
   <div class="form-panel no-print">
-    <h2>打印前可修改（仅屏幕显示，打印区域见下方）</h2>
+    <h2>打印前可修改（下方为 8.5×11 坐标版式）</h2>
     <div class="form-grid">
       <label>Date <input type="date" id="fld-date" /></label>
       <label>Pay to the order of <input type="text" id="fld-payee" autocomplete="organization" /></label>
@@ -158,35 +257,55 @@
       <label style="grid-column: 1 / -1;">Memo <input type="text" id="fld-memo" /></label>
     </div>
     <p class="hint" id="check-micr-banner"></p>
-    <p class="hint" id="micr-hint" hidden>未生成 MICR 行：请到 <a href="/settings.html">Settings</a> 选择<strong>美国</strong>或<strong>加拿大</strong>格式并填写账户，或使用「MICR 完全覆盖」。</p>
-    <p class="hint">金额大写为英文。无发票打开时默认币种在 <a href="/settings.html">Settings</a>「支票金额币种」中设置（可与加拿大/美国 MICR 格式独立，例如加行 + USD）。<code>?id=</code>、<code>?amount=</code> 见上。</p>
+    <p class="hint" id="micr-hint" hidden>未生成 MICR 行：请到 <a href="/settings.html">Settings</a> 配置银行账户或 MICR 覆盖。</p>
+    <p class="hint"><strong>打印：</strong>请选择「实际大小 / 100% / Actual size」，<strong>不要</strong>使用「适合页面」或缩放，否则坐标会错位。MICR 须使用 E-13B 字体与磁墨；底边 0.625″ 内为银行扫描区。</p>
+    <p class="hint">折痕线位置：距顶约 3.5″ 与 7.25″（与常见预印纸一致）。预印支票请用打印边距微调对齐。</p>
   </div>
   <div class="check-wrap">
-    <article class="check-slip" id="check-slip" aria-label="Cheque slip">
-      <div class="chk-date"><span class="chk-label">Date&nbsp;</span><span id="out-date"></span></div>
-      <div class="pay-line">
-        <span class="chk-label" style="white-space:nowrap;">Pay to the<br />order of</span>
-        <div class="line" id="out-payee"></div>
-      </div>
-      <div class="words-row">
-        <div class="words-box" id="out-words"></div>
-        <div class="amount-box" id="out-amount"></div>
-      </div>
-      <div class="memo-sig">
-        <div>
+    <div class="check-sheet" id="check-sheet">
+      <section class="check-face" aria-label="Cheque face">
+        <div class="abs abs-company" id="out-company-main"></div>
+        <div class="abs abs-check-no"><span class="chk-label">No.</span> <span id="out-check-no"></span></div>
+        <div class="abs abs-date"><span class="chk-label">Date </span><span id="out-date"></span></div>
+        <div class="abs abs-payee">
+          <div class="chk-label">Pay to the order of</div>
+          <div class="payee-line" id="out-payee"></div>
+        </div>
+        <div class="abs abs-amount" id="out-amount"></div>
+        <div class="abs abs-words" id="out-words"></div>
+        <div class="abs abs-memo">
           <span class="chk-label">Memo</span>
           <div class="memo-line" id="out-memo"></div>
         </div>
-        <div style="flex: 0 0 42%;">
+        <div class="abs abs-sig">
           <div class="sig-box"></div>
           <div class="sig-label">Signature</div>
         </div>
-      </div>
-      <div class="micr-zone">
-        <div class="chk-label">MICR / E13B encoding line</div>
-        <div class="micr-line" id="out-micr"></div>
-      </div>
-    </article>
+        <div class="abs abs-micr">
+          <div class="micr-line" id="out-micr"></div>
+        </div>
+      </section>
+
+      <hr class="perf-line" aria-hidden="true" />
+      <section class="check-stub stub-1" aria-label="Stub 1">
+        <div class="stub-head">
+          <span class="stub-company" id="stub-company-1"></span>
+          <span class="stub-no">No. <span id="stub-chq-1"></span></span>
+        </div>
+        <div class="stub-caption">Remittance / detail</div>
+        <div class="stub-body" id="stub-memo-1"></div>
+      </section>
+
+      <hr class="perf-line" aria-hidden="true" />
+      <section class="check-stub stub-2" aria-label="Stub 2">
+        <div class="stub-head">
+          <span class="stub-company" id="stub-company-2"></span>
+          <span class="stub-no">No. <span id="stub-chq-2"></span></span>
+        </div>
+        <div class="stub-caption">Record copy</div>
+        <div class="stub-body" id="stub-memo-2"></div>
+      </section>
+    </div>
   </div>
   <script src="/check.js"></script>
 </body>
