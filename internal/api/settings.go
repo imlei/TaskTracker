@@ -84,8 +84,9 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 			BankTransit      string `json:"bankTransit"`
 			BankRoutingABA   string `json:"bankRoutingAba"`
 			BankAccount      string `json:"bankAccount"`
-			BankChequeNumber string `json:"bankChequeNumber"`
-			MICRLineOverride string `json:"micrLineOverride"`
+			BankChequeNumber      string `json:"bankChequeNumber"`
+			MICRLineOverride      string `json:"micrLineOverride"`
+			DefaultChequeCurrency string `json:"defaultChequeCurrency"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
