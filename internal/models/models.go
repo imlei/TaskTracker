@@ -107,6 +107,14 @@ type Expense struct {
 	CreatedAt   string  `json:"createdAt,omitempty"`
 }
 
+// ExpenseCodeRow Settings 中费用科目列表（含年内累计支出）
+type ExpenseCodeRow struct {
+	Code        string  `json:"code"`
+	Name        string  `json:"name"`
+	BalanceYtd  float64 `json:"balanceYtd"`
+	BalanceYear int     `json:"balanceYear"`
+}
+
 // BankAccount 支票打印 / MICR 银行账户（支持多账户）
 type BankAccount struct {
 	ID                   string `json:"id"`

@@ -74,53 +74,7 @@ async function loadSettings() {
   }
   logoDataUrl = s.logoDataUrl || "";
   showLogoPreview(logoDataUrl);
-  await loadBankAccounts();
 }
-
-/** ABA routing 9 位校验（美国） */
-function abaRoutingChecksumOk(d9) {
-  if (!d9 || d9.length !== 9) return false;
-  const a = d9.split("").map((c) => parseInt(c, 10));
-  if (a.some((x) => Number.isNaN(x))) return false;
-  const sum = 3 * (a[0] + a[3] + a[6]) + 7 * (a[1] + a[4] + a[7]) + 1 * (a[2] + a[5] + a[8]);
-  return sum % 10 === 0;
-}
-
-function checkAbaRoutingInput(msgId, inputId) {
-  const msg = document.getElementById(msgId);
-  const inp = document.getElementById(inputId);
-  if (!msg || !inp) return;
-  const d = inp.value.replace(/\D/g, "");
-  msg.textContent = "";
-  if (d.length === 0) {
-    msg.hidden = true;
-    return;
-  }
-  if (d.length !== 9) {
-    msg.hidden = false;
-    msg.textContent = "ABA Routing 应为 9 位数字。";
-    return;
-  }
-  if (!abaRoutingChecksumOk(d)) {
-    msg.hidden = false;
-    msg.textContent = "校验位与 ABA 算法不符，请核对支票或银行资料。";
-    return;
-  }
-  msg.hidden = true;
-}
-
-function updateBankMicrCountryUI() {
-  const sel = document.getElementById("bank-micr-country");
-  if (!sel) return;
-  const isUS = sel.value === "US";
-  const ca = document.getElementById("bank-group-ca");
-  const us = document.getElementById("bank-group-us");
-  if (ca) ca.hidden = isUS;
-  if (us) us.hidden = !isUS;
-}
-
-document.getElementById("bank-micr-country")?.addEventListener("change", updateBankMicrCountryUI);
-document.getElementById("bank-routing")?.addEventListener("blur", () => checkAbaRoutingInput("bank-routing-aba-msg", "bank-routing"));
 
 function collectSettingsBody() {
   return {
@@ -162,145 +116,150 @@ function showSettingsView(view) {
   document.querySelectorAll("[data-settings-view]").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.settingsView === view);
   });
+  if (view === "expense-code") {
+    loadExpenseCodes();
+  }
 }
 
 document.querySelectorAll("[data-settings-view]").forEach((btn) => {
   btn.addEventListener("click", () => showSettingsView(btn.dataset.settingsView));
 });
 
-async function loadBankAccounts() {
-  const box = document.getElementById("bank-list");
-  if (!box) return;
-  box.innerHTML = "加载中…";
-  let data;
+function asArray(v) {
+  return Array.isArray(v) ? v : [];
+}
+
+function escapeHtml(s) {
+  const d = document.createElement("div");
+  d.textContent = s == null ? "" : String(s);
+  return d.innerHTML;
+}
+
+function fmtEcMoney(n) {
+  if (n == null || Number.isNaN(Number(n))) return "0.00";
+  return Number(n).toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function ensureEcCodeSelectOptions() {
+  const sel = document.getElementById("ec-code-new");
+  if (!sel || sel.dataset.filled === "1") return;
+  sel.dataset.filled = "1";
+  const ph = document.createElement("option");
+  ph.value = "";
+  ph.textContent = "— Select code —";
+  sel.appendChild(ph);
+  for (let c = 5000; c <= 5999; c++) {
+    const o = document.createElement("option");
+    o.value = String(c);
+    o.textContent = String(c);
+    sel.appendChild(o);
+  }
+}
+
+let ecDlgMode = "new";
+
+function openEcDialog(mode, row) {
+  ensureEcCodeSelectOptions();
+  ecDlgMode = mode;
+  const title = document.getElementById("ec-dlg-title");
+  const rowNew = document.getElementById("ec-row-new");
+  const rowEdit = document.getElementById("ec-row-edit");
+  const sel = document.getElementById("ec-code-new");
+  const nameInp = document.getElementById("ec-name");
+  const dlg = document.getElementById("dlg-expense-code");
+  if (!dlg || !nameInp) return;
+  if (title) title.textContent = mode === "edit" ? "Edit expense code" : "New expense code";
+  if (mode === "edit" && row) {
+    if (rowNew) rowNew.hidden = true;
+    if (rowEdit) rowEdit.hidden = false;
+    const disp = document.getElementById("ec-code-display");
+    const hid = document.getElementById("ec-code-edit");
+    if (disp) disp.textContent = row.code || "";
+    if (hid) hid.value = row.code || "";
+    nameInp.value = row.name || "";
+    if (sel) sel.removeAttribute("required");
+  } else {
+    if (rowNew) rowNew.hidden = false;
+    if (rowEdit) rowEdit.hidden = true;
+    if (sel) {
+      sel.value = "";
+      sel.setAttribute("required", "");
+    }
+    nameInp.value = "";
+  }
+  dlg.showModal();
+}
+
+async function loadExpenseCodes() {
+  const tbody = document.getElementById("ec-body");
+  const hint = document.getElementById("ec-year-hint");
+  if (!tbody) return;
+  const year = new Date().getFullYear();
+  if (hint) {
+    hint.textContent = `Balance (YTD) = ${year} 自然年累计支出（amount 直接相加）。`;
+  }
+  tbody.innerHTML = `<tr><td colspan="4" class="hint">加载中…</td></tr>`;
   try {
-    data = await api("/api/bank-accounts");
+    const list = asArray(await api(`/api/expense-codes?year=${year}`));
+    tbody.innerHTML = "";
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="hint">暂无科目。可点击 New expense code 添加名称，或在主页 Expense 录入后自动出现已用代码。</td></tr>`;
+      return;
+    }
+    for (const row of list) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(row.code)}</td>
+        <td>${escapeHtml(row.name || "—")}</td>
+        <td>${escapeHtml(fmtEcMoney(row.balanceYtd))}</td>
+        <td class="row-actions"><button type="button" class="ghost" data-act="edit">Edit</button></td>`;
+      tr.querySelector('[data-act="edit"]').addEventListener("click", () => openEcDialog("edit", row));
+      tbody.appendChild(tr);
+    }
   } catch (e) {
-    box.innerHTML = `<p class="hint">加载银行账户失败：${e.message}</p>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="hint">加载失败：${escapeHtml(e.message)}</td></tr>`;
+  }
+}
+
+document.getElementById("btn-ec-new")?.addEventListener("click", () => openEcDialog("new", null));
+
+document.getElementById("ec-cancel")?.addEventListener("click", () => {
+  document.getElementById("dlg-expense-code")?.close();
+});
+
+document.getElementById("form-expense-code")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = document.getElementById("ec-name")?.value?.trim() || "";
+  if (!name) {
+    alert("请填写 Expense name。");
     return;
   }
-  const items = data.items || [];
-  const def = data.defaultId || "";
-  if (items.length === 0) {
-    box.innerHTML = `<p class="hint">尚未添加银行账户。请在下方表单添加，并可设置默认账户。</p>`;
-    return;
-  }
-  box.innerHTML = items
-    .map((b) => {
-      const isDef = b.id === def;
-      const badge = isDef ? `<strong>（默认）</strong>` : "";
-      const safe = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-      return `
-        <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px dashed #cbd5e1;">
-          <div>
-            <div><strong>${safe(b.label || b.id)}</strong> ${badge}</div>
-            <div class="hint">${safe((b.micrCountry || "CA").toUpperCase())} · Cheque # ${safe(b.bankChequeNumber || "")} · Currency ${safe((b.defaultChequeCurrency || "CAD").toUpperCase())}</div>
-          </div>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            ${isDef ? "" : `<button type="button" class="ghost small" data-act="default" data-id="${safe(b.id)}">设为默认</button>`}
-            <button type="button" class="ghost small" data-act="edit" data-id="${safe(b.id)}">编辑</button>
-            <button type="button" class="ghost small" data-act="del" data-id="${safe(b.id)}">删除</button>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
-  box.querySelectorAll("button[data-act]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const act = btn.dataset.act;
-      const id = btn.dataset.id;
-      if (act === "default") {
-        await api(`/api/bank-accounts/${encodeURIComponent(id)}/default`, { method: "POST", body: "{}" });
-        await loadBankAccounts();
-        return;
-      }
-      if (act === "edit") {
-        const it = items.find((x) => x.id === id);
-        if (!it) return;
-        fillBankForm(it);
-        return;
-      }
-      if (act === "del") {
-        if (!confirm("确定删除该银行账户？")) return;
-        await api(`/api/bank-accounts/${encodeURIComponent(id)}`, { method: "DELETE" });
-        await loadBankAccounts();
-        return;
-      }
-    });
-  });
-}
-
-function fillBankForm(b) {
-  document.getElementById("bank-id").value = b.id || "";
-  document.getElementById("bank-label").value = b.label || "";
-  document.getElementById("bank-micr-country").value = (b.micrCountry || "CA").toUpperCase() === "US" ? "US" : "CA";
-  document.getElementById("bank-institution").value = b.bankInstitution || "";
-  document.getElementById("bank-transit").value = b.bankTransit || "";
-  document.getElementById("bank-routing").value = b.bankRoutingAba || "";
-  document.getElementById("bank-account").value = b.bankAccount || "";
-  document.getElementById("bank-cheque").value = b.bankChequeNumber || "";
-  document.getElementById("bank-micr-override").value = b.micrLineOverride || "";
-  const cur = (b.defaultChequeCurrency || "CAD").toUpperCase();
-  const sel = document.getElementById("bank-default-cheque-currency");
-  if (sel) {
-    sel.querySelectorAll("option[data-custom]").forEach((o) => o.remove());
-    const allowed = ["CAD", "USD", "CNY", "EUR"];
-    if (allowed.includes(cur)) {
-      sel.value = cur;
-    } else if (cur) {
-      const opt = document.createElement("option");
-      opt.value = cur;
-      opt.textContent = `${cur}（自定义）`;
-      opt.setAttribute("data-custom", "1");
-      sel.appendChild(opt);
-      sel.value = cur;
-    } else {
-      sel.value = "CAD";
-    }
-  }
-  updateBankMicrCountryUI();
-  checkAbaRoutingInput("bank-routing-aba-msg", "bank-routing");
-}
-
-function clearBankForm() {
-  fillBankForm({
-    id: "",
-    label: "",
-    micrCountry: "CA",
-    bankInstitution: "",
-    bankTransit: "",
-    bankRoutingAba: "",
-    bankAccount: "",
-    bankChequeNumber: "000001",
-    micrLineOverride: "",
-    defaultChequeCurrency: "CAD",
-  });
-}
-
-document.getElementById("btn-bank-clear")?.addEventListener("click", clearBankForm);
-document.getElementById("btn-bank-save")?.addEventListener("click", async () => {
-  const id = document.getElementById("bank-id").value.trim();
-  const body = {
-    label: document.getElementById("bank-label").value.trim(),
-    micrCountry: document.getElementById("bank-micr-country").value.trim() || "CA",
-    bankInstitution: document.getElementById("bank-institution").value.trim(),
-    bankTransit: document.getElementById("bank-transit").value.trim(),
-    bankRoutingAba: document.getElementById("bank-routing").value.trim(),
-    bankAccount: document.getElementById("bank-account").value.trim(),
-    bankChequeNumber: document.getElementById("bank-cheque").value.trim(),
-    micrLineOverride: document.getElementById("bank-micr-override").value.trim(),
-    defaultChequeCurrency: document.getElementById("bank-default-cheque-currency").value.trim() || "CAD",
-  };
   try {
-    if (id) {
-      await api(`/api/bank-accounts/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(body) });
+    if (ecDlgMode === "edit") {
+      const code = document.getElementById("ec-code-edit")?.value?.trim() || "";
+      if (!/^5\d{3}$/.test(code)) {
+        alert("无效 code。");
+        return;
+      }
+      await api(`/api/expense-codes/${encodeURIComponent(code)}`, {
+        method: "PUT",
+        body: JSON.stringify({ name }),
+      });
     } else {
-      await api(`/api/bank-accounts`, { method: "POST", body: JSON.stringify(body) });
+      const code = document.getElementById("ec-code-new")?.value?.trim() || "";
+      if (!/^5\d{3}$/.test(code)) {
+        alert("请选择 Code（5XXX）。");
+        return;
+      }
+      await api("/api/expense-codes", {
+        method: "POST",
+        body: JSON.stringify({ code, name }),
+      });
     }
-    clearBankForm();
-    await loadBankAccounts();
-  } catch (e) {
-    alert("保存失败: " + e.message);
+    document.getElementById("dlg-expense-code")?.close();
+    await loadExpenseCodes();
+  } catch (err) {
+    alert("保存失败: " + err.message);
   }
 });
 
@@ -348,7 +307,6 @@ document.getElementById("btn-save-password")?.addEventListener("click", async ()
       return;
     }
     await loadSettings();
-    clearBankForm();
     showSettingsView("company");
   } catch {
     window.location.href = "/login.html";

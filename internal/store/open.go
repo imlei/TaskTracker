@@ -156,6 +156,10 @@ func Open(dir string) (*sql.DB, error) {
 		_ = db.Close()
 		return nil, err
 	}
+	if err := ensureExpenseCodesCatalogTable(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
 	return db, nil
 }
 
@@ -626,4 +630,13 @@ func ensureExpenseAccountCodeColumn(db *sql.DB) error {
 		}
 	}
 	return nil
+}
+
+func ensureExpenseCodesCatalogTable(db *sql.DB) error {
+	_, err := db.Exec(`
+CREATE TABLE IF NOT EXISTS expense_codes (
+  code TEXT PRIMARY KEY,
+  name TEXT NOT NULL DEFAULT ''
+);`)
+	return err
 }

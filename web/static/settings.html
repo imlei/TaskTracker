@@ -42,56 +42,6 @@
             <button type="button" class="ghost small" id="set-logo-clear" hidden>清除 Logo</button>
           </div>
 
-          <section class="settings-card">
-            <h2>银行账户（支票 / MICR）</h2>
-            <p class="hint">已改为<strong>独立</strong>的「银行账户」列表，支持添加多个，并可设置默认账户供「支票打印」使用。</p>
-
-            <div id="bank-list" class="settings-micr-group"></div>
-
-            <div class="settings-micr-group">
-              <h3 class="settings-subh">添加 / 编辑银行账户</h3>
-              <input type="hidden" id="bank-id" value="" />
-              <label>名称（用于区分多个账户） <input id="bank-label" type="text" maxlength="80" autocomplete="off" placeholder="如 RBC CAD Chequing" /></label>
-              <label>国家格式
-                <select id="bank-micr-country">
-                  <option value="CA">加拿大 (Canada — CPA)</option>
-                  <option value="US">美国 (United States — ABA)</option>
-                </select>
-              </label>
-
-              <div id="bank-group-ca" class="settings-micr-group">
-                <h3 class="settings-subh">加拿大银行</h3>
-                <label>Institution number（FI，3 位） <input id="bank-institution" type="text" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="如 003" /></label>
-                <label>Transit / Branch number（5 位） <input id="bank-transit" type="text" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="如 45678" /></label>
-              </div>
-
-              <div id="bank-group-us" class="settings-micr-group" hidden>
-                <h3 class="settings-subh">美国银行</h3>
-                <label>ABA Routing number（9 位） <input id="bank-routing" type="text" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="9 位数字" /></label>
-                <p class="hint" id="bank-routing-aba-msg" hidden></p>
-              </div>
-
-              <label>支票金额默认币种
-                <select id="bank-default-cheque-currency">
-                  <option value="CAD">CAD — 加元</option>
-                  <option value="USD">USD — 美元</option>
-                  <option value="CNY">CNY — 人民币</option>
-                  <option value="EUR">EUR — 欧元</option>
-                </select>
-              </label>
-              <label>Account number（账号） <input id="bank-account" type="text" maxlength="80" autocomplete="off" /></label>
-              <label>当前支票号码 <input id="bank-cheque" type="text" maxlength="20" autocomplete="off" placeholder="CA 如 00123；US 如 000123" /></label>
-              <label style="display:block;">MICR 行完全覆盖（可选）
-                <textarea id="bank-micr-override" rows="2" maxlength="500" placeholder="非空则忽略自动拼装"></textarea>
-              </label>
-
-              <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button type="button" class="ghost" id="btn-bank-clear">清空表单</button>
-                <button type="button" class="primary" id="btn-bank-save">保存银行账户</button>
-              </div>
-            </div>
-          </section>
-
           <div class="settings-actions">
             <button type="button" class="primary" id="btn-save-settings">保存公司与展示</button>
             <span id="save-msg" class="hint"></span>
@@ -112,9 +62,24 @@
         <div id="settings-view-expense-code" class="invoices-view settings-view" hidden>
           <section class="settings-card">
             <h2>Expense Code（费用科目）</h2>
-            <p class="hint">在主页 <strong>Expense</strong> 标签中录入支出时，需选择 <strong>Expense account</strong>：四位数字、以 <strong>5</strong> 开头，即 <strong>5XXX</strong>（范围 <strong>5000–5999</strong>），与常见总账中费用类科目编号一致。</p>
-            <p class="hint">录入时从下拉列表中选择具体科目代码；列表包含 5000–5999 全部可选值。</p>
-            <p class="hint"><a href="/" class="top-nav-link">← 返回主页打开 Expense</a></p>
+            <p class="hint">科目代码为 <strong>5XXX</strong>（5000–5999）。下方列表含已维护名称的科目及已在 Expense 中出现过的代码；<strong>Balance (YTD)</strong> 为当前自然年各笔支出金额之和（未做币种换算）。<a href="/" class="top-nav-link">返回主页 Expense</a></p>
+            <div class="settings-subtoolbar">
+              <span class="hint" id="ec-year-hint"></span>
+              <button type="button" class="primary" id="btn-ec-new">New expense code</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Expense name</th>
+                    <th>Balance (YTD)</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="ec-body"></tbody>
+              </table>
+            </div>
           </section>
         </div>
 
@@ -139,6 +104,27 @@
       </div>
     </div>
   </main>
+
+  <dialog id="dlg-expense-code" class="dlg-task-wide">
+    <form method="dialog" id="form-expense-code">
+      <h2 id="ec-dlg-title">Expense code</h2>
+      <div id="ec-row-new">
+        <label>Code
+          <select id="ec-code-new" required></select>
+        </label>
+      </div>
+      <div id="ec-row-edit" hidden>
+        <p class="hint">Code <strong id="ec-code-display"></strong></p>
+        <input type="hidden" id="ec-code-edit" value="" />
+      </div>
+      <label>Expense name <input id="ec-name" type="text" maxlength="200" placeholder="科目名称" required /></label>
+      <div class="dlg-actions">
+        <button type="submit" class="primary">保存</button>
+        <button type="button" id="ec-cancel">取消</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="/settings.js"></script>
 </body>
 </html>
