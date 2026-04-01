@@ -58,6 +58,8 @@ async function loadSettings() {
   const s = await api("/api/settings");
   document.getElementById("set-company").value = s.companyName || "";
   document.getElementById("set-baseurl").value = s.baseUrl || "";
+  const bc = document.getElementById("set-base-currency");
+  if (bc) bc.value = (s.baseCurrency || "CAD").toUpperCase();
   document.getElementById("set-smtp-host").value = s.smtpHost || "";
   document.getElementById("set-smtp-port").value = s.smtpPort || 587;
   document.getElementById("set-smtp-user").value = s.smtpUser || "";
@@ -80,6 +82,7 @@ function collectSettingsBody() {
   return {
     companyName: document.getElementById("set-company").value.trim(),
     baseUrl: document.getElementById("set-baseurl").value.trim(),
+    baseCurrency: (document.getElementById("set-base-currency")?.value || "CAD").trim().toUpperCase() || "CAD",
     logoDataUrl: logoDataUrl,
     smtpHost: document.getElementById("set-smtp-host").value.trim(),
     smtpPort: parseInt(document.getElementById("set-smtp-port").value, 10) || 587,

@@ -34,6 +34,8 @@ type AppSettings struct {
 	BankChequeNumber       string `json:"bankChequeNumber"`
 	MICRLineOverride       string `json:"micrLineOverride"` // 非空则直接使用该行，不自动拼装
 	DefaultChequeCurrency  string `json:"defaultChequeCurrency"` // 支票金额显示币种，与 micrCountry 独立（如加拿大行 + USD）
+	// BaseCurrency 公司基准货币（ISO 4217），Exchange Rate 等以该币种为基准
+	BaseCurrency string `json:"baseCurrency"`
 }
 
 func (s *Store) loadSettingsRow() (AppSettings, error) {
@@ -44,12 +46,12 @@ func (s *Store) loadSettingsRow() (AppSettings, error) {
 	err := s.db.QueryRow(`SELECT company_name, logo_data_url, base_url,
 		smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from, smtp_starttls, smtp_tls,
 		micr_country, bank_institution, bank_transit, bank_routing_aba, bank_account, bank_cheque_number, micr_line_override,
-		default_cheque_currency
+		default_cheque_currency, base_currency
 		FROM app_settings WHERE id=1`).Scan(
 		&st.CompanyName, &st.LogoDataURL, &st.BaseURL,
 		&st.SMTPHost, &port, &st.SMTPUser, &pass, &st.SMTPFrom, &startTLS, &implicitTLS,
 		&st.MICRCountry, &st.BankInstitution, &st.BankTransit, &st.BankRoutingABA, &st.BankAccount, &st.BankChequeNumber, &st.MICRLineOverride,
-		&st.DefaultChequeCurrency,
+		&st.DefaultChequeCurrency, &st.BaseCurrency,
 	)
 	if err != nil {
 		return st, err
@@ -66,6 +68,9 @@ func (s *Store) loadSettingsRow() (AppSettings, error) {
 	}
 	if strings.TrimSpace(st.DefaultChequeCurrency) == "" {
 		st.DefaultChequeCurrency = "CAD"
+	}
+	if strings.TrimSpace(st.BaseCurrency) == "" {
+		st.BaseCurrency = "CAD"
 	}
 	return st, nil
 }
@@ -123,6 +128,14 @@ func (s *Store) UpdateSettings(in AppSettings, updateSMTPPass bool, smtpPassNew 
 		cc = cc[:8]
 	}
 	in.DefaultChequeCurrency = cc
+	bc := strings.ToUpper(strings.TrimSpace(in.BaseCurrency))
+	if bc == "" {
+		bc = "CAD"
+	}
+	if len(bc) > 8 {
+		bc = bc[:8]
+	}
+	in.BaseCurrency = bc
 	if in.SMTPPort <= 0 {
 		in.SMTPPort = 587
 	}
@@ -140,12 +153,12 @@ func (s *Store) UpdateSettings(in AppSettings, updateSMTPPass bool, smtpPassNew 
 			company_name=?, logo_data_url=?, base_url=?,
 			smtp_host=?, smtp_port=?, smtp_user=?, smtp_pass=?, smtp_from=?, smtp_starttls=?, smtp_tls=?,
 			micr_country=?, bank_institution=?, bank_transit=?, bank_routing_aba=?, bank_account=?, bank_cheque_number=?, micr_line_override=?,
-			default_cheque_currency=?
+			default_cheque_currency=?, base_currency=?
 			WHERE id=1`,
 			in.CompanyName, in.LogoDataURL, in.BaseURL,
 			strings.TrimSpace(in.SMTPHost), in.SMTPPort, strings.TrimSpace(in.SMTPUser), smtpPassNew, strings.TrimSpace(in.SMTPFrom), start, tls,
 			in.MICRCountry, in.BankInstitution, in.BankTransit, in.BankRoutingABA, in.BankAccount, in.BankChequeNumber, in.MICRLineOverride,
-			in.DefaultChequeCurrency,
+			in.DefaultChequeCurrency, in.BaseCurrency,
 		)
 		return err
 	}
@@ -153,12 +166,12 @@ func (s *Store) UpdateSettings(in AppSettings, updateSMTPPass bool, smtpPassNew 
 		company_name=?, logo_data_url=?, base_url=?,
 		smtp_host=?, smtp_port=?, smtp_user=?, smtp_from=?, smtp_starttls=?, smtp_tls=?,
 		micr_country=?, bank_institution=?, bank_transit=?, bank_routing_aba=?, bank_account=?, bank_cheque_number=?, micr_line_override=?,
-		default_cheque_currency=?
+		default_cheque_currency=?, base_currency=?
 		WHERE id=1`,
 		in.CompanyName, in.LogoDataURL, in.BaseURL,
 		strings.TrimSpace(in.SMTPHost), in.SMTPPort, strings.TrimSpace(in.SMTPUser), strings.TrimSpace(in.SMTPFrom), start, tls,
 		in.MICRCountry, in.BankInstitution, in.BankTransit, in.BankRoutingABA, in.BankAccount, in.BankChequeNumber, in.MICRLineOverride,
-		in.DefaultChequeCurrency,
+		in.DefaultChequeCurrency, in.BaseCurrency,
 	)
 	return err
 }

@@ -863,6 +863,33 @@ dialog input[readonly] {
   flex-wrap: nowrap;
 }
 
+.exchange-rates-toolbar {
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: flex-end;
+}
+
+table.data.exchange-rates-table th.num,
+table.data.exchange-rates-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+table.data.exchange-rates-table td:first-child,
+table.data.exchange-rates-table th:first-child {
+  text-align: left;
+}
+
+.exchange-code {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
+table.data.exchange-rates-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.035);
+}
+
 .price-pick-block {
   border: 1px solid var(--border);
   border-radius: 8px;

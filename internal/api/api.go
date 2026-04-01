@@ -652,4 +652,5 @@ func Register(mux *http.ServeMux, s *Server) {
 	mux.HandleFunc("/api/expense-codes", s.handleExpenseCodes)
 	mux.HandleFunc("/api/expenses/", s.handleExpenseByID)
 	mux.HandleFunc("/api/expenses", s.handleExpenses)
+	mux.HandleFunc("/api/exchange-rates", s.handleExchangeRates)
 }

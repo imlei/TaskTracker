@@ -12,7 +12,7 @@
       <div class="top-brand">
         <div id="app-header-logo" class="app-header-logo" hidden></div>
         <h1 id="app-title">TaskTracker</h1>
-        <span class="app-version" aria-label="version">v0.0.7</span>
+        <span class="app-version" aria-label="version">v0.0.8</span>
       </div>
       <div class="top-actions">
         <a href="/settings.html" class="top-nav-link" id="link-settings">Settings</a>
@@ -26,6 +26,7 @@
       <button type="button" class="tab" data-tab="report">报表 Report</button>
       <button type="button" class="tab" data-tab="prices">价目表 Price list</button>
       <button type="button" class="tab" data-tab="expense">Expense</button>
+      <button type="button" class="tab" data-tab="exchange">Exchange Rate</button>
       <button type="button" class="tab" data-tab="cheque">Print Cheque</button>
     </nav>
   </header>
@@ -176,6 +177,29 @@
             </tr>
           </thead>
           <tbody id="expenses-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="panel-exchange" class="panel">
+      <div class="toolbar report-toolbar exchange-rates-toolbar">
+        <label>搜索
+          <input type="search" id="exchange-q" placeholder="代码或名称" autocomplete="off" />
+        </label>
+        <label>起始日期
+          <input type="date" id="exchange-from" />
+        </label>
+        <label>结束日期
+          <input type="date" id="exchange-to" />
+        </label>
+        <button type="button" id="btn-exchange-load" class="primary">查询</button>
+        <button type="button" id="btn-exchange-default" class="ghost">默认（昨日止 5 个工作日）</button>
+      </div>
+      <p class="report-summary" id="exchange-summary">基准货币在 Settings → Company Profile 中设置。数据优先读本地，缺失时从 Frankfurter 拉取并缓存。</p>
+      <div class="table-wrap">
+        <table class="data exchange-rates-table">
+          <thead id="exchange-thead"></thead>
+          <tbody id="exchange-body"></tbody>
         </table>
       </div>
     </section>

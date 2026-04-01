@@ -52,6 +52,7 @@ document.querySelectorAll(".tab").forEach((btn) => {
     }
     if (tab === "prices") loadPrices();
     if (tab === "expense") loadExpenses();
+    if (tab === "exchange") loadExchangeRates();
     if (tab === "cheque") {
       const fr = document.getElementById("iframe-cheque");
       if (fr && !fr.getAttribute("src")) {
@@ -1448,6 +1449,103 @@ if (formExpense) {
     }
   });
 }
+
+// --- Exchange rates (Frankfurter, server cache) ---
+function fmtExchangeRate(n) {
+  if (n == null || typeof n !== "number" || Number.isNaN(n)) return "—";
+  const a = Math.abs(n);
+  const opts =
+    a >= 1
+      ? { minimumFractionDigits: 4, maximumFractionDigits: 4 }
+      : { minimumFractionDigits: 4, maximumFractionDigits: 6 };
+  return n.toLocaleString("en-CA", opts);
+}
+
+function buildExchangeRatesURL() {
+  const q = document.getElementById("exchange-q")?.value?.trim() || "";
+  const from = document.getElementById("exchange-from")?.value?.trim() || "";
+  const to = document.getElementById("exchange-to")?.value?.trim() || "";
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (from && to) {
+    params.set("from", from);
+    params.set("to", to);
+  } else if (from || to) {
+    return { error: "请同时填写起始与结束日期，或两者都留空使用默认（昨日止 5 个工作日）。" };
+  }
+  const qs = params.toString();
+  return { url: qs ? `/api/exchange-rates?${qs}` : "/api/exchange-rates" };
+}
+
+async function loadExchangeRates() {
+  const sum = document.getElementById("exchange-summary");
+  const thead = document.getElementById("exchange-thead");
+  const tbody = document.getElementById("exchange-body");
+  if (!thead || !tbody) return;
+  const built = buildExchangeRatesURL();
+  if (built.error) {
+    alert(built.error);
+    return;
+  }
+  if (sum) sum.textContent = "加载中…";
+  tbody.innerHTML = "";
+  thead.innerHTML = "";
+  try {
+    const data = await api(built.url);
+    const dates = asArray(data.dates);
+    const rows = asArray(data.rows);
+    const base = data.base || "";
+    if (sum) {
+      sum.textContent = `基准 ${base}；列为工作日。已显示 ${rows.length} 种货币。本地无数据时由服务器从 Frankfurter 拉取并写入缓存。`;
+    }
+    const hr = document.createElement("tr");
+    const thCur = document.createElement("th");
+    thCur.textContent = "Currency";
+    hr.appendChild(thCur);
+    for (const d of dates) {
+      const th = document.createElement("th");
+      th.className = "num";
+      th.textContent = d;
+      hr.appendChild(th);
+    }
+    thead.appendChild(hr);
+    for (const r of rows) {
+      const tr = document.createElement("tr");
+      const td0 = document.createElement("td");
+      const name = escapeHtml(r.name || "");
+      const code = escapeHtml(r.code || "");
+      td0.innerHTML = `${name} <span class="exchange-code">(${code})</span>`;
+      tr.appendChild(td0);
+      const rateMap = r.rates && typeof r.rates === "object" ? r.rates : {};
+      for (const d of dates) {
+        const td = document.createElement("td");
+        td.className = "num";
+        td.textContent = fmtExchangeRate(rateMap[d]);
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+  } catch (e) {
+    console.error(e);
+    if (sum) sum.textContent = "加载失败。";
+    alert("Exchange Rate 加载失败: " + e.message);
+  }
+}
+
+document.getElementById("btn-exchange-load")?.addEventListener("click", () => loadExchangeRates());
+document.getElementById("btn-exchange-default")?.addEventListener("click", () => {
+  const f = document.getElementById("exchange-from");
+  const t = document.getElementById("exchange-to");
+  if (f) f.value = "";
+  if (t) t.value = "";
+  loadExchangeRates();
+});
+document.getElementById("exchange-q")?.addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter") {
+    ev.preventDefault();
+    loadExchangeRates();
+  }
+});
 
 function escapeHtml(s) {
   const d = document.createElement("div");

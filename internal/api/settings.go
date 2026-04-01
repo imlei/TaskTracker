@@ -65,6 +65,7 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 			"bankChequeNumber":      st.BankChequeNumber,
 			"micrLineOverride":      st.MICRLineOverride,
 			"defaultChequeCurrency": st.DefaultChequeCurrency,
+			"baseCurrency":          st.BaseCurrency,
 		}
 		writeJSON(w, http.StatusOK, out)
 	case http.MethodPut:
@@ -87,6 +88,7 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 			BankChequeNumber      string `json:"bankChequeNumber"`
 			MICRLineOverride      string `json:"micrLineOverride"`
 			DefaultChequeCurrency string `json:"defaultChequeCurrency"`
+			BaseCurrency          string `json:"baseCurrency"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -113,6 +115,7 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 			BankChequeNumber:      body.BankChequeNumber,
 			MICRLineOverride:      body.MICRLineOverride,
 			DefaultChequeCurrency: body.DefaultChequeCurrency,
+			BaseCurrency:          body.BaseCurrency,
 		}
 		if body.SMTPPort <= 0 {
 			in.SMTPPort = cur.SMTPPort
@@ -129,6 +132,9 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 			in.SMTPImplicitTLS = *body.SMTPImplicitTLS
 		} else {
 			in.SMTPImplicitTLS = cur.SMTPImplicitTLS
+		}
+		if strings.TrimSpace(in.BaseCurrency) == "" {
+			in.BaseCurrency = cur.BaseCurrency
 		}
 		pass := strings.TrimSpace(body.SMTPPass)
 		updatePass := pass != ""

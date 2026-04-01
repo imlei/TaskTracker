@@ -164,6 +164,14 @@ func Open(dir string) (*sql.DB, error) {
 		_ = db.Close()
 		return nil, err
 	}
+	if err := ensureBaseCurrencyColumn(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	if err := ensureExchangeRatesTable(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
 	return db, nil
 }
 
@@ -324,10 +332,53 @@ CREATE TABLE IF NOT EXISTS app_settings (
   bank_cheque_number TEXT NOT NULL DEFAULT '000001',
   micr_line_override TEXT NOT NULL DEFAULT '',
   default_cheque_currency TEXT NOT NULL DEFAULT 'CAD',
-  default_bank_account_id TEXT NOT NULL DEFAULT ''
+  default_bank_account_id TEXT NOT NULL DEFAULT '',
+  base_currency TEXT NOT NULL DEFAULT 'CAD'
 );
 INSERT OR IGNORE INTO app_settings (id) VALUES (1);
 `)
+	return err
+}
+
+func ensureBaseCurrencyColumn(db *sql.DB) error {
+	existing := map[string]bool{}
+	rows, err := db.Query(`PRAGMA table_info(app_settings)`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var cid int
+		var name, ctype string
+		var notnull int
+		var dflt sql.NullString
+		var pk int
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk); err != nil {
+			continue
+		}
+		existing[name] = true
+	}
+	if !existing["base_currency"] {
+		if _, err := db.Exec(`ALTER TABLE app_settings ADD COLUMN base_currency TEXT NOT NULL DEFAULT 'CAD'`); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ensureExchangeRatesTable(db *sql.DB) error {
+	if _, err := db.Exec(`
+CREATE TABLE IF NOT EXISTS exchange_rates (
+  requested_date TEXT NOT NULL,
+  base_code TEXT NOT NULL,
+  quote_code TEXT NOT NULL,
+  rate REAL NOT NULL,
+  fetched_at TEXT NOT NULL,
+  PRIMARY KEY (requested_date, base_code, quote_code)
+);`); err != nil {
+		return err
+	}
+	_, err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_exchange_rates_base_date ON exchange_rates (base_code, requested_date);`)
 	return err
 }
 

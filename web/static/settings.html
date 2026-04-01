@@ -35,6 +35,10 @@
               <input id="set-baseurl" type="url" placeholder="https://invoice.example.com" />
             </label>
             <p class="hint">邮件中发票链接、回调地址等会优先使用此处；不填则使用环境变量 BASE_URL 或当前访问主机。</p>
+            <label>基准货币（ISO 4217，Exchange Rate）
+              <input id="set-base-currency" type="text" maxlength="8" placeholder="CAD" autocomplete="off" />
+            </label>
+            <p class="hint">主页 <strong>Exchange Rate</strong> 以该货币为基准；数据来自 <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a>，本地缓存。</p>
             <label>Logo（PNG/JPG，建议正方形）
               <input id="set-logo-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
             </label>
