@@ -177,6 +177,11 @@ body.login-page {
   color: var(--muted);
 }
 
+.customer-edit-display-hint {
+  margin: -0.35rem 0 0.5rem;
+  font-size: 0.78rem;
+}
+
 .customer-inline-check {
   display: flex;
   align-items: flex-start;
@@ -519,8 +524,9 @@ button.ghost.small {
 }
 
 .trend-card--pies {
-  max-height: none;
-  overflow: visible;
+  max-height: min(320px, 46vh);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .trend-card--bar {
@@ -575,27 +581,6 @@ button.ghost.small {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text);
-}
-
-.trend-profit-table-wrap {
-  margin-top: 0.75rem;
-  padding-top: 0.65rem;
-  border-top: 1px solid var(--border);
-}
-
-.trend-profit-table-title {
-  margin: 0 0 0.35rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.trend-profit-hint {
-  margin: 0 0 0.5rem;
-  font-size: 0.78rem;
-}
-
-table.data.trend-profit-table td.trend-profit-negative {
-  color: #f87171;
 }
 
 .trend-pie-chart {

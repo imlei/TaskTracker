@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"simpletask/internal/mail"
 	"simpletask/internal/models"
@@ -39,6 +40,9 @@ func validateCustomerContact(c models.Customer) error {
 	phone := strings.TrimSpace(c.Phone)
 	if phone != "" && !phoneRx.MatchString(phone) {
 		return errors.New("invalid phone format")
+	}
+	if disp := strings.TrimSpace(c.DisplayName); utf8.RuneCountInString(disp) > 20 {
+		return errors.New("displayName must be at most 20 characters")
 	}
 	return nil
 }
@@ -397,6 +401,14 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 
+// completedReportRow 报表行：在 Task 上附加 CAD 支出、利润、利润率（Revenue=Price1+Price2，与 Trend Profit 一致）
+type completedReportRow struct {
+	models.Task
+	ExpenseCAD float64  `json:"expenseCad"`
+	Profit     float64  `json:"profit"`
+	MarginPct  *float64 `json:"marginPct,omitempty"` // Revenue>0 时为 (Profit/Revenue)*100；否则省略
+}
+
 // GET /api/reports/completed?month=YYYY-MM
 // 返回该月内完成（Done 且 completedAt 落在该月）的任务，按完成日期升序。
 func (s *Server) handleReportCompleted(w http.ResponseWriter, r *http.Request) {
@@ -426,7 +438,24 @@ func (s *Server) handleReportCompleted(w http.ResponseWriter, r *http.Request) {
 		}
 		return out[i].ID < out[j].ID
 	})
-	writeJSON(w, http.StatusOK, out)
+	ids := make([]string, len(out))
+	for i, t := range out {
+		ids[i] = t.ID
+	}
+	expByTask := s.Store.SumExpensesCADByTaskIDs(ids)
+	rows := make([]completedReportRow, len(out))
+	for i, t := range out {
+		rev := t.Price1 + t.Price2
+		exp := expByTask[t.ID]
+		p := rev - exp
+		var mp *float64
+		if rev > 0 {
+			v := (p / rev) * 100
+			mp = &v
+		}
+		rows[i] = completedReportRow{Task: t, ExpenseCAD: exp, Profit: p, MarginPct: mp}
+	}
+	writeJSON(w, http.StatusOK, rows)
 }
 
 // completedAt 为 YYYY-MM-DD（或至少前 7 位为 YYYY-MM）

@@ -88,25 +88,6 @@
               <div class="trend-pie-chart"><canvas id="trend-pie-pending"></canvas></div>
             </div>
           </div>
-          <div class="trend-profit-table-wrap">
-            <h3 class="trend-profit-table-title">本月任务盈利明细</h3>
-            <p class="hint trend-profit-hint">上表 Profit 的逐任务分解（完成日落在本月）。</p>
-            <div class="table-wrap">
-              <table class="data trend-profit-table">
-                <thead>
-                  <tr>
-                    <th>任务</th>
-                    <th>公司</th>
-                    <th>完成日</th>
-                    <th class="num">Revenue</th>
-                    <th class="num">Expense (CAD)</th>
-                    <th class="num">Profit</th>
-                  </tr>
-                </thead>
-                <tbody id="trend-profit-body"></tbody>
-              </table>
-            </div>
-          </div>
         </div>
 
         <div class="trend-card trend-card--bar">
@@ -149,6 +130,7 @@
               <th>日期</th>
               <th>Task</th>
               <th>Price</th>
+              <th class="num">利润率</th>
               <th>完成日期</th>
               <th>备注</th>
             </tr>
@@ -556,15 +538,19 @@
   </dialog>
 
   <dialog id="dlg-customer" class="dlg-task-wide">
-    <form id="form-customer">
-      <h2>Edit Customer</h2>
+    <form id="form-customer" data-customer-mode="">
+      <h2 id="customer-dlg-heading">Edit Customer</h2>
       <input type="hidden" id="customer-edit-id" />
       <p class="customer-edit-title" id="customer-edit-idname"></p>
       <label>Customer Name <input id="customer-edit-name" type="text" autocomplete="off" required /></label>
+      <label>Display Customer Name
+        <input id="customer-edit-display" type="text" maxlength="20" autocomplete="off" placeholder="表格/下拉等处显示；留空则用全名" />
+      </label>
+      <p class="hint customer-edit-display-hint">最多 20 个字符（中英文均计 1 字）。</p>
       <label>Email <input id="customer-edit-email" type="email" autocomplete="off" /></label>
       <label>电话 <input id="customer-edit-phone" type="text" autocomplete="off" /></label>
       <label>地址 <textarea id="customer-edit-address" rows="3"></textarea></label>
-      <label class="customer-inline-check">
+      <label id="customer-edit-inactive-wrap" class="customer-inline-check">
         <input id="customer-edit-inactive" type="checkbox" />
         设为 inactive（不可新建任务与发票）
       </label>

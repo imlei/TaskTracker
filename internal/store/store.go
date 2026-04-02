@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"simpletask/internal/models"
 )
@@ -20,6 +21,23 @@ var (
 	ErrTaskDeleteLocked = errors.New("only pending tasks can be deleted")
 	ErrCustomerInactive = errors.New("customer is inactive")
 )
+
+// 任务列表等处 Customer 列：有简称用简称，否则全名
+const sqlTaskCustomerDisplayName = `COALESCE(NULLIF(TRIM(COALESCE(c.display_name,'')), ''), COALESCE(c.name,''), '')`
+
+const maxCustomerDisplayNameRunes = 20
+
+func normalizeCustomerDisplayName(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+	if utf8.RuneCountInString(s) <= maxCustomerDisplayNameRunes {
+		return s
+	}
+	runes := []rune(s)
+	return string(runes[:maxCustomerDisplayNameRunes])
+}
 
 func isActiveCustomerStatus(status string) bool {
 	s := strings.ToLower(strings.TrimSpace(status))
@@ -193,7 +211,7 @@ const taskCols = `id, customer_id, company_name, date, service1, service2, price
 func (s *Store) GetTask(id string) (models.Task, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	row := s.db.QueryRow(`SELECT t.id, t.customer_id, t.company_name, t.date, t.service1, t.service2, t.price1, t.price2, t.status, t.completed_at, t.note, t.selected_price_ids, COALESCE(c.name,''), COALESCE(c.status,'active') FROM tasks t LEFT JOIN customers c ON c.id = t.customer_id WHERE t.id=?`, id)
+	row := s.db.QueryRow(`SELECT t.id, t.customer_id, t.company_name, t.date, t.service1, t.service2, t.price1, t.price2, t.status, t.completed_at, t.note, t.selected_price_ids, `+sqlTaskCustomerDisplayName+`, COALESCE(c.status,'active') FROM tasks t LEFT JOIN customers c ON c.id = t.customer_id WHERE t.id=?`, id)
 	t, err := scanTaskJoin(row)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -205,7 +223,7 @@ func (s *Store) GetTask(id string) (models.Task, error) {
 }
 
 func (s *Store) ListTasks() []models.Task {
-	rows, err := s.db.Query(`SELECT t.id, t.customer_id, t.company_name, t.date, t.service1, t.service2, t.price1, t.price2, t.status, t.completed_at, t.note, t.selected_price_ids, COALESCE(c.name,''), COALESCE(c.status,'active') FROM tasks t LEFT JOIN customers c ON c.id = t.customer_id ORDER BY t.id`)
+	rows, err := s.db.Query(`SELECT t.id, t.customer_id, t.company_name, t.date, t.service1, t.service2, t.price1, t.price2, t.status, t.completed_at, t.note, t.selected_price_ids, ` + sqlTaskCustomerDisplayName + `, COALESCE(c.status,'active') FROM tasks t LEFT JOIN customers c ON c.id = t.customer_id ORDER BY t.id`)
 	if err != nil {
 		return nil
 	}
@@ -354,7 +372,7 @@ func (s *Store) DeleteTask(id string) error {
 func (s *Store) ListCustomers() []models.Customer {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	rows, err := s.db.Query(`SELECT id, name, COALESCE(email,''), COALESCE(phone,''), COALESCE(address,''), COALESCE(status,'active') FROM customers ORDER BY id`)
+	rows, err := s.db.Query(`SELECT id, name, COALESCE(display_name,''), COALESCE(email,''), COALESCE(phone,''), COALESCE(address,''), COALESCE(status,'active') FROM customers ORDER BY id`)
 	if err != nil {
 		return nil
 	}
@@ -362,7 +380,7 @@ func (s *Store) ListCustomers() []models.Customer {
 	out := make([]models.Customer, 0)
 	for rows.Next() {
 		var c models.Customer
-		if err := rows.Scan(&c.ID, &c.Name, &c.Email, &c.Phone, &c.Address, &c.Status); err != nil {
+		if err := rows.Scan(&c.ID, &c.Name, &c.DisplayName, &c.Email, &c.Phone, &c.Address, &c.Status); err != nil {
 			continue
 		}
 		out = append(out, c)
@@ -380,9 +398,9 @@ func (s *Store) GetCustomer(id string) (models.Customer, error) {
 func (s *Store) getCustomerUnlocked(id string) (models.Customer, error) {
 	var c models.Customer
 	err := s.db.QueryRow(
-		`SELECT id, name, COALESCE(email,''), COALESCE(phone,''), COALESCE(address,''), COALESCE(status,'active') FROM customers WHERE id=?`,
+		`SELECT id, name, COALESCE(display_name,''), COALESCE(email,''), COALESCE(phone,''), COALESCE(address,''), COALESCE(status,'active') FROM customers WHERE id=?`,
 		strings.TrimSpace(id),
-	).Scan(&c.ID, &c.Name, &c.Email, &c.Phone, &c.Address, &c.Status)
+	).Scan(&c.ID, &c.Name, &c.DisplayName, &c.Email, &c.Phone, &c.Address, &c.Status)
 	if errors.Is(err, sql.ErrNoRows) {
 		return models.Customer{}, ErrNotFound
 	}
@@ -421,8 +439,9 @@ func (s *Store) UpdateCustomer(id string, patch models.Customer) (models.Custome
 			status = "active"
 		}
 	}
-	res, err := s.db.Exec(`UPDATE customers SET name=?, email=?, phone=?, address=?, status=? WHERE id=?`,
-		name, email, phone, address, status, id)
+	displayName := normalizeCustomerDisplayName(patch.DisplayName)
+	res, err := s.db.Exec(`UPDATE customers SET name=?, display_name=?, email=?, phone=?, address=?, status=? WHERE id=?`,
+		name, displayName, email, phone, address, status, id)
 	if err != nil {
 		return models.Customer{}, err
 	}
@@ -490,13 +509,15 @@ func (s *Store) CreateCustomer(c models.Customer) models.Customer {
 	if id == "" {
 		id = s.nextCustomerIDLocked()
 	}
-	_, err := s.db.Exec(`INSERT INTO customers (id, name, email, phone, address, status) VALUES (?,?,?,?,?,?)`,
-		id, name, strings.TrimSpace(c.Email), strings.TrimSpace(c.Phone), strings.TrimSpace(c.Address), "active")
+	disp := normalizeCustomerDisplayName(c.DisplayName)
+	_, err := s.db.Exec(`INSERT INTO customers (id, name, display_name, email, phone, address, status) VALUES (?,?,?,?,?,?,?)`,
+		id, name, disp, strings.TrimSpace(c.Email), strings.TrimSpace(c.Phone), strings.TrimSpace(c.Address), "active")
 	if err != nil {
 		return c
 	}
 	c.ID = id
 	c.Name = name
+	c.DisplayName = disp
 	c.Status = "active"
 	return c
 }

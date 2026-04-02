@@ -12,19 +12,20 @@ const (
 
 // Customer 客户（任务从客户中选择；公司名为任务上的具体名称）
 type Customer struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Email   string `json:"email"`
-	Phone   string `json:"phone"`
-	Address string `json:"address"`
-	Status  string `json:"status"` // active | inactive；inactive 时不可新建任务/发票
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"` // 列表/下拉等处优先显示；空则用 Name；最多 20 字符（UTF-8 码点）
+	Email       string `json:"email"`
+	Phone       string `json:"phone"`
+	Address     string `json:"address"`
+	Status      string `json:"status"` // active | inactive；inactive 时不可新建任务/发票
 }
 
 // Task 对应任务表中的一行
 type Task struct {
 	ID               string     `json:"id"`
 	CustomerID       string     `json:"customerId"`
-	CustomerName     string     `json:"customerName,omitempty"` // 列表/详情展示，来自 customers 表
+	CustomerName     string     `json:"customerName,omitempty"` // 列表等处展示用：customers.display_name 非空则用之，否则 name
 	CustomerStatus   string     `json:"customerStatus,omitempty"` // 来自 customers.status，用于前端过滤 inactive
 	CompanyName      string     `json:"companyName"`            // 公司名（隶属于所选 Customer）
 	Date             string     `json:"date"` // ISO 日期字符串，如 2026-03-30

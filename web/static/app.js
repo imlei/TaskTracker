@@ -65,6 +65,14 @@ document.querySelectorAll(".tab").forEach((btn) => {
 // --- Tasks ---
 let tasksCache = [];
 let customersCache = [];
+
+/** 界面展示用客户名：有 displayName 用其，否则全名 name */
+function customerDisplayLabel(c) {
+  if (!c) return "";
+  const d = String(c.displayName || "").trim();
+  if (d) return d;
+  return String(c.name || "").trim();
+}
 /** 当前编辑对话框打开时的任务快照（用于保留 completedAt 等未在表单展示的字段） */
 let lastOpenedTask = null;
 
@@ -106,7 +114,7 @@ function fillTaskCustomerSelect(selectedId) {
     }
     const o = document.createElement("option");
     o.value = c.id;
-    o.textContent = (c.name || c.id).trim() || c.id;
+    o.textContent = (customerDisplayLabel(c) || c.id).trim() || c.id;
     sel.appendChild(o);
   }
   if (selectedId) sel.value = selectedId;
@@ -188,16 +196,8 @@ $("#filter-status").addEventListener("change", renderTasks);
 
 $("#btn-new-task").addEventListener("click", () => openTaskDialog(null));
 
-document.getElementById("btn-new-customer")?.addEventListener("click", async () => {
-  const name = prompt("新客户名称（将出现在 Customer 列表中）：");
-  if (!name || !String(name).trim()) return;
-  try {
-    const c = await api("/api/customers", { method: "POST", body: JSON.stringify({ name: String(name).trim() }) });
-    await loadCustomers();
-    fillTaskCustomerSelect(c.id);
-  } catch (e) {
-    alert("添加失败: " + e.message);
-  }
+document.getElementById("btn-new-customer")?.addEventListener("click", () => {
+  openNewCustomerDialog({ selectTaskCustomer: true });
 });
 
 const dlgTask = $("#dlg-task");
@@ -640,9 +640,15 @@ function renderCustomersList() {
   for (const c of rows) {
     const active = customerIsActive(c);
     const tr = document.createElement("tr");
+    const full = (c.name || "").trim();
+    const lab = customerDisplayLabel(c) || full || c.id;
+    const nameCell =
+      lab !== full && full
+        ? `${escapeHtml(lab)} <span class="hint">(${escapeHtml(full)})</span>`
+        : escapeHtml(lab);
     tr.innerHTML = `
       <td>${escapeHtml(c.id)}</td>
-      <td>${escapeHtml((c.name || "").trim() || c.id)}</td>
+      <td>${nameCell}</td>
       <td>${active ? `<span class="status-done">active</span>` : `<span class="status-pending">inactive</span>`}</td>
       <td class="row-actions">
         <button type="button" class="ghost small" data-act="edit">Edit</button>
@@ -850,24 +856,72 @@ document.querySelectorAll(".invoices-nav-btn").forEach((btn) => {
 
 document.getElementById("btn-invoices-back-customers")?.addEventListener("click", () => setInvoiceView("list"));
 
-document.getElementById("btn-invoices-new-customer")?.addEventListener("click", async () => {
-  const name = prompt("新客户名称：");
-  if (!name || !String(name).trim()) return;
-  try {
-    await api("/api/customers", { method: "POST", body: JSON.stringify({ name: String(name).trim() }) });
-    await loadCustomers();
-    if (invoiceViewMode === "customers") {
-      renderCustomersList();
-    }
-  } catch (e) {
-    alert("添加失败: " + e.message);
-  }
+document.getElementById("btn-invoices-new-customer")?.addEventListener("click", () => {
+  openNewCustomerDialog({ refreshCustomersView: true });
 });
 
 const dlgCustomer = document.getElementById("dlg-customer");
 const formCustomer = document.getElementById("form-customer");
 const phoneFormatRx = /^\+?\d{10,15}$/;
 const emailFormatRx = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/** 新建客户：用户改过 Display 后不再随全名自动覆盖 */
+let newCustomerDisplayTouched = false;
+/** 新建保存后的回调选项 */
+let newCustomerDialogOpts = null;
+
+function sliceCustomerDisplayFromFull(full) {
+  const t = String(full || "").trim();
+  return [...t].slice(0, 20).join("");
+}
+
+document.getElementById("customer-edit-name")?.addEventListener("input", () => {
+  if (formCustomer?.dataset.customerMode !== "new") return;
+  if (newCustomerDisplayTouched) return;
+  const dispInp = document.getElementById("customer-edit-display");
+  const nameInp = document.getElementById("customer-edit-name");
+  if (dispInp && nameInp) dispInp.value = sliceCustomerDisplayFromFull(nameInp.value);
+});
+
+document.getElementById("customer-edit-display")?.addEventListener("input", () => {
+  if (formCustomer?.dataset.customerMode === "new") newCustomerDisplayTouched = true;
+});
+
+dlgCustomer?.addEventListener("close", () => {
+  if (formCustomer) formCustomer.dataset.customerMode = "";
+  newCustomerDialogOpts = null;
+});
+
+function openNewCustomerDialog(opts = {}) {
+  if (!dlgCustomer || !formCustomer) return;
+  newCustomerDialogOpts = opts;
+  newCustomerDisplayTouched = false;
+  formCustomer.dataset.customerMode = "new";
+  const heading = document.getElementById("customer-dlg-heading");
+  if (heading) heading.textContent = "新建客户";
+  document.getElementById("customer-edit-id").value = "";
+  const idname = document.getElementById("customer-edit-idname");
+  if (idname) {
+    idname.hidden = false;
+    idname.textContent =
+      "请填写 Customer Name 与 Display Customer Name。Display 默认随全名自动填前 20 字，可随时修改。";
+  }
+  const iw = document.getElementById("customer-edit-inactive-wrap");
+  if (iw) iw.hidden = true;
+  const inactive = document.getElementById("customer-edit-inactive");
+  if (inactive) inactive.checked = false;
+  const nameInp = document.getElementById("customer-edit-name");
+  const dispInp = document.getElementById("customer-edit-display");
+  if (nameInp) nameInp.value = "";
+  if (dispInp) {
+    dispInp.value = "";
+    dispInp.placeholder = "默认同步全名前 20 字，可改";
+  }
+  document.getElementById("customer-edit-email")?.value = "";
+  document.getElementById("customer-edit-phone")?.value = "";
+  document.getElementById("customer-edit-address")?.value = "";
+  dlgCustomer.showModal();
+}
 
 // --- Trend ---
 let trendPieProfitChart = null;
@@ -988,29 +1042,6 @@ async function loadTrend() {
     document.getElementById("trend-invoiced-amount").textContent = `CAD ${(data.monthlyInvoicedAmount || 0).toFixed(2)}`;
     document.getElementById("trend-invoiced-month-label").textContent = `${monthLabel} 本月开票总额`;
 
-    const tbody = document.getElementById("trend-profit-body");
-    if (tbody) {
-      const rows = asArray(data.profitTasks);
-      tbody.innerHTML = "";
-      if (rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="hint">本月无已完成任务（完成日期落在本月），或尚未标记完成。</td></tr>`;
-      } else {
-        for (const row of rows) {
-          const tr = document.createElement("tr");
-          const profit = (row.profit ?? 0).toFixed(2);
-          const profitCls = Number(row.profit) < 0 ? " trend-profit-negative" : "";
-          tr.innerHTML = `
-            <td>${escapeHtml(row.taskId || "")}</td>
-            <td>${escapeHtml(row.companyName || "—")}</td>
-            <td>${escapeHtml(row.completedAt || "")}</td>
-            <td class="num">${(row.revenue ?? 0).toFixed(2)}</td>
-            <td class="num">${(row.expenseTotal ?? 0).toFixed(2)}</td>
-            <td class="num${profitCls}">${profit}</td>`;
-          tbody.appendChild(tr);
-        }
-      }
-    }
-
     // 圆图
     const ctxProfit = document.getElementById("trend-pie-profit")?.getContext("2d");
     const ctxAmount = document.getElementById("trend-pie-amount")?.getContext("2d");
@@ -1129,10 +1160,21 @@ async function openCustomerEditDialog(customerId) {
   if (!dlgCustomer || !formCustomer) return;
   try {
     const c = await api(`/api/customers/${encodeURIComponent(customerId)}`);
+    formCustomer.dataset.customerMode = "edit";
+    newCustomerDialogOpts = null;
+    const heading = document.getElementById("customer-dlg-heading");
+    if (heading) heading.textContent = "Edit Customer";
+    const iw = document.getElementById("customer-edit-inactive-wrap");
+    if (iw) iw.hidden = false;
     document.getElementById("customer-edit-id").value = c.id || "";
     const idname = document.getElementById("customer-edit-idname");
     if (idname) idname.textContent = `${c.id} — ${(c.name || "").trim() || c.id}`;
     document.getElementById("customer-edit-name").value = (c.name || "").trim();
+    const dispEl = document.getElementById("customer-edit-display");
+    if (dispEl) {
+      dispEl.value = (c.displayName || "").trim();
+      dispEl.placeholder = "表格/下拉等处显示；留空则用全名";
+    }
     document.getElementById("customer-edit-email").value = c.email || "";
     document.getElementById("customer-edit-phone").value = c.phone || "";
     document.getElementById("customer-edit-address").value = c.address || "";
@@ -1146,13 +1188,17 @@ async function openCustomerEditDialog(customerId) {
 
 formCustomer?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const id = document.getElementById("customer-edit-id")?.value?.trim();
-  if (!id) return;
+  const mode = formCustomer?.dataset?.customerMode || "edit";
   const name = document.getElementById("customer-edit-name")?.value?.trim() || "";
   const email = document.getElementById("customer-edit-email")?.value?.trim() || "";
   const phone = document.getElementById("customer-edit-phone")?.value?.trim() || "";
+  const displayName = (document.getElementById("customer-edit-display")?.value || "").trim();
   if (!name) {
     alert("Customer Name 不能为空。");
+    return;
+  }
+  if ([...displayName].length > 20) {
+    alert("Display Customer Name 不能超过 20 个字符。");
     return;
   }
   if (email && !emailFormatRx.test(email)) {
@@ -1163,9 +1209,49 @@ formCustomer?.addEventListener("submit", async (e) => {
     alert("Phone Number 格式不正确，仅支持 +000000000000 或纯数字。");
     return;
   }
+  if (mode === "new") {
+    if (!displayName) {
+      alert("请填写 Display Customer Name（已根据全名自动填充；若为空请先输入 Customer Name）。");
+      return;
+    }
+    const body = {
+      name,
+      displayName,
+      email,
+      phone,
+      address: document.getElementById("customer-edit-address")?.value ?? "",
+      status: "active",
+    };
+    try {
+      const created = await api("/api/customers", { method: "POST", body: JSON.stringify(body) });
+      await loadCustomers();
+      await loadTasks();
+      dlgCustomer?.close();
+      const o = newCustomerDialogOpts;
+      newCustomerDialogOpts = null;
+      if (o?.selectTaskCustomer && created?.id) {
+        fillTaskCustomerSelect(created.id);
+      } else {
+        const selId = document.getElementById("task-customer")?.value;
+        fillTaskCustomerSelect(selId || "");
+      }
+      if (o?.refreshCustomersView && invoiceViewMode === "customers") {
+        renderCustomersList();
+      }
+      if (invoiceViewMode === "new-invoice") {
+        renderNewInvoiceView();
+      }
+    } catch (err) {
+      alert("保存失败: " + err.message);
+    }
+    return;
+  }
+  const id = document.getElementById("customer-edit-id")?.value?.trim();
+  if (!id) return;
   const inactive = document.getElementById("customer-edit-inactive")?.checked;
   const body = {
     name,
+    displayName,
     email,
     phone,
     address: document.getElementById("customer-edit-address")?.value ?? "",
@@ -1830,6 +1916,11 @@ function fmtNum(n) {
   return Number(n).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
 }
 
+function fmtMarginPct(marginPct) {
+  if (marginPct == null || Number.isNaN(Number(marginPct))) return "—";
+  return `${Number(marginPct).toFixed(1)}%`;
+}
+
 // --- Report（按月查看已完成任务 + 导出 CSV）---
 let reportRows = [];
 
@@ -1858,6 +1949,7 @@ async function loadReport() {
         <td>${escapeHtml(t.date || "")}</td>
         <td>${escapeHtml(t.service1 || "")}</td>
         <td>${fmtNum(t.price1)}</td>
+        <td class="num">${escapeHtml(fmtMarginPct(t.marginPct))}</td>
         <td>${escapeHtml(t.completedAt || "")}</td>
         <td>${escapeHtml(t.note || "")}</td>`;
       bodyEl.appendChild(tr);
@@ -1887,9 +1979,23 @@ function exportReportCSV() {
     alert("当前没有可导出的数据，请先查询。");
     return;
   }
-  const headers = ["No.", "Customer", "Task Name", "日期", "Task", "Price", "状态", "完成日期", "备注"];
+  const headers = [
+    "No.",
+    "Customer",
+    "Task Name",
+    "日期",
+    "Task",
+    "Price",
+    "Expense (CAD)",
+    "Profit",
+    "Margin %",
+    "状态",
+    "完成日期",
+    "备注",
+  ];
   const lines = [headers.join(",")];
   for (const t of rows) {
+    const marginStr = t.marginPct == null || Number.isNaN(Number(t.marginPct)) ? "" : String(Number(t.marginPct).toFixed(2));
     lines.push(
       [
         csvEscape(t.id),
@@ -1898,6 +2004,9 @@ function exportReportCSV() {
         csvEscape(t.date),
         csvEscape(t.service1),
         csvEscape(t.price1),
+        csvEscape(t.expenseCad),
+        csvEscape(t.profit),
+        csvEscape(marginStr),
         csvEscape(t.status),
         csvEscape(t.completedAt),
         csvEscape(t.note),

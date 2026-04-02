@@ -209,6 +209,7 @@ func ensureCustomerExtraColumns(db *sql.DB) error {
 		{Name: "phone", DDL: "ALTER TABLE customers ADD COLUMN phone TEXT NOT NULL DEFAULT ''"},
 		{Name: "address", DDL: "ALTER TABLE customers ADD COLUMN address TEXT NOT NULL DEFAULT ''"},
 		{Name: "status", DDL: "ALTER TABLE customers ADD COLUMN status TEXT NOT NULL DEFAULT 'active'"},
+		{Name: "display_name", DDL: "ALTER TABLE customers ADD COLUMN display_name TEXT NOT NULL DEFAULT ''"},
 	}
 	existing := map[string]bool{}
 	rows, err := db.Query(`PRAGMA table_info(customers)`)
