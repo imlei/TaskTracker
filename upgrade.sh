@@ -47,6 +47,7 @@ die() { printf 'upgrade.sh: %s\n' "$*" >&2; exit 1; }
 
 # 定义全局变量
 current_version=""
+BUILD_SUCCESSFUL=false
 
 # 和 install.sh 保持一致
 ensure_go() {
@@ -81,10 +82,12 @@ ensure_go() {
 }
 
 build_if_needed() {
-	if [[ "${NO_BUILD:-}" != "1" && ! -f "$ROOT/SimpleTask" ]]; then
+	if [[ "${NO_BUILD:-}" != "1" ]]; then
 		if [[ "$current_version" =~ 1.2[2-9]*|. ]]; then
 			log "Building SimpleTask..."
 			go build -o SimpleTask . || die "编译失败"
+			log "SimpleTask binary generated successfully"
+			BUILD_SUCCESSFUL=true
 		else
 			die "Go 版本不足 1.22，请先安装 Go 1.22.2+"
 		fi
@@ -187,8 +190,9 @@ WantedBy=multi-user.target
 EOF
 	chmod 0644 "/etc/systemd/system/SimpleTask.service"
 	systemctl daemon-reload
-	log "systemd: enabled and started SimpleTask (LISTEN_ADDR=$LISTEN_ADDR)"
+	log "systemd: service updated (LISTEN_ADDR=$LISTEN_ADDR)"
 	log "Check: systemctl status SimpleTask"
+	log "Start: systemctl start SimpleTask"
 }
 
 upgrade_nginx() {
@@ -257,7 +261,7 @@ main() {
 	ensure_go
 	build_if_needed
 
-	if [[ ! -f "$ROOT/SimpleTask" ]]; then
+	if [[ "$BUILD_SUCCESSFUL" == "true" && ! -f "$ROOT/SimpleTask" ]]; then
 		die "编译失败：未生成 SimpleTask"
 	fi
 
@@ -281,6 +285,8 @@ main() {
 	log "  systemd: /etc/systemd/system/SimpleTask.service"
 	log "  数据: $PREFIX/data/"
 	log "  nginx: /etc/nginx/sites-available/SimpleTask"
+	log ""
+	log "启动服务: systemctl start SimpleTask"
 }
 
 main "$@"
