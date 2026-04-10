@@ -45,10 +45,14 @@ EOF
 log() { printf 'upgrade.sh: %s\n' "$*"; }
 die() { printf 'upgrade.sh: %s\n' "$*" >&2; exit 1; }
 
+# 定义全局变量
+current_version=""
+
 # 和 install.sh 保持一致
 ensure_go() {
-	local version go_version current_version
+	local version
 	version="${GOTOOLCHAIN:-go1.22.2}"
+	# 将current_version设为全局变量，以便在其他函数中使用
 	current_version=$(go version 2>/dev/null || echo "")
 	if [[ "$current_version" =~ go([0-9]+\.[0-9]+(\.[0-9]+)?) ]]; then
 		current_version="${BASH_REMATCH[1]}"
