@@ -83,14 +83,10 @@ ensure_go() {
 
 build_if_needed() {
 	if [[ "${NO_BUILD:-}" != "1" ]]; then
-		if [[ "$current_version" =~ 1.2[2-9]*|. ]]; then
-			log "Building SimpleTask..."
-			go build -o SimpleTask . || die "编译失败"
-			log "SimpleTask binary generated successfully"
-			BUILD_SUCCESSFUL=true
-		else
-			die "Go 版本不足 1.22，请先安装 Go 1.22.2+"
-		fi
+		log "Building SimpleTask..."
+		go build -o SimpleTask . || die "编译失败"
+		log "SimpleTask binary generated successfully"
+		BUILD_SUCCESSFUL=true
 	fi
 }
 
@@ -258,11 +254,14 @@ main() {
 	apt-get update -qq
 	apt-get install -y systemd  # 确保 systemd
 
-	ensure_go
+	ensure_go || die "Go 环境不满足要求，请安装 Go 1.22.2+ 后重试"
 	build_if_needed
 
-	if [[ "$BUILD_SUCCESSFUL" == "true" && ! -f "$ROOT/SimpleTask" ]]; then
-		die "编译失败：未生成 SimpleTask"
+	if [[ "$BUILD_SUCCESSFUL" != "true" ]]; then
+		die "编译未执行，无法升级"
+	fi
+	if [[ ! -f "$ROOT/SimpleTask" ]]; then
+		die "编译失败：未生成 SimpleTask 二进制"
 	fi
 
 	# 如果系统有服务，停止服务
@@ -278,6 +277,8 @@ main() {
 		upgrade_nginx
 	fi
 
+	log "正在启动 SimpleTask 服务..."
+	systemctl start SimpleTask || die "启动 SimpleTask 服务失败"
 	log "SimpleTask 升级完成！"
 	log "访问：http://localhost${LISTEN_ADDR}"
 	log "配置文件位置："
@@ -285,8 +286,6 @@ main() {
 	log "  systemd: /etc/systemd/system/SimpleTask.service"
 	log "  数据: $PREFIX/data/"
 	log "  nginx: /etc/nginx/sites-available/SimpleTask"
-	log ""
-	log "启动服务: systemctl start SimpleTask"
 }
 
 main "$@"

@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"io/fs"
 	"log"
 	"net/http"
@@ -57,6 +58,10 @@ func main() {
 	mux := http.NewServeMux()
 	api.Register(mux, srv)
 	auth.Register(mux, authCfg)
+	mux.HandleFunc("/api/version", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"version":"%s"}`, Version)
+	})
 
 	sub, err := fs.Sub(staticFS, "web/static")
 	if err != nil {

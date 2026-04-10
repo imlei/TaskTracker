@@ -2043,6 +2043,12 @@ document.getElementById("btn-report-load")?.addEventListener("click", () => load
 document.getElementById("btn-report-export")?.addEventListener("click", () => exportReportCSV());
 
 (async function init() {
+  // Load version
+  fetch("/api/version").then(r => r.json()).then(d => {
+    const el = document.getElementById("app-version");
+    if (el) el.textContent = "v" + d.version;
+  }).catch(() => {});
+
   let me;
   try {
     me = await fetch("/api/me", { credentials: "same-origin" }).then((r) => r.json());
