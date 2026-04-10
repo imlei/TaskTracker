@@ -477,10 +477,10 @@ function openInvoiceDialog(task) {
   setInvoiceDialogMode(false);
   const today = todayLocalISO();
   document.getElementById("inv-task-id").value = task.id;
-  document.getElementById("inv-bill-name").value = task.companyName || "";
+  document.getElementById("inv-bill-name").value = task.customerName || "";
   document.getElementById("inv-bill-addr").value = "";
   document.getElementById("inv-bill-email").value = "";
-  document.getElementById("inv-ship-name").value = task.companyName || "";
+  document.getElementById("inv-ship-name").value = task.customerName || "";
   document.getElementById("inv-ship-addr").value = "";
   document.getElementById("inv-date").value = today;
   document.getElementById("inv-terms").value = "Net 30";
