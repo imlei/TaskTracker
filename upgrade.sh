@@ -133,6 +133,13 @@ upgrade_binary() {
 	log "Replacing SimpleTask binary..."
 	install -d -m 0755 "$PREFIX"
 	install -m 0755 "$ROOT/SimpleTask" "$PREFIX/SimpleTask"
+	
+	# 检查是否存在SimpleTask用户，不存在则创建
+	if ! id "SimpleTask" &>/dev/null; then
+		log "Creating SimpleTask user..."
+		useradd -r -s /bin/false -d "$PREFIX" SimpleTask || die "创建SimpleTask用户失败"
+	fi
+	
 	chown -R SimpleTask:SimpleTask "$PREFIX"
 }
 
