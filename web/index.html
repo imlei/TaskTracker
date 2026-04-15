@@ -15,9 +15,8 @@
     <!-- Navbar -->
     <div class="navbar bg-base-100 border-b border-base-300 px-4 min-h-12 sticky top-0 z-30 shadow-sm">
       <div class="navbar-start gap-2">
-        <span class="font-bold text-sm tracking-wide">PAYROLL WORKS</span>
-        <span class="badge badge-ghost badge-sm">🇨🇦</span>
-        <span class="text-base-content/40 text-xs" id="taxYear">2025</span>
+        <span class="font-bold text-sm tracking-wide">SimpleTask - Payroll</span>
+        <span class="text-base">🇨🇦</span>
       </div>
       <div class="navbar-center">
         <span class="text-sm font-medium text-base-content/70">Payroll</span>
@@ -276,7 +275,6 @@
           if (!me.authenticated) { window.location.href = '/'; return; }
           var av = document.getElementById('topbar-avatar');
           if (av && me.user) av.textContent = me.user.slice(0, 2).toUpperCase();
-          document.getElementById('taxYear').textContent = new Date().getFullYear();
         })
         .catch(function() {});
 
