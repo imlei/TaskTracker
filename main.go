@@ -19,6 +19,9 @@ import (
 //go:embed web/static
 var staticFS embed.FS
 
+//go:embed web/*.html web/*.css web/reports
+var payrollFS embed.FS
+
 func main() {
 	dataDir := os.Getenv("DATA_DIR")
 	if dataDir == "" {
@@ -77,6 +80,16 @@ func main() {
 		w.Header().Set("Cache-Control", "no-cache, must-revalidate")
 		fileServer.ServeHTTP(w, r)
 	}))
+
+	payrollSub, err := fs.Sub(payrollFS, "web")
+	if err != nil {
+		log.Fatal(err)
+	}
+	payrollServer := http.FileServer(http.FS(payrollSub))
+	mux.Handle("/payroll/", http.StripPrefix("/payroll", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache, must-revalidate")
+		payrollServer.ServeHTTP(w, r)
+	})))
 
 	handler := api.RecoverMiddleware(auth.Middleware(authCfg, mux))
 
