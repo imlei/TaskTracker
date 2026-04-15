@@ -19,7 +19,7 @@ import (
 //go:embed web/static
 var staticFS embed.FS
 
-//go:embed web/*.html web/*.css web/reports
+//go:embed web/*.html web/*.css web/reports web/vendor web/js
 var payrollFS embed.FS
 
 //go:embed web/admin
@@ -92,6 +92,16 @@ func main() {
 	mux.Handle("/payroll/", http.StripPrefix("/payroll", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-cache, must-revalidate")
 		payrollServer.ServeHTTP(w, r)
+	})))
+
+	vendorSub, err := fs.Sub(payrollFS, "web/vendor")
+	if err != nil {
+		log.Fatal(err)
+	}
+	vendorServer := http.FileServer(http.FS(vendorSub))
+	mux.Handle("/vendor/", http.StripPrefix("/vendor", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+		vendorServer.ServeHTTP(w, r)
 	})))
 
 	adminSub, err := fs.Sub(adminFS, "web/admin")

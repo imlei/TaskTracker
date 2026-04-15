@@ -151,10 +151,39 @@ ensure_go() {
 	ok "Go 安装成功: $(go version)"
 }
 
+# ── 前端 vendor 文件（自托管 CDN 替代）────────────────────────────────────────
+ensure_vendor_files() {
+	local vendor_dir="$ROOT/web/vendor"
+	mkdir -p "$vendor_dir"
+
+	# 需要下载的文件列表: "本地文件名|下载URL"
+	local files=(
+		"tailwind-browser.js|https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"
+		"daisyui-themes.css|https://cdn.jsdelivr.net/npm/daisyui@5/themes.css"
+		"daisyui-components.css|https://cdn.jsdelivr.net/npm/daisyui@5/daisyui.css"
+		"chart.min.js|https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"
+	)
+
+	for entry in "${files[@]}"; do
+		local fname="${entry%%|*}"
+		local url="${entry##*|}"
+		local dest="$vendor_dir/$fname"
+		if [[ ! -f "$dest" ]]; then
+			log "下载 vendor/$fname ..."
+			curl -fsSL "$url" -o "$dest" || warn "无法下载 $fname，如已存在可忽略此警告"
+		else
+			log "vendor/$fname 已存在，跳过"
+		fi
+	done
+}
+
 # ── 编译 ──────────────────────────────────────────────────────────────────────
 build_if_needed() {
 	step "编译"
 	[[ "${NO_BUILD:-}" == "1" ]] && { log "跳过编译（NO_BUILD=1）"; BUILD_SUCCESSFUL=true; return; }
+
+	# 下载前端 vendor 文件（自托管，避免 CDN 依赖）
+	ensure_vendor_files
 
 	rm -f "$ROOT/SimpleTask.new"
 	log "go build..."
