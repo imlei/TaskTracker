@@ -1,69 +1,315 @@
 <!DOCTYPE html>
-<html lang="en-CA">
+<html lang="en-CA" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Summary — Payroll Works</title>
-    <link rel="stylesheet" href="theme.css" />
-    <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="pages.css" />
+    <title>Payroll Summary — Payroll Works</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daisyui@5/cdn.js"></script>
+    <style type="text/tailwindcss">@import "tailwindcss";</style>
   </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <a href="dashboard.html" class="muted">←</a>
-          <span>PAYROLL WORKS</span>
-          <span class="muted">Payroll</span>
-          <span class="brand-flag" aria-hidden="true">🇨🇦</span>
-          <span class="tax-year"><span>2026</span></span>
-        </div>
-        <nav class="topbar-nav">
-          <a href="run-payroll.html" class="topbar-nav-item active">Payroll</a>
-        </nav>
-        <div class="topbar-actions">
-          <span class="muted" style="font-size: 0.8rem">RORO HOLDING LTD</span>
-          <div class="avatar">LH</div>
-        </div>
-      </header>
+  <body class="bg-base-200 min-h-screen">
 
-      <aside class="sidebar">
-        <a href="dashboard.html" class="nav-item"><span>⌂</span> Home</a>
-        <a href="run-payroll.html" class="nav-item active"><span>▤</span> Run Payroll</a>
-        <a href="#" class="nav-item" onclick="return false"><span>☰</span> Actions</a>
-        <a href="reports/payrun.html" class="nav-item"><span>▦</span> Reports</a>
-        <a href="employees.html" class="nav-item"><span>👤</span> Employees</a>
+    <!-- Navbar -->
+    <div class="navbar bg-base-100 border-b border-base-300 px-4 min-h-12 sticky top-0 z-30 shadow-sm">
+      <div class="navbar-start gap-2">
+        <a id="backBrand" href="run-payroll.html" class="btn btn-ghost btn-sm text-base-content/60">←</a>
+        <span class="font-bold text-sm tracking-wide">PAYROLL WORKS</span>
+        <span class="badge badge-ghost badge-sm">🇨🇦</span>
+        <span class="text-base-content/40 text-xs" id="taxYear">2025</span>
+      </div>
+      <div class="navbar-center">
+        <a id="nav-run" href="run-payroll.html" class="btn btn-ghost btn-sm font-medium">Payroll</a>
+      </div>
+      <div class="navbar-end gap-3">
+        <span class="text-sm text-base-content/60" id="companyName">—</span>
+        <div class="avatar placeholder">
+          <div class="bg-primary text-primary-content rounded-full w-8 text-xs"><span>PW</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside class="w-56 bg-base-100 border-r border-base-300 min-h-[calc(100vh-3rem)] hidden md:flex flex-col gap-1 p-3 shrink-0">
+        <a id="nav-home" href="dashboard.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Home
+        </a>
+        <a id="nav-runSide" href="run-payroll.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal bg-primary/10 text-primary">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Run Payroll
+        </a>
+        <a id="nav-employees" href="employees.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Employees
+        </a>
+        <div class="divider my-1"></div>
+        <a id="nav-reports" href="reports/payrun.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Reports
+        </a>
       </aside>
 
-      <main class="main">
-        <div class="hero-banner">
-          <span>Payroll complete</span>
-          <span class="muted">Submitted</span>
+      <!-- Main -->
+      <main class="flex-1 p-4 md:p-6 min-w-0">
+
+        <!-- Stepper (completed) -->
+        <ul class="steps steps-horizontal w-full max-w-2xl mb-6 text-xs">
+          <li class="step step-neutral">Pay Cycle</li>
+          <li class="step step-neutral">Salaries</li>
+          <li class="step step-neutral">Calculate</li>
+          <li class="step step-neutral">Review</li>
+          <li class="step step-neutral">Payments</li>
+          <li class="step step-primary font-semibold">Summary</li>
+        </ul>
+
+        <!-- Success banner -->
+        <div class="card bg-success text-success-content shadow-sm p-6 mb-6 flex flex-col items-center text-center">
+          <div class="w-14 h-14 bg-success-content/20 rounded-full flex items-center justify-center mb-3">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <h1 class="text-xl font-bold mb-1">Payroll Run Complete</h1>
+          <p class="text-success-content/80 text-sm" id="successSub">Period finalized successfully.</p>
         </div>
-        <div class="content">
-          <div class="payroll-steps-label">Payroll steps</div>
-          <div class="stepper">
-            <div class="step">Select pay cycle</div>
-            <div class="step">Salaries</div>
-            <div class="step">Timesheets</div>
-            <div class="step">Calculate</div>
-            <div class="step">Review</div>
-            <div class="step">Payments</div>
-            <div class="step active">Summary</div>
+
+        <!-- Stats + Pie chart grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+
+          <!-- Left: KPI stats -->
+          <div class="lg:col-span-1 space-y-3">
+            <div class="card bg-base-100 shadow-sm p-4">
+              <p class="text-xs uppercase tracking-wide font-semibold text-base-content/50 mb-3">Payrun Details</p>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-base-content/60">Pay Period</span>
+                  <span class="font-medium text-xs text-right" id="detPeriod">—</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-base-content/60">Pay Date</span>
+                  <span class="font-medium" id="detPayDate">—</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-base-content/60">Payment Method</span>
+                  <span class="font-medium" id="detMethod">Cheque</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-base-content/60">Employees</span>
+                  <span class="font-medium" id="detEmployees">—</span>
+                </div>
+                <div class="divider my-1"></div>
+                <div class="flex justify-between">
+                  <span class="text-base-content/60">Total Gross</span>
+                  <span class="font-mono font-bold" id="detGross">—</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-base-content/60">Employee Net Pay</span>
+                  <span class="font-mono font-bold text-success" id="detNetPay">—</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-base-content/60">EA Remittance</span>
+                  <span class="font-mono" id="detRemittance">—</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-base-content/60">Total Payrun</span>
+                  <span class="font-mono font-bold text-primary" id="detTotal">—</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="panel summary-hero">
-            <div class="icon-ok">✓</div>
-            <h1 class="page-title" style="margin-bottom: 0.5rem">This payroll run is submitted</h1>
-            <p class="muted">Payment date Apr 06, 2026 · Remittance calendar: follow CRA / your advisor.</p>
-          </div>
-
-          <div class="flow-footer" style="border-top: none; justify-content: center">
-            <a href="dashboard.html" class="btn btn-primary" style="text-decoration: none">Back to dashboard</a>
-            <a href="run-payroll.html" class="btn" style="text-decoration: none">New run</a>
+          <!-- Right: Pie chart + legend -->
+          <div class="lg:col-span-2 card bg-base-100 shadow-sm p-4 flex flex-col items-center justify-center">
+            <p class="text-xs uppercase tracking-wide font-semibold text-base-content/50 mb-4 self-start">Distribution</p>
+            <div class="flex flex-col sm:flex-row items-center gap-6 w-full">
+              <canvas id="pieChart" width="160" height="160" class="shrink-0"></canvas>
+              <div class="space-y-2 text-sm w-full" id="pieLegend"></div>
+            </div>
           </div>
         </div>
+
+        <!-- Employee payments table -->
+        <div class="card bg-base-100 shadow-sm overflow-x-auto mb-6">
+          <div class="px-4 pt-4 pb-2 flex items-center justify-between">
+            <h2 class="font-semibold text-sm">Employee Payments</h2>
+            <a id="btnPayslips" href="reports/cheques-payslips.html" class="btn btn-ghost btn-xs gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+              Pay Slips
+            </a>
+          </div>
+          <table class="table table-sm">
+            <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
+              <tr>
+                <th>Employee ID</th>
+                <th>Employee Name</th>
+                <th>Pay Type</th>
+                <th>Payment Date</th>
+                <th class="text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="summaryTbody">
+              <tr><td colspan="5" class="text-center py-6 text-base-content/40">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-wrap gap-3 justify-between">
+          <div class="flex gap-2">
+            <a id="nav-remittance" href="reports/remittance.html" class="btn btn-outline btn-sm gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Remittance Report
+            </a>
+          </div>
+          <div class="flex gap-2">
+            <a id="btnNewRun" href="run-payroll.html" class="btn btn-ghost btn-sm">New Run</a>
+            <a id="nav-dashboard" href="dashboard.html" class="btn btn-primary btn-sm">Back to Dashboard →</a>
+          </div>
+        </div>
+
       </main>
     </div>
+
+    <script>
+      var params    = new URLSearchParams(location.search);
+      var periodId  = params.get('period')  || '';
+      var companyId = params.get('company') || '';
+
+      function withC(href) { return companyId ? href + '?company=' + encodeURIComponent(companyId) : href; }
+
+      document.getElementById('nav-home').href       = withC('dashboard.html');
+      document.getElementById('nav-runSide').href    = withC('run-payroll.html');
+      document.getElementById('nav-run').href        = withC('run-payroll.html');
+      document.getElementById('nav-employees').href  = withC('employees.html');
+      document.getElementById('nav-reports').href    = withC('reports/payrun.html');
+      document.getElementById('nav-remittance').href = withC('reports/remittance.html');
+      document.getElementById('nav-dashboard').href  = withC('dashboard.html');
+      document.getElementById('btnNewRun').href      = withC('run-payroll.html');
+      document.getElementById('backBrand').href      = withC('run-payroll.html');
+      document.getElementById('btnPayslips').href    = withC('reports/cheques-payslips.html');
+
+      var periodInfo = null;
+
+      if (periodId) {
+        loadData();
+      } else {
+        renderEmpty();
+      }
+
+      function loadData() {
+        Promise.all([
+          fetch('/api/payroll/periods/' + encodeURIComponent(periodId), { credentials: 'same-origin' }).then(function(r){ return r.ok ? r.json() : null; }),
+          fetch('/api/payroll/periods/' + encodeURIComponent(periodId) + '/entries', { credentials: 'same-origin' }).then(function(r){ return r.ok ? r.json() : []; })
+        ]).then(function(results) {
+          periodInfo    = results[0];
+          var entries   = results[1] || [];
+          renderPage(periodInfo, entries);
+        });
+      }
+
+      function renderEmpty() {
+        document.getElementById('summaryTbody').innerHTML =
+          '<tr><td colspan="5" class="text-center py-6 text-base-content/40">No period data.</td></tr>';
+      }
+
+      function renderPage(p, entries) {
+        if (p) {
+          if (p.payDate) document.getElementById('taxYear').textContent = p.payDate.slice(0, 4);
+          document.getElementById('successSub').textContent = 'Pay date ' + (p.payDate || '—') + ' · ' + (p.payFrequency || '') + ' · Period finalized';
+          document.getElementById('detPeriod').textContent  = (p.startDate || '—') + ' → ' + (p.endDate || '—');
+          document.getElementById('detPayDate').textContent = p.payDate || '—';
+          if (p.companyId) {
+            fetch('/api/payroll/companies/' + encodeURIComponent(p.companyId), { credentials: 'same-origin' })
+              .then(function(r){ return r.ok ? r.json() : null; })
+              .then(function(c){ if (c) document.getElementById('companyName').textContent = c.name || c.legalName || ''; });
+          }
+        }
+
+        // Aggregate
+        var totGross  = 0, totNet  = 0, totDed   = 0;
+        var totErCPP  = 0, totErEI = 0, totEeCPP = 0, totEeEI = 0, totTax = 0;
+        entries.forEach(function(e) {
+          totGross  += parseFloat(e.grossPay)        || 0;
+          totNet    += parseFloat(e.netPay)           || 0;
+          totDed    += parseFloat(e.totalDeductions)  || 0;
+          totErCPP  += (parseFloat(e.cppEmployer)||0) + (parseFloat(e.cpp2Employer)||0);
+          totErEI   += parseFloat(e.eiEmployer)       || 0;
+          totEeCPP  += (parseFloat(e.cppEmployee)||0) + (parseFloat(e.cpp2Employee)||0);
+          totEeEI   += parseFloat(e.eiEmployee)       || 0;
+          totTax    += (parseFloat(e.federalTax)||0) + (parseFloat(e.provincialTax)||0);
+        });
+        var remittance = totEeCPP + totErCPP + totEeEI + totErEI + totTax;
+        var payrunTotal = totGross + totErCPP + totErEI;
+
+        document.getElementById('detEmployees').textContent  = entries.length;
+        document.getElementById('detGross').textContent      = fmt(totGross);
+        document.getElementById('detNetPay').textContent     = fmt(totNet);
+        document.getElementById('detRemittance').textContent = fmt(remittance);
+        document.getElementById('detTotal').textContent      = fmt(payrunTotal);
+
+        // Employee table
+        var tbody = document.getElementById('summaryTbody');
+        if (!entries.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-base-content/40">No employees.</td></tr>';
+        } else {
+          tbody.innerHTML = entries.map(function(e) {
+            var ptype = (e.paymentType || 'cheque') === 'deposit' ? 'Direct Deposit' : 'Cheque';
+            return '<tr>' +
+              '<td class="font-mono text-xs text-base-content/50">' + esc(e.employeeId) + '</td>' +
+              '<td class="font-medium text-sm">' + esc(e.employeeName || e.employeeId) + '</td>' +
+              '<td><span class="badge badge-ghost badge-xs">' + ptype + '</span></td>' +
+              '<td class="text-xs">' + esc(p && p.payDate ? p.payDate : '—') + '</td>' +
+              '<td class="text-right font-mono font-semibold text-success">' + fmt(e.netPay) + '</td>' +
+              '</tr>';
+          }).join('');
+        }
+
+        // Pie chart
+        drawPie([
+          { label: 'Net Pay',          value: totNet,    color: '#22c55e' },
+          { label: 'Federal Tax',      value: totTax,    color: '#3b82f6' },
+          { label: 'CPP (ee+er)',      value: totEeCPP + totErCPP, color: '#8b5cf6' },
+          { label: 'EI (ee+er)',       value: totEeEI  + totErEI,  color: '#f59e0b' },
+        ], totGross + totErCPP + totErEI);
+      }
+
+      // ── Simple canvas pie chart ───────────────────────────────────────────
+      function drawPie(segments, total) {
+        var canvas = document.getElementById('pieChart');
+        if (!canvas.getContext) return;
+        var ctx    = canvas.getContext('2d');
+        var cx = 80, cy = 80, r = 70, start = -Math.PI / 2;
+        ctx.clearRect(0, 0, 160, 160);
+
+        var legendHtml = '';
+        segments.forEach(function(s) {
+          if (!s.value) return;
+          var slice = (s.value / total) * 2 * Math.PI;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.arc(cx, cy, r, start, start + slice);
+          ctx.closePath();
+          ctx.fillStyle = s.color;
+          ctx.fill();
+          start += slice;
+
+          legendHtml += '<div class="flex justify-between items-center gap-2">' +
+            '<span class="flex items-center gap-1.5 text-base-content/70">' +
+              '<span class="inline-block w-3 h-3 rounded-sm shrink-0" style="background:' + s.color + '"></span>' +
+              s.label +
+            '</span>' +
+            '<span class="font-mono font-semibold">' + fmt(s.value) + '</span>' +
+            '</div>';
+        });
+
+        // Center hole for donut effect
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * 0.52, 0, 2 * Math.PI);
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--b1') || '#ffffff';
+        ctx.fill();
+
+        document.getElementById('pieLegend').innerHTML = legendHtml;
+      }
+
+      function fmt(v) { return '$' + (parseFloat(v)||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+      function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    </script>
   </body>
 </html>

@@ -1,159 +1,270 @@
 <!DOCTYPE html>
-<html lang="en-CA">
+<html lang="en-CA" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Review Payroll — Payroll Works</title>
-    <link rel="stylesheet" href="theme.css" />
-    <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="pages.css" />
-    <style>
-      .num { text-align: right; font-family: monospace; }
-      .breakdown-row td { font-size: 0.8rem; color: var(--text-muted); }
-      .totals-row .num { font-weight: 700; }
-      .employer-section { margin-top: 1.5rem; }
-      .employer-section h4 { margin: 0 0 0.5rem; font-size: 0.9rem; color: var(--text-muted); }
-      .finalized-banner { background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1rem; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daisyui@5/cdn.js"></script>
+    <style type="text/tailwindcss">@import "tailwindcss";</style>
   </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <a href="run-payroll.html" class="muted" id="backBrand">←</a>
-          <span>PAYROLL WORKS</span>
-          <span class="muted">Payroll</span>
-          <span class="brand-flag" aria-hidden="true">🇨🇦</span>
-          <span class="tax-year"><span id="taxYear">2025</span></span>
-        </div>
-        <nav class="topbar-nav">
-          <a href="run-payroll.html" class="topbar-nav-item active" id="nav-run">Payroll</a>
-        </nav>
-        <div class="topbar-actions">
-          <span class="muted" style="font-size: 0.8rem" id="companyName">—</span>
-          <div class="avatar">PW</div>
-        </div>
-      </header>
+  <body class="bg-base-200 min-h-screen">
 
-      <aside class="sidebar">
-        <a href="dashboard.html" class="nav-item" id="nav-home"><span>⌂</span> Home</a>
-        <a href="run-payroll.html" class="nav-item active" id="nav-runSide"><span>▤</span> Run Payroll</a>
-        <a href="#" class="nav-item" onclick="return false"><span>☰</span> Actions</a>
-        <a href="employees.html" class="nav-item" id="nav-employees"><span>👤</span> Employees</a>
-        <a href="pay-rules.html" class="nav-item" id="nav-payrules"><span>⚙</span> Pay Rules</a>
+    <!-- Navbar -->
+    <div class="navbar bg-base-100 border-b border-base-300 px-4 min-h-12 sticky top-0 z-30 shadow-sm">
+      <div class="navbar-start gap-2">
+        <a id="backBrand" href="run-payroll.html" class="btn btn-ghost btn-sm text-base-content/60">←</a>
+        <span class="font-bold text-sm tracking-wide">PAYROLL WORKS</span>
+        <span class="badge badge-ghost badge-sm">🇨🇦</span>
+        <span class="text-base-content/40 text-xs" id="taxYear">2025</span>
+      </div>
+      <div class="navbar-center">
+        <a id="nav-run" href="run-payroll.html" class="btn btn-ghost btn-sm font-medium">Payroll</a>
+      </div>
+      <div class="navbar-end gap-3">
+        <span class="text-sm text-base-content/60" id="companyName">—</span>
+        <div class="avatar placeholder">
+          <div class="bg-primary text-primary-content rounded-full w-8 text-xs"><span>PW</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside class="w-56 bg-base-100 border-r border-base-300 min-h-[calc(100vh-3rem)] hidden md:flex flex-col gap-1 p-3 shrink-0">
+        <a id="nav-home" href="dashboard.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Home
+        </a>
+        <a id="nav-runSide" href="run-payroll.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal bg-primary/10 text-primary">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Run Payroll
+        </a>
+        <a id="nav-employees" href="employees.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Employees
+        </a>
+        <a id="nav-payrules" href="pay-rules.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>Pay Rules
+        </a>
       </aside>
 
-      <main class="main">
-        <div class="hero-banner">
-          <span>Review payroll</span>
-          <span class="muted" id="heroPeriod">Before finalize</span>
+      <!-- Main -->
+      <main class="flex-1 p-4 md:p-6 min-w-0">
+        <div class="mb-4">
+          <h1 class="text-xl font-bold">Review Payroll</h1>
+          <p class="text-sm text-base-content/60 mt-0.5" id="heroPeriod">—</p>
         </div>
-        <div class="content">
-          <div class="payroll-steps-label">Payroll steps</div>
-          <div class="stepper">
-            <div class="step">Select pay cycle</div>
-            <div class="step">Salaries</div>
-            <div class="step">Calculate</div>
-            <div class="step active">Review</div>
-          </div>
 
-          <div id="finalizedBanner" class="finalized-banner" style="display:none">
-            ✅ This payroll period has been <strong>finalized</strong>. No further changes allowed.
-          </div>
-          <div id="alertBox" class="error-msg" style="display:none; margin-bottom:0.75rem"></div>
+        <!-- Stepper -->
+        <ul class="steps steps-horizontal w-full max-w-2xl mb-6 text-xs">
+          <li class="step step-neutral">Pay Cycle</li>
+          <li class="step step-neutral">Salaries</li>
+          <li class="step step-neutral">Calculate</li>
+          <li class="step step-primary font-semibold">Review</li>
+          <li class="step">Payments</li>
+          <li class="step">Summary</li>
+        </ul>
 
-          <!-- Employee deductions table -->
-          <div class="panel">
-            <table class="data" id="reviewTable">
-              <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th class="num">Hours</th>
-                  <th class="num">Gross Pay</th>
-                  <th class="num">CPP Ee</th>
-                  <th class="num">EI Ee</th>
-                  <th class="num">Fed Tax</th>
-                  <th class="num">Prov Tax</th>
-                  <th class="num">Total Deductions</th>
-                  <th class="num">Net Pay</th>
-                </tr>
-              </thead>
-              <tbody id="reviewTbody">
-                <tr><td colspan="9" class="muted" style="padding:1rem">Loading…</td></tr>
-              </tbody>
-              <tfoot>
-                <tr class="totals-row">
-                  <td>Totals</td>
-                  <td class="num" id="totHours">—</td>
-                  <td class="num" id="totGross">—</td>
-                  <td class="num" id="totCPP">—</td>
-                  <td class="num" id="totEI">—</td>
-                  <td class="num" id="totFed">—</td>
-                  <td class="num" id="totProv">—</td>
-                  <td class="num" id="totDeductions">—</td>
-                  <td class="num" id="totNet">—</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+        <!-- Finalized banner -->
+        <div id="finalizedBanner" class="alert alert-success mb-4 hidden">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>This payroll period has been <strong>finalized</strong>.</span>
+        </div>
+        <div id="alertBox" class="hidden mb-4"></div>
 
-          <!-- Employer contributions summary -->
-          <div class="employer-section">
-            <div class="panel" style="padding: 1rem">
-              <h4>Employer Contributions (for CRA PD7A remittance)</h4>
-              <table class="data" style="width: auto">
-                <thead>
-                  <tr>
-                    <th>CPP Er</th>
-                    <th>CPP2 Er</th>
-                    <th>EI Er</th>
-                    <th>Total Remittance</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td class="num" id="erCPP">—</td>
-                    <td class="num" id="erCPP2">—</td>
-                    <td class="num" id="erEI">—</td>
-                    <td class="num" id="erTotal">—</td>
-                  </tr>
-                </tbody>
-              </table>
-              <p class="muted" style="font-size:0.8rem; margin: 0.5rem 0 0">
-                Remittance = Employee CPP + Employer CPP + Employee CPP2 + Employer CPP2 + Employee EI + Employer EI + Federal Tax + Provincial Tax
-              </p>
+        <!-- ── All-employee summary table ── -->
+        <div class="card bg-base-100 shadow-sm overflow-x-auto mb-6" id="summaryCard">
+          <div class="flex items-center justify-between px-4 pt-4 pb-2">
+            <h2 class="font-semibold text-sm">Employee Summary</h2>
+            <div class="flex gap-2">
+              <a id="btnExportCSV" href="#" class="btn btn-ghost btn-xs gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Export CSV
+              </a>
             </div>
           </div>
+          <table class="table table-sm">
+            <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
+              <tr>
+                <th>Employee</th>
+                <th class="text-right">Hours</th>
+                <th class="text-right">Gross Pay</th>
+                <th class="text-right">CPP</th>
+                <th class="text-right">EI</th>
+                <th class="text-right">Fed Tax</th>
+                <th class="text-right">Prov Tax</th>
+                <th class="text-right">Deductions</th>
+                <th class="text-right font-bold">Net Pay</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="reviewTbody">
+              <tr><td colspan="10" class="text-center py-6 text-base-content/40">Loading…</td></tr>
+            </tbody>
+            <tfoot class="font-bold bg-base-50 text-sm">
+              <tr>
+                <td>Totals</td>
+                <td class="text-right font-mono" id="totHours">—</td>
+                <td class="text-right font-mono" id="totGross">—</td>
+                <td class="text-right font-mono" id="totCPP">—</td>
+                <td class="text-right font-mono" id="totEI">—</td>
+                <td class="text-right font-mono" id="totFed">—</td>
+                <td class="text-right font-mono" id="totProv">—</td>
+                <td class="text-right font-mono" id="totDeductions">—</td>
+                <td class="text-right font-mono text-primary" id="totNet">—</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
 
-          <div class="flow-footer">
-            <a href="salaries.html" class="btn" id="backLink">← Salaries</a>
-            <button type="button" class="btn btn-primary" id="btnFinalize">Finalize Payroll ✓</button>
+        <!-- ── Employer contributions card ── -->
+        <div class="card bg-base-100 shadow-sm p-4 mb-6">
+          <h2 class="font-semibold text-sm mb-3">Employer Contributions <span class="text-xs font-normal text-base-content/50">(CRA PD7A remittance)</span></h2>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="stat bg-base-200 rounded-lg p-3">
+              <div class="stat-title text-xs">CPP Employer</div>
+              <div class="stat-value text-base font-mono" id="erCPP">—</div>
+            </div>
+            <div class="stat bg-base-200 rounded-lg p-3">
+              <div class="stat-title text-xs">CPP2 Employer</div>
+              <div class="stat-value text-base font-mono" id="erCPP2">—</div>
+            </div>
+            <div class="stat bg-base-200 rounded-lg p-3">
+              <div class="stat-title text-xs">EI Employer</div>
+              <div class="stat-value text-base font-mono" id="erEI">—</div>
+            </div>
+            <div class="stat bg-primary text-primary-content rounded-lg p-3">
+              <div class="stat-title text-xs text-primary-content/70">Total Remittance</div>
+              <div class="stat-value text-base font-mono" id="erTotal">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer nav -->
+        <div class="flex justify-between mt-2">
+          <a id="backLink" href="salaries.html" class="btn btn-ghost btn-sm">← Salaries</a>
+          <div class="flex gap-2">
+            <button type="button" class="btn btn-outline btn-sm btn-error" id="btnRecalc">↺ Recalculate</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btnNext">Payments →</button>
           </div>
         </div>
       </main>
     </div>
+
+    <!-- ══ Per-employee detail modal ══════════════════════════════════════════ -->
+    <dialog id="detailModal" class="modal modal-bottom sm:modal-middle">
+      <div class="modal-box w-full max-w-2xl p-0 overflow-hidden">
+
+        <!-- Modal header -->
+        <div class="bg-primary px-5 py-4 text-primary-content flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-3 mb-1">
+              <div class="avatar placeholder">
+                <div class="bg-primary-content/20 text-primary-content rounded-full w-9 text-sm font-bold">
+                  <span id="detailInitials">—</span>
+                </div>
+              </div>
+              <div>
+                <p class="font-bold text-sm" id="detailName">—</p>
+                <p class="text-primary-content/70 text-xs" id="detailSub">—</p>
+              </div>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-primary-content/60">Net Pay</p>
+            <p class="text-2xl font-bold font-mono" id="detailNetPay">$0.00</p>
+          </div>
+        </div>
+
+        <!-- Net pay visual bar -->
+        <div class="px-5 pt-3 pb-1">
+          <div class="flex h-3 rounded-full overflow-hidden w-full gap-px bg-base-300" id="netPayBar"></div>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1.5" id="netPayLegend"></div>
+        </div>
+
+        <!-- Detail content -->
+        <div class="px-5 py-3 overflow-y-auto max-h-[65vh]">
+
+          <!-- SUMMARY -->
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-base-200 rounded-lg p-3">
+              <p class="text-xs font-semibold text-base-content/50 uppercase tracking-wide mb-2">Summary</p>
+              <div class="space-y-1 text-xs">
+                <div class="flex justify-between"><span class="text-base-content/60">Total Gross</span><span class="font-mono font-semibold" id="dTotalGross">—</span></div>
+                <div class="flex justify-between"><span class="text-base-content/60">Total Taxable Income</span><span class="font-mono" id="dTaxableIncome">—</span></div>
+                <div class="flex justify-between"><span class="text-base-content/60">Total Deductions</span><span class="font-mono text-error" id="dTotalDeductions">—</span></div>
+                <div class="flex justify-between border-t border-base-300 pt-1 mt-1"><span class="font-semibold">Net Pay</span><span class="font-mono font-bold text-success" id="dNetPay2">—</span></div>
+              </div>
+            </div>
+            <div class="bg-base-200 rounded-lg p-3">
+              <p class="text-xs font-semibold text-base-content/50 uppercase tracking-wide mb-2">Details</p>
+              <div class="space-y-1 text-xs">
+                <div class="flex justify-between"><span class="text-base-content/60">Total Hours</span><span class="font-mono" id="dTotalHours">—</span></div>
+                <div class="flex justify-between"><span class="text-base-content/60">Insurable Earnings</span><span class="font-mono" id="dInsurableEarnings">—</span></div>
+                <div class="flex justify-between"><span class="text-base-content/60">Basic Rate</span><span class="font-mono" id="dBasicRate">—</span></div>
+                <div class="flex justify-between"><span class="text-base-content/60">Vacation Earned</span><span class="font-mono" id="dVacation">$0.00</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HOURS + EARNINGS -->
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <p class="text-xs font-semibold text-base-content/50 uppercase tracking-wide mb-1.5">Hours</p>
+              <div class="space-y-1 text-xs" id="dHoursSection"></div>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-base-content/50 uppercase tracking-wide mb-1.5">Other Earnings</p>
+              <div class="space-y-1 text-xs" id="dOtherEarnings"></div>
+            </div>
+          </div>
+
+          <!-- EARNINGS breakdown -->
+          <div class="mb-4">
+            <p class="text-xs font-semibold text-base-content/50 uppercase tracking-wide mb-1.5">Earnings</p>
+            <div class="bg-base-100 border border-base-300 rounded-lg divide-y divide-base-200" id="dEarningsSection"></div>
+          </div>
+
+          <!-- DEDUCTIONS -->
+          <div>
+            <p class="text-xs font-semibold text-base-content/50 uppercase tracking-wide mb-1.5">Statutory Deductions</p>
+            <div class="bg-base-100 border border-base-300 rounded-lg divide-y divide-base-200" id="dDeductionsSection"></div>
+          </div>
+
+        </div>
+
+        <div class="modal-action px-5 pb-4 gap-2">
+          <form method="dialog"><button class="btn btn-ghost btn-sm">Close</button></form>
+          <a id="detailEditLink" href="#" class="btn btn-outline btn-sm btn-primary">← Edit in Salaries</a>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
 
     <script>
       var params    = new URLSearchParams(location.search);
       var periodId  = params.get('period')  || '';
       var companyId = params.get('company') || '';
 
-      // Wire nav
       function withC(href) { return companyId ? href + '?company=' + encodeURIComponent(companyId) : href; }
-      document.getElementById('nav-home').href     = withC('dashboard.html');
-      document.getElementById('nav-runSide').href  = withC('run-payroll.html');
-      document.getElementById('nav-run').href      = withC('run-payroll.html');
+      function withP(href) { return href + '?period=' + encodeURIComponent(periodId) + (companyId ? '&company=' + encodeURIComponent(companyId) : ''); }
+
+      document.getElementById('nav-home').href      = withC('dashboard.html');
+      document.getElementById('nav-runSide').href   = withC('run-payroll.html');
+      document.getElementById('nav-run').href       = withC('run-payroll.html');
       document.getElementById('nav-employees').href = withC('employees.html');
       document.getElementById('nav-payrules').href  = withC('pay-rules.html');
-      document.getElementById('backBrand').href    = withC('run-payroll.html');
-      document.getElementById('backLink').href     =
-        'salaries.html?period=' + encodeURIComponent(periodId) +
-        (companyId ? '&company=' + encodeURIComponent(companyId) : '');
+      document.getElementById('backBrand').href     = withC('run-payroll.html');
+      document.getElementById('backLink').href      = withP('salaries.html');
+      document.getElementById('btnExportCSV').href  = '/api/payroll/export/csv?period_id=' + encodeURIComponent(periodId);
 
+      var allEntries   = [];
       var periodStatus = '';
+      var periodInfo   = null;
 
       if (!periodId) {
-        document.getElementById('reviewTbody').innerHTML = '<tr><td colspan="9" class="error-msg" style="padding:1rem">No period selected.</td></tr>';
+        document.getElementById('reviewTbody').innerHTML =
+          '<tr><td colspan="10" class="text-center py-6 text-error">No period selected.</td></tr>';
       } else {
         loadPeriodInfo();
         loadEntries();
@@ -161,121 +272,237 @@
 
       function loadPeriodInfo() {
         fetch('/api/payroll/periods/' + encodeURIComponent(periodId), { credentials: 'same-origin' })
-          .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (p) {
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(p) {
             if (!p) return;
+            periodInfo   = p;
             periodStatus = p.status || '';
             document.getElementById('heroPeriod').textContent =
               (p.payrollType || 'Regular') + ' · ' + (p.payFrequency || '') +
               ' · Pay date ' + (p.payDate || '');
             if (p.payDate) document.getElementById('taxYear').textContent = p.payDate.slice(0, 4);
-            if (p.status === 'finalized') {
-              document.getElementById('finalizedBanner').style.display = 'block';
-              document.getElementById('btnFinalize').disabled = true;
-              document.getElementById('btnFinalize').textContent = '✅ Finalized';
+            if (periodStatus === 'finalized') {
+              document.getElementById('finalizedBanner').classList.remove('hidden');
+              document.getElementById('btnNext').disabled = false;
             }
             if (p.companyId) {
               fetch('/api/payroll/companies/' + encodeURIComponent(p.companyId), { credentials: 'same-origin' })
-                .then(function (r) { return r.ok ? r.json() : null; })
-                .then(function (c) { if (c) document.getElementById('companyName').textContent = c.name || c.legalName; });
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(c) { if (c) document.getElementById('companyName').textContent = c.name || c.legalName || ''; });
             }
           });
       }
 
       function loadEntries() {
         fetch('/api/payroll/periods/' + encodeURIComponent(periodId) + '/entries', { credentials: 'same-origin' })
-          .then(function (r) { return r.ok ? r.json() : []; })
-          .then(renderEntries);
+          .then(function(r) { return r.ok ? r.json() : []; })
+          .then(function(list) {
+            allEntries = list || [];
+            renderSummaryTable(allEntries);
+          });
       }
 
-      function fmt(v) {
-        var n = parseFloat(v) || 0;
-        return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      }
-      function fmtH(v) { return (parseFloat(v) || 0).toFixed(2); }
-
-      function renderEntries(list) {
+      // ── Summary table ─────────────────────────────────────────────────────
+      function renderSummaryTable(list) {
         var tbody = document.getElementById('reviewTbody');
-        if (!list || !list.length) {
-          tbody.innerHTML = '<tr><td colspan="9" class="muted" style="padding:1rem">No entries found.</td></tr>';
+        if (!list.length) {
+          tbody.innerHTML = '<tr><td colspan="10" class="text-center py-6 text-base-content/40">No entries. Run Calculate first.</td></tr>';
           return;
         }
 
-        var totals = { hours:0, gross:0, cpp:0, ei:0, fed:0, prov:0, ded:0, net:0, erCPP:0, erCPP2:0, erEI:0 };
+        var T = { hours:0, gross:0, cpp:0, ei:0, fed:0, prov:0, ded:0, net:0, erCPP:0, erCPP2:0, erEI:0 };
 
-        tbody.innerHTML = list.map(function (e) {
-          totals.hours += parseFloat(e.hours)            || 0;
-          totals.gross += parseFloat(e.grossPay)         || 0;
-          totals.cpp   += (parseFloat(e.cppEmployee)||0) + (parseFloat(e.cpp2Employee)||0);
-          totals.ei    += parseFloat(e.eiEmployee)       || 0;
-          totals.fed   += parseFloat(e.federalTax)       || 0;
-          totals.prov  += parseFloat(e.provincialTax)    || 0;
-          totals.ded   += parseFloat(e.totalDeductions)  || 0;
-          totals.net   += parseFloat(e.netPay)           || 0;
-          totals.erCPP  += parseFloat(e.cppEmployer)    || 0;
-          totals.erCPP2 += parseFloat(e.cpp2Employer)   || 0;
-          totals.erEI   += parseFloat(e.eiEmployer)     || 0;
-
+        tbody.innerHTML = list.map(function(e, i) {
           var cpp = (parseFloat(e.cppEmployee)||0) + (parseFloat(e.cpp2Employee)||0);
-          return '<tr>' +
-            '<td>' + (e.employeeName || e.employeeId) + '</td>' +
-            '<td class="num">' + fmtH(e.hours) + '</td>' +
-            '<td class="num">' + fmt(e.grossPay) + '</td>' +
-            '<td class="num">' + fmt(cpp) + '</td>' +
-            '<td class="num">' + fmt(e.eiEmployee) + '</td>' +
-            '<td class="num">' + fmt(e.federalTax) + '</td>' +
-            '<td class="num">' + fmt(e.provincialTax) + '</td>' +
-            '<td class="num">' + fmt(e.totalDeductions) + '</td>' +
-            '<td class="num" style="font-weight:600">' + fmt(e.netPay) + '</td>' +
+          T.hours += parseFloat(e.hours)||0;
+          T.gross += parseFloat(e.grossPay)||0;
+          T.cpp   += cpp;
+          T.ei    += parseFloat(e.eiEmployee)||0;
+          T.fed   += parseFloat(e.federalTax)||0;
+          T.prov  += parseFloat(e.provincialTax)||0;
+          T.ded   += parseFloat(e.totalDeductions)||0;
+          T.net   += parseFloat(e.netPay)||0;
+          T.erCPP  += parseFloat(e.cppEmployer)||0;
+          T.erCPP2 += parseFloat(e.cpp2Employer)||0;
+          T.erEI   += parseFloat(e.eiEmployer)||0;
+
+          var statusBadge = e.status === 'finalized'
+            ? '<span class="badge badge-success badge-xs">Finalized</span>'
+            : e.status === 'calculated' || e.status === 'approved'
+            ? '<span class="badge badge-info badge-xs">Calculated</span>'
+            : '<span class="badge badge-ghost badge-xs">Draft</span>';
+
+          return '<tr class="hover cursor-pointer" data-idx="' + i + '">' +
+            '<td class="font-medium text-sm text-primary hover:underline">' + esc(e.employeeName || e.employeeId) + '</td>' +
+            '<td class="text-right font-mono text-xs">' + fmtH(e.hours) + '</td>' +
+            '<td class="text-right font-mono text-xs">' + fmt(e.grossPay) + '</td>' +
+            '<td class="text-right font-mono text-xs">' + fmt(cpp) + '</td>' +
+            '<td class="text-right font-mono text-xs">' + fmt(e.eiEmployee) + '</td>' +
+            '<td class="text-right font-mono text-xs">' + fmt(e.federalTax) + '</td>' +
+            '<td class="text-right font-mono text-xs">' + fmt(e.provincialTax) + '</td>' +
+            '<td class="text-right font-mono text-xs text-error">' + fmt(e.totalDeductions) + '</td>' +
+            '<td class="text-right font-mono text-sm font-bold text-success">' + fmt(e.netPay) + '</td>' +
+            '<td>' + statusBadge + '</td>' +
             '</tr>';
         }).join('');
 
-        // Fill totals
-        document.getElementById('totHours').textContent       = fmtH(totals.hours);
-        document.getElementById('totGross').textContent       = fmt(totals.gross);
-        document.getElementById('totCPP').textContent         = fmt(totals.cpp);
-        document.getElementById('totEI').textContent          = fmt(totals.ei);
-        document.getElementById('totFed').textContent         = fmt(totals.fed);
-        document.getElementById('totProv').textContent        = fmt(totals.prov);
-        document.getElementById('totDeductions').textContent  = fmt(totals.ded);
-        document.getElementById('totNet').textContent         = fmt(totals.net);
+        // Wire row clicks
+        tbody.querySelectorAll('tr[data-idx]').forEach(function(row) {
+          row.addEventListener('click', function() {
+            openDetailModal(parseInt(row.dataset.idx, 10));
+          });
+        });
 
-        document.getElementById('erCPP').textContent  = fmt(totals.erCPP);
-        document.getElementById('erCPP2').textContent = fmt(totals.erCPP2);
-        document.getElementById('erEI').textContent   = fmt(totals.erEI);
-        // Remittance = ee CPP+CPP2 + er CPP+CPP2 + ee EI + er EI + fed + prov
-        var remit = totals.cpp + totals.erCPP + totals.erCPP2 + totals.ei + totals.erEI + totals.fed + totals.prov;
+        // Totals
+        document.getElementById('totHours').textContent      = fmtH(T.hours);
+        document.getElementById('totGross').textContent      = fmt(T.gross);
+        document.getElementById('totCPP').textContent        = fmt(T.cpp);
+        document.getElementById('totEI').textContent         = fmt(T.ei);
+        document.getElementById('totFed').textContent        = fmt(T.fed);
+        document.getElementById('totProv').textContent       = fmt(T.prov);
+        document.getElementById('totDeductions').textContent = fmt(T.ded);
+        document.getElementById('totNet').textContent        = fmt(T.net);
+
+        document.getElementById('erCPP').textContent  = fmt(T.erCPP);
+        document.getElementById('erCPP2').textContent = fmt(T.erCPP2);
+        document.getElementById('erEI').textContent   = fmt(T.erEI);
+        var remit = T.cpp + T.erCPP + T.erCPP2 + T.ei + T.erEI + T.fed + T.prov;
         document.getElementById('erTotal').textContent = fmt(remit);
       }
 
-      document.getElementById('btnFinalize').addEventListener('click', function () {
-        if (periodStatus === 'finalized') return;
-        if (!confirm('Finalize this payroll period? This cannot be undone.')) return;
+      // ── Per-employee detail modal ─────────────────────────────────────────
+      function openDetailModal(idx) {
+        var e = allEntries[idx];
+        if (!e) return;
 
-        document.getElementById('btnFinalize').disabled = true;
-        fetch('/api/payroll/periods/' + encodeURIComponent(periodId) + '/finalize', {
-          method: 'POST',
-          credentials: 'same-origin'
-        })
-          .then(function (r) { return r.ok ? r.json() : r.text().then(function (t) { throw new Error(t); }); })
-          .then(function () {
-            periodStatus = 'finalized';
-            document.getElementById('finalizedBanner').style.display = 'block';
-            document.getElementById('btnFinalize').textContent = '✅ Finalized';
-            showAlert('Payroll finalized successfully.', false);
-          })
-          .catch(function (err) {
-            document.getElementById('btnFinalize').disabled = false;
-            showAlert('Finalize failed: ' + err.message, true);
-          });
+        var name    = e.employeeName || e.employeeId;
+        var initials = name.split(/[\s,]+/).filter(Boolean).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();
+        var cpp     = (parseFloat(e.cppEmployee)||0) + (parseFloat(e.cpp2Employee)||0);
+        var gross   = parseFloat(e.grossPay)        || 0;
+        var net     = parseFloat(e.netPay)          || 0;
+        var ded     = parseFloat(e.totalDeductions) || 0;
+        var fed     = parseFloat(e.federalTax)      || 0;
+        var prov    = parseFloat(e.provincialTax)   || 0;
+        var ei      = parseFloat(e.eiEmployee)      || 0;
+        var hours   = parseFloat(e.hours)           || 0;
+        var rate    = parseFloat(e.payRate)         || 0;
+
+        document.getElementById('detailInitials').textContent = initials || '?';
+        document.getElementById('detailName').textContent     = name;
+        document.getElementById('detailSub').textContent      = 'Basic Rate: $' + rate.toFixed(2) + '/hr' + (hours > 0 ? '  ·  Hours: ' + fmtH(hours) : '');
+        document.getElementById('detailNetPay').textContent   = fmt(net);
+        document.getElementById('detailEditLink').href        = withP('salaries.html');
+
+        // Net Pay bar
+        renderNetPayBar(gross, net, fed, prov, ei, cpp);
+
+        // Summary
+        document.getElementById('dTotalGross').textContent      = fmt(gross);
+        document.getElementById('dTaxableIncome').textContent   = fmt(gross);    // taxable ≈ gross (tips are taxable)
+        document.getElementById('dTotalDeductions').textContent = '-' + fmt(ded);
+        document.getElementById('dNetPay2').textContent         = fmt(net);
+        document.getElementById('dTotalHours').textContent      = fmtH(hours);
+        document.getElementById('dInsurableEarnings').textContent = fmt(gross);
+        document.getElementById('dBasicRate').textContent       = '$' + rate.toFixed(2) + ' Hourly';
+        document.getElementById('dVacation').textContent        = '$0.00';
+
+        // Hours section
+        document.getElementById('dHoursSection').innerHTML =
+          detailRow('Regular Hours', fmtH(hours));
+
+        // Load additional earnings then render
+        if (e.id) {
+          fetch('/api/payroll/entries/' + encodeURIComponent(e.id) + '/earnings', { credentials: 'same-origin' })
+            .then(function(r) { return r.ok ? r.json() : []; })
+            .then(function(lines) { renderDetailEarnings(e, lines || []); });
+        } else {
+          renderDetailEarnings(e, []);
+        }
+
+        document.getElementById('detailModal').showModal();
+      }
+
+      function renderDetailEarnings(e, addlLines) {
+        var gross       = parseFloat(e.grossPay)       || 0;
+        var net         = parseFloat(e.netPay)         || 0;
+        var fed         = parseFloat(e.federalTax)     || 0;
+        var prov        = parseFloat(e.provincialTax)  || 0;
+        var ei          = parseFloat(e.eiEmployee)     || 0;
+        var cpp         = (parseFloat(e.cppEmployee)||0) + (parseFloat(e.cpp2Employee)||0);
+        var regEarnings = gross - addlLines.reduce(function(s, l) { return s + (parseFloat(l.amount)||0); }, 0);
+
+        // Other earnings column (commissions, bonus etc from addl lines)
+        var otherEarningsHtml = addlLines.length
+          ? addlLines.map(function(l) { return detailRow(esc(l.codeName || l.earningsCodeId || '—'), fmt(l.amount)); }).join('')
+          : detailRow('Commission', '$0.00') + detailRow('Bonus', '$0.00');
+        document.getElementById('dOtherEarnings').innerHTML = otherEarningsHtml;
+
+        // Earnings breakdown
+        var earningsLines = [['Regular Earnings', regEarnings > 0 ? fmt(regEarnings) : '$0.00']];
+        addlLines.forEach(function(l) { earningsLines.push([esc(l.codeName || l.earningsCodeId), fmt(l.amount)]); });
+        document.getElementById('dEarningsSection').innerHTML = earningsLines.map(function(r) {
+          return '<div class="flex justify-between px-3 py-1.5 text-xs"><span class="text-base-content/70">' + r[0] + '</span><span class="font-mono">' + r[1] + '</span></div>';
+        }).join('');
+
+        // Deductions
+        document.getElementById('dDeductionsSection').innerHTML = [
+          ['Federal Tax', fmt(fed)],
+          ['Provincial Tax', fmt(prov)],
+          ['EI', fmt(ei)],
+          ['Canada Pension Plan', fmt(cpp)],
+        ].map(function(r) {
+          return '<div class="flex justify-between px-3 py-1.5 text-xs"><span class="text-base-content/70">' + r[0] + '</span><span class="font-mono text-error">' + r[1] + '</span></div>';
+        }).join('');
+      }
+
+      function renderNetPayBar(gross, net, fed, prov, ei, cpp) {
+        if (!gross) return;
+        var segments = [
+          { label:'Net Pay',       value: net,  color:'bg-success' },
+          { label:'Federal Tax',   value: fed,  color:'bg-primary' },
+          { label:'Prov Tax',      value: prov, color:'bg-info' },
+          { label:'EI',            value: ei,   color:'bg-warning' },
+          { label:'CPP',           value: cpp,  color:'bg-secondary' },
+        ];
+        var bar    = document.getElementById('netPayBar');
+        var legend = document.getElementById('netPayLegend');
+        bar.innerHTML = segments.map(function(s) {
+          var pct = (s.value / gross * 100).toFixed(1);
+          return '<div class="' + s.color + ' h-full" style="width:' + pct + '%"></div>';
+        }).join('');
+        legend.innerHTML = segments.map(function(s) {
+          return '<span class="flex items-center gap-1 text-xs text-base-content/60">' +
+            '<span class="inline-block w-2.5 h-2.5 rounded-sm ' + s.color + '"></span>' +
+            s.label + '</span>';
+        }).join('');
+      }
+
+      function detailRow(label, value) {
+        return '<div class="flex justify-between"><span class="text-base-content/60">' + label + '</span><span class="font-mono">' + value + '</span></div>';
+      }
+
+      // ── Recalculate ───────────────────────────────────────────────────────
+      document.getElementById('btnRecalc').addEventListener('click', function() {
+        location.href = withP('salaries.html');
       });
+
+      // ── Next → Payments ───────────────────────────────────────────────────
+      document.getElementById('btnNext').addEventListener('click', function() {
+        location.href = withP('payments.html');
+      });
+
+      // ── Helpers ───────────────────────────────────────────────────────────
+      function fmt(v)  { return '$' + (parseFloat(v)||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+      function fmtH(v) { return (parseFloat(v)||0).toFixed(2); }
+      function esc(s)  { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
       function showAlert(msg, isErr) {
         var el = document.getElementById('alertBox');
+        el.className = isErr ? 'alert alert-error text-sm py-2 px-4 mb-4' : 'alert alert-success text-sm py-2 px-4 mb-4';
         el.textContent = msg;
-        el.className = isErr ? 'error-msg' : 'success-msg';
-        el.style.display = 'block';
-        setTimeout(function () { el.style.display = 'none'; }, 5000);
+        el.classList.remove('hidden');
+        clearTimeout(el._t);
+        el._t = setTimeout(function() { el.classList.add('hidden'); }, 5000);
       }
     </script>
   </body>

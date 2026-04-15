@@ -1,127 +1,330 @@
 <!DOCTYPE html>
-<html lang="en-CA">
+<html lang="en-CA" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Payments — Payroll Works</title>
-    <link rel="stylesheet" href="theme.css" />
-    <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="pages.css" />
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daisyui@5/cdn.js"></script>
+    <style type="text/tailwindcss">@import "tailwindcss";</style>
   </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <a href="dashboard.html" class="muted">←</a>
-          <span>PAYROLL WORKS</span>
-          <span class="muted">Payroll</span>
-          <span class="brand-flag" aria-hidden="true">🇨🇦</span>
-          <span class="tax-year"><span>2026</span></span>
-        </div>
-        <nav class="topbar-nav">
-          <a href="run-payroll.html" class="topbar-nav-item active">Payroll</a>
-        </nav>
-        <div class="topbar-actions">
-          <span class="muted" style="font-size: 0.8rem">RORO HOLDING LTD</span>
-          <div class="avatar">LH</div>
-        </div>
-      </header>
+  <body class="bg-base-200 min-h-screen">
 
-      <aside class="sidebar">
-        <a href="dashboard.html" class="nav-item"><span>⌂</span> Home</a>
-        <a href="run-payroll.html" class="nav-item active"><span>▤</span> Run Payroll</a>
-        <a href="#" class="nav-item" onclick="return false"><span>☰</span> Actions</a>
-        <a href="reports/payrun.html" class="nav-item"><span>▦</span> Reports</a>
-        <a href="employees.html" class="nav-item"><span>👤</span> Employees</a>
+    <!-- Navbar -->
+    <div class="navbar bg-base-100 border-b border-base-300 px-4 min-h-12 sticky top-0 z-30 shadow-sm">
+      <div class="navbar-start gap-2">
+        <a id="backBrand" href="run-payroll.html" class="btn btn-ghost btn-sm text-base-content/60">←</a>
+        <span class="font-bold text-sm tracking-wide">PAYROLL WORKS</span>
+        <span class="badge badge-ghost badge-sm">🇨🇦</span>
+        <span class="text-base-content/40 text-xs" id="taxYear">2025</span>
+      </div>
+      <div class="navbar-center">
+        <a id="nav-run" href="run-payroll.html" class="btn btn-ghost btn-sm font-medium">Payroll</a>
+      </div>
+      <div class="navbar-end gap-3">
+        <span class="text-sm text-base-content/60" id="companyName">—</span>
+        <div class="avatar placeholder">
+          <div class="bg-primary text-primary-content rounded-full w-8 text-xs"><span>PW</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside class="w-56 bg-base-100 border-r border-base-300 min-h-[calc(100vh-3rem)] hidden md:flex flex-col gap-1 p-3 shrink-0">
+        <a id="nav-home" href="dashboard.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Home
+        </a>
+        <a id="nav-runSide" href="run-payroll.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal bg-primary/10 text-primary">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Run Payroll
+        </a>
+        <a id="nav-employees" href="employees.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Employees
+        </a>
       </aside>
 
-      <main class="main">
-        <div class="hero-banner">
-          <span>Payments</span>
-          <span class="muted">Funding &amp; debit</span>
+      <!-- Main -->
+      <main class="flex-1 p-4 md:p-6 min-w-0 max-w-3xl">
+        <div class="mb-4">
+          <h1 class="text-xl font-bold">Payments</h1>
+          <p class="text-sm text-base-content/60 mt-0.5" id="heroPeriod">—</p>
         </div>
-        <div class="content">
-          <div class="payroll-steps-label">Payroll steps</div>
-          <div class="stepper">
-            <div class="step">Select pay cycle</div>
-            <div class="step">Salaries</div>
-            <div class="step">Timesheets</div>
-            <div class="step">Calculate</div>
-            <div class="step">Review</div>
-            <div class="step active">Payments</div>
-            <div class="step">Summary</div>
+
+        <!-- Stepper -->
+        <ul class="steps steps-horizontal w-full max-w-2xl mb-6 text-xs">
+          <li class="step step-neutral">Pay Cycle</li>
+          <li class="step step-neutral">Salaries</li>
+          <li class="step step-neutral">Calculate</li>
+          <li class="step step-neutral">Review</li>
+          <li class="step step-primary font-semibold">Payments</li>
+          <li class="step">Summary</li>
+        </ul>
+
+        <div id="alertBox" class="hidden mb-4"></div>
+
+        <!-- ① Funding Source -->
+        <div class="card bg-base-100 shadow-sm p-5 mb-4">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="badge badge-primary badge-sm font-bold">1</div>
+            <h2 class="font-semibold">Funding Source</h2>
+          </div>
+          <div class="form-control max-w-xs mb-3">
+            <label class="label py-1"><span class="label-text text-sm">Employee Payments Date</span></label>
+            <input type="date" class="input input-bordered input-sm" id="paymentDate" />
+          </div>
+        </div>
+
+        <!-- ② Confirm Payments -->
+        <div class="card bg-base-100 shadow-sm p-5 mb-4">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="badge badge-primary badge-sm font-bold">2</div>
+            <h2 class="font-semibold">Confirm Payments</h2>
           </div>
 
-          <div class="payments-section">
-            <h3>1 · Funding source</h3>
-            <div class="form-row" style="max-width: 400px">
-              <label class="field-label" for="fund">Payment method</label>
-              <select id="fund" class="field-input field-select" style="max-width: 100%">
-                <option>Bill payment · ID 004</option>
-              </select>
-            </div>
-            <div class="form-row" style="max-width: 280px">
-              <label class="field-label" for="pdate">Employee payment date</label>
-              <input id="pdate" class="field-input" type="text" value="05-Apr-2026" />
-            </div>
+          <div class="overflow-x-auto mb-4">
+            <table class="table table-sm">
+              <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
+                <tr>
+                  <th>Emp #</th>
+                  <th>Name</th>
+                  <th>Payment Type</th>
+                  <th class="text-right">Net Pay</th>
+                  <th>Ref #</th>
+                </tr>
+              </thead>
+              <tbody id="paymentsTbody">
+                <tr><td colspan="5" class="text-center py-4 text-base-content/40">Loading…</td></tr>
+              </tbody>
+            </table>
           </div>
 
-          <div class="payments-section">
-            <h3>2 · Confirm payments</h3>
-            <div class="panel">
-              <table class="data">
-                <thead>
-                  <tr>
-                    <th>Emp #</th>
-                    <th>Name</th>
-                    <th>Payment type</th>
-                    <th>Net pay</th>
-                    <th>Ref #</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td class="mono">000016</td>
-                    <td>SAWAENGPON, JIRAYU</td>
-                    <td>
-                      <select class="input" style="font-size: 0.8rem"><option>Cheque</option></select>
-                    </td>
-                    <td class="mono">$706.32</td>
-                    <td><input class="cell-input" value="000105" style="max-width: 100px" /></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div style="margin-top: 1rem; display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start">
-              <div>
-                <p class="muted" style="margin: 0.35rem 0">Gross wages <strong style="color: var(--text-primary)">$754.86</strong></p>
-                <p class="muted" style="margin: 0.35rem 0">Net <strong style="color: var(--text-primary)">$706.32</strong></p>
-                <p class="muted" style="margin: 0.35rem 0">Employee deductions (statutory) <strong style="color: var(--text-primary)">$48.54</strong></p>
-                <p class="muted" style="margin: 0.35rem 0">Employer EI <strong>$11.22</strong> · Employer CPP <strong>$36.24</strong></p>
-                <p class="grand-total">Payrun total $802.32</p>
+          <!-- Totals summary -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-base-200">
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between text-base-content/60">
+                <span>Gross Wages</span>
+                <span class="font-mono font-semibold text-base-content" id="sumGross">—</span>
               </div>
-              <div class="fees-box">
-                <div class="line"><span>Per-employee fees</span><span>$1.50</span></div>
-                <div class="line"><span>Extra fees</span><span>$10.00</span></div>
-                <div class="line"><span>Tax</span><span>$0.00</span></div>
-                <div class="line total"><span>Fees total</span><span>$11.50</span></div>
+              <div class="flex justify-between text-base-content/60">
+                <span>Employee Deductions</span>
+                <span class="font-mono text-error" id="sumDeductions">—</span>
+              </div>
+              <div class="flex justify-between text-base-content/60">
+                <span>Employer CPP</span>
+                <span class="font-mono" id="sumErCPP">—</span>
+              </div>
+              <div class="flex justify-between text-base-content/60">
+                <span>Employer EI</span>
+                <span class="font-mono" id="sumErEI">—</span>
+              </div>
+              <div class="flex justify-between font-bold text-base border-t border-base-300 pt-2 mt-2">
+                <span>Payrun Total</span>
+                <span class="font-mono text-primary" id="sumPayrunTotal">—</span>
               </div>
             </div>
-            <p class="grand-total">Total debit <span style="color: var(--success)">$813.82</span></p>
+            <div class="bg-base-200 rounded-lg p-3 text-sm space-y-1.5">
+              <p class="font-semibold text-xs uppercase tracking-wide text-base-content/50 mb-2">Net Payments</p>
+              <div class="flex justify-between text-base-content/70">
+                <span>Employee Net Pay Total</span>
+                <span class="font-mono font-bold text-success" id="sumNetPay">—</span>
+              </div>
+              <div class="flex justify-between text-base-content/70">
+                <span>Employees</span>
+                <span class="font-mono" id="sumEmployeeCount">—</span>
+              </div>
+            </div>
           </div>
+        </div>
 
-          <div class="payments-section">
-            <h3>3 · Optional PIN security</h3>
-            <p class="muted" style="font-size: 0.85rem">🔒 PIN / two-factor verification (optional)</p>
-          </div>
-
-          <div class="flow-footer">
-            <a href="review.html" class="btn">← Review</a>
-            <a href="summary.html" class="btn btn-primary" style="text-decoration: none">Finish payroll →</a>
-          </div>
+        <!-- Footer nav -->
+        <div class="flex justify-between mt-2">
+          <a id="backLink" href="review.html" class="btn btn-ghost btn-sm">← Review</a>
+          <button type="button" class="btn btn-primary btn-sm" id="btnAuthorize">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            Authorize & Finalize
+          </button>
         </div>
       </main>
     </div>
+
+    <!-- Authorization dialog -->
+    <dialog id="authModal" class="modal modal-middle">
+      <div class="modal-box max-w-sm">
+        <div class="text-center mb-4">
+          <div class="w-12 h-12 bg-warning/20 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          </div>
+          <h3 class="font-bold text-lg">Authorize Payroll</h3>
+          <p class="text-sm text-base-content/60 mt-1">Do you want to authorize and submit this payroll?</p>
+          <p class="text-xs text-base-content/40 mt-1">This action will finalize the period and cannot be undone.</p>
+        </div>
+        <div class="flex items-center gap-2 mb-4">
+          <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" id="chkNotify" checked />
+          <label for="chkNotify" class="text-sm">Send employee payslip notifications</label>
+        </div>
+        <div class="modal-action justify-between">
+          <form method="dialog"><button class="btn btn-ghost btn-sm">← Go back</button></form>
+          <button type="button" class="btn btn-primary btn-sm" id="btnConfirmAuthorize">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Yes, Authorize
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <script>
+      var params    = new URLSearchParams(location.search);
+      var periodId  = params.get('period')  || '';
+      var companyId = params.get('company') || '';
+
+      function withC(href) { return companyId ? href + '?company=' + encodeURIComponent(companyId) : href; }
+      function withP(href) { return href + '?period=' + encodeURIComponent(periodId) + (companyId ? '&company=' + encodeURIComponent(companyId) : ''); }
+
+      document.getElementById('nav-home').href      = withC('dashboard.html');
+      document.getElementById('nav-runSide').href   = withC('run-payroll.html');
+      document.getElementById('nav-run').href       = withC('run-payroll.html');
+      document.getElementById('nav-employees').href = withC('employees.html');
+      document.getElementById('backBrand').href     = withC('run-payroll.html');
+      document.getElementById('backLink').href      = withP('review.html');
+
+      var allEntries = [];
+
+      if (!periodId) {
+        document.getElementById('paymentsTbody').innerHTML =
+          '<tr><td colspan="5" class="text-center py-6 text-error">No period selected.</td></tr>';
+      } else {
+        loadPeriodInfo();
+        loadEntries();
+      }
+
+      function loadPeriodInfo() {
+        fetch('/api/payroll/periods/' + encodeURIComponent(periodId), { credentials: 'same-origin' })
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(p) {
+            if (!p) return;
+            document.getElementById('heroPeriod').textContent =
+              (p.payrollType || 'Regular') + ' · ' + (p.payFrequency || '') + ' · Pay date ' + (p.payDate || '');
+            if (p.payDate) {
+              document.getElementById('taxYear').textContent = p.payDate.slice(0, 4);
+              document.getElementById('paymentDate').value   = p.payDate;
+            }
+            if (p.status === 'finalized') {
+              document.getElementById('btnAuthorize').disabled = true;
+              document.getElementById('btnAuthorize').textContent = '✅ Finalized';
+            }
+            if (p.companyId) {
+              fetch('/api/payroll/companies/' + encodeURIComponent(p.companyId), { credentials: 'same-origin' })
+                .then(function(r) { return r.ok ? r.json() : null; })
+                .then(function(c) { if (c) document.getElementById('companyName').textContent = c.name || c.legalName || ''; });
+            }
+          });
+      }
+
+      function loadEntries() {
+        fetch('/api/payroll/periods/' + encodeURIComponent(periodId) + '/entries', { credentials: 'same-origin' })
+          .then(function(r) { return r.ok ? r.json() : []; })
+          .then(function(list) {
+            allEntries = list || [];
+            renderPaymentsTable(allEntries);
+          });
+      }
+
+      var paymentTypes = {}; // entryId → 'cheque' | 'deposit'
+
+      function renderPaymentsTable(list) {
+        var tbody = document.getElementById('paymentsTbody');
+        if (!list.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-base-content/40">No entries found.</td></tr>';
+          return;
+        }
+
+        var totGross = 0, totDed = 0, totNet = 0, totErCPP = 0, totErEI = 0;
+
+        tbody.innerHTML = list.map(function(e, i) {
+          totGross  += parseFloat(e.grossPay)       || 0;
+          totDed    += parseFloat(e.totalDeductions) || 0;
+          totNet    += parseFloat(e.netPay)          || 0;
+          totErCPP  += (parseFloat(e.cppEmployer)||0) + (parseFloat(e.cpp2Employer)||0);
+          totErEI   += parseFloat(e.eiEmployer)      || 0;
+          paymentTypes[e.id] = paymentTypes[e.id] || (e.paymentType || 'cheque');
+
+          return '<tr>' +
+            '<td class="font-mono text-xs text-base-content/50">' + esc(e.employeeId) + '</td>' +
+            '<td class="font-medium text-sm">' + esc(e.employeeName || e.employeeId) + '</td>' +
+            '<td>' +
+              '<select class="select select-bordered select-xs w-28 ptype-sel" data-id="' + esc(e.id) + '">' +
+                '<option value="cheque"' + (paymentTypes[e.id] === 'cheque' ? ' selected' : '') + '>Cheque</option>' +
+                '<option value="deposit"' + (paymentTypes[e.id] === 'deposit' ? ' selected' : '') + '>Direct Deposit</option>' +
+              '</select>' +
+            '</td>' +
+            '<td class="text-right font-mono font-semibold text-success">' + fmt(e.netPay) + '</td>' +
+            '<td><input type="text" class="input input-bordered input-xs w-24 font-mono" placeholder="Ref #" /></td>' +
+            '</tr>';
+        }).join('');
+
+        // Wire payment type changes
+        tbody.querySelectorAll('.ptype-sel').forEach(function(sel) {
+          sel.addEventListener('change', function() { paymentTypes[sel.dataset.id] = sel.value; });
+        });
+
+        // Totals
+        document.getElementById('sumGross').textContent        = fmt(totGross);
+        document.getElementById('sumDeductions').textContent   = '-' + fmt(totDed);
+        document.getElementById('sumErCPP').textContent        = fmt(totErCPP);
+        document.getElementById('sumErEI').textContent         = fmt(totErEI);
+        document.getElementById('sumNetPay').textContent       = fmt(totNet);
+        document.getElementById('sumEmployeeCount').textContent = list.length;
+        var payrunTotal = totGross + totErCPP + totErEI;
+        document.getElementById('sumPayrunTotal').textContent  = fmt(payrunTotal);
+      }
+
+      // ── Authorize ─────────────────────────────────────────────────────────
+      document.getElementById('btnAuthorize').addEventListener('click', function() {
+        document.getElementById('authModal').showModal();
+      });
+
+      document.getElementById('btnConfirmAuthorize').addEventListener('click', function() {
+        document.getElementById('btnConfirmAuthorize').disabled = true;
+        document.getElementById('authModal').close();
+
+        // Save payment types first, then finalize
+        var updates = allEntries
+          .filter(function(e) { return e.id && paymentTypes[e.id]; })
+          .map(function(e) {
+            return fetch('/api/payroll/periods/' + encodeURIComponent(periodId) + '/entries', {
+              method: 'POST', credentials: 'same-origin',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify([{ employeeId: e.employeeId, hours: e.hours, payRate: e.payRate,
+                grossPay: e.grossPay, paymentType: paymentTypes[e.id] }])
+            });
+          });
+
+        Promise.all(updates).then(function() {
+          return fetch('/api/payroll/periods/' + encodeURIComponent(periodId) + '/finalize', {
+            method: 'POST', credentials: 'same-origin'
+          });
+        }).then(function(r) {
+          if (!r.ok) return r.text().then(function(t) { throw new Error(t); });
+          location.href = withP('summary.html');
+        }).catch(function(err) {
+          document.getElementById('btnConfirmAuthorize').disabled = false;
+          showAlert('Authorization failed: ' + err.message, true);
+        });
+      });
+
+      function fmt(v) { return '$' + (parseFloat(v)||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+      function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      function showAlert(msg, isErr) {
+        var el = document.getElementById('alertBox');
+        el.className = isErr ? 'alert alert-error text-sm py-2 px-4 mb-4' : 'alert alert-success text-sm py-2 px-4 mb-4';
+        el.textContent = msg;
+        el.classList.remove('hidden');
+        clearTimeout(el._t);
+        el._t = setTimeout(function() { el.classList.add('hidden'); }, 5000);
+      }
+    </script>
   </body>
 </html>
