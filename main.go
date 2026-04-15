@@ -22,6 +22,9 @@ var staticFS embed.FS
 //go:embed web/*.html web/*.css web/reports
 var payrollFS embed.FS
 
+//go:embed web/admin
+var adminFS embed.FS
+
 func main() {
 	dataDir := os.Getenv("DATA_DIR")
 	if dataDir == "" {
@@ -89,6 +92,16 @@ func main() {
 	mux.Handle("/payroll/", http.StripPrefix("/payroll", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-cache, must-revalidate")
 		payrollServer.ServeHTTP(w, r)
+	})))
+
+	adminSub, err := fs.Sub(adminFS, "web/admin")
+	if err != nil {
+		log.Fatal(err)
+	}
+	adminServer := http.FileServer(http.FS(adminSub))
+	mux.Handle("/admin/", http.StripPrefix("/admin", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache, must-revalidate")
+		adminServer.ServeHTTP(w, r)
 	})))
 
 	handler := api.RecoverMiddleware(auth.Middleware(authCfg, mux))

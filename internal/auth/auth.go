@@ -438,6 +438,11 @@ func isPublicPath(c *Config, path string, r *http.Request) bool {
 		}
 		return false
 	}
+	// Admin login page is public
+	switch path {
+	case "/admin/login.html", "/admin/admin.js":
+		return true
+	}
 	switch path {
 	case "/login.html", "/login", "/login.js", "/style.css", "/invoice.html", "/invoice.js":
 		return true
@@ -463,8 +468,14 @@ func isAllowedForRole(role, path string) bool {
 	case "admin":
 		return true
 	case "user2":
-		// Full app access, but no user management
-		return path != "/api/users" && !strings.HasPrefix(path, "/api/users/")
+		// Full app access, but no user management and no admin module
+		if path == "/api/users" || strings.HasPrefix(path, "/api/users/") {
+			return false
+		}
+		if strings.HasPrefix(path, "/admin/") {
+			return false
+		}
+		return true
 	case "user1":
 		// Payroll pages only
 		if strings.HasPrefix(path, "/payroll/") {
@@ -532,8 +543,12 @@ func Middleware(c *Config, next http.Handler) http.Handler {
 			if !isAllowedForRole(role, path) {
 				if strings.HasPrefix(path, "/api/") {
 					writeJSON(w, http.StatusForbidden, map[string]string{"error": "access denied"})
-				} else {
+				} else if strings.HasPrefix(path, "/admin/") {
+					http.Redirect(w, r, "/admin/login.html", http.StatusFound)
+				} else if role == "user1" {
 					http.Redirect(w, r, "/payroll/dashboard.html", http.StatusFound)
+				} else {
+					http.Redirect(w, r, "/", http.StatusFound)
 				}
 				return
 			}
@@ -548,6 +563,11 @@ func Middleware(c *Config, next http.Handler) http.Handler {
 		}
 		if c.NeedsSetup() {
 			http.Redirect(w, r, "/setup.html", http.StatusFound)
+			return
+		}
+		// Unauthenticated access to admin module → admin login
+		if strings.HasPrefix(path, "/admin/") {
+			http.Redirect(w, r, "/admin/login.html", http.StatusFound)
 			return
 		}
 		http.Redirect(w, r, "/login.html", http.StatusFound)
