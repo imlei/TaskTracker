@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Companies — Payroll Works</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span>PAYROLL WORKS</span>
+          <span class="muted">Payroll</span>
+          <span class="brand-flag" aria-hidden="true">🇨🇦</span>
+          <span class="tax-year" title="Tax year (TaxYear / RateBook)"><span>2026</span></span>
+        </div>
+        <nav class="topbar-nav">
+          <a href="run-payroll.html" class="topbar-nav-item">Payroll</a>
+        </nav>
+        <div class="topbar-actions">
+          <button type="button" class="icon-btn" title="Help">?</button>
+          <div class="avatar" title="Signed in">LH</div>
+        </div>
+      </header>
+
+      <aside class="sidebar">
+        <a href="index.html" class="nav-item active"><span>⌂</span> Home</a>
+        <a href="run-payroll.html" class="nav-item"><span>▤</span> Run Payroll</a>
+        <a href="#" class="nav-item" onclick="return false"><span>☰</span> Actions</a>
+        <a href="reports/payrun.html" class="nav-item"><span>▦</span> Reports</a>
+        <a href="employees.html" class="nav-item"><span>👤</span> Employees</a>
+        <a href="#" class="nav-item" onclick="return false" style="margin-top: 1rem"><span>📋</span> Billing</a>
+        <a href="#" class="nav-item" onclick="return false"><span>⚙</span> Settings</a>
+      </aside>
+
+      <main class="main">
+        <div class="hero-banner">
+          <span>Company list</span>
+          <span class="muted">Multi-company · Dark mode</span>
+        </div>
+
+        <div class="content">
+          <h1 class="page-title">Companies</h1>
+
+          <div class="payroll-steps-label">Payroll steps</div>
+          <div class="stepper" role="list">
+            <div class="step active" role="listitem">Select pay cycle</div>
+            <div class="step" role="listitem">Salaries</div>
+            <div class="step" role="listitem">Timesheets</div>
+            <div class="step" role="listitem">Calculate</div>
+            <div class="step" role="listitem">Review</div>
+            <div class="step" role="listitem">Payments</div>
+            <div class="step" role="listitem">Summary</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-toolbar">
+              <div class="cutoff">e-Pay cutoff: Apr 06 3:30 PM ET · Pay date Apr 10</div>
+              <div style="display: flex; gap: 0.5rem; align-items: center">
+                <label class="muted" for="f">Status</label>
+                <select id="f" class="input">
+                  <option>Active</option>
+                  <option>All</option>
+                </select>
+                <button type="button" class="btn btn-primary">+ Company</button>
+              </div>
+            </div>
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>Company</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Contact</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><a href="dashboard.html">Bizsense Services Inc.</a></td>
+                  <td>pay@example.com</td>
+                  <td>(416) 555-0100</td>
+                  <td>Jane Doe</td>
+                  <td><span class="status-pill">Active</span></td>
+                  <td class="row-actions">
+                    <button type="button" title="Users">👥</button>
+                    <button type="button" title="Reports">📋</button>
+                    <button type="button" title="Settings (rates / RateBook)">⚙</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><a href="dashboard.html">RORO HOLDING LTD</a></td>
+                  <td>hq@example.com</td>
+                  <td>(604) 555-0199</td>
+                  <td>Lei Huang</td>
+                  <td><span class="status-pill">Active</span></td>
+                  <td class="row-actions">
+                    <button type="button" title="Users">👥</button>
+                    <button type="button" title="Reports">📋</button>
+                    <button type="button" title="Settings">⚙</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="muted" style="margin-top: 1.25rem">
+            <a href="run-payroll.html" class="btn btn-primary" style="text-decoration: none; display: inline-flex"
+              >Run payroll · Select pay cycle →</a
+            >
+          </p>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

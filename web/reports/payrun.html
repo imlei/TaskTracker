@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pay run — Payroll Works</title>
+    <link rel="stylesheet" href="../employees-theme.css" />
+    <link rel="stylesheet" href="../reports.css" />
+  </head>
+  <body class="pe-app">
+    <div class="pe-shell">
+      <header class="pe-topbar">
+        <div class="pe-brand">
+          <span>PAYROLL WORKS</span>
+          <span class="sep">|</span>
+          <span class="sub">Payroll</span>
+          <span class="pe-flag">🇨🇦</span>
+          <span class="pe-tax-pill">2026</span>
+        </div>
+        <nav class="pe-topbar-nav">
+          <a href="../run-payroll.html" class="pe-topbar-nav-item">Payroll</a>
+        </nav>
+        <div class="pe-topbar-right">
+          <span class="pe-badge-admin">Admin</span>
+          <span>RORO HOLDING LTD</span>
+          <button type="button" class="pe-icon-btn" title="Notifications">🔔</button>
+          <button type="button" class="pe-icon-btn" title="Help">?</button>
+          <div class="pe-avatar">LH</div>
+        </div>
+      </header>
+
+      <div class="pe-strip">
+        <span style="opacity: 0.9">Payroll reports</span>
+        <span style="opacity: 0.85">Pay run</span>
+      </div>
+
+      <aside class="pe-sidebar">
+        <a class="pe-nav" href="../dashboard.html"><span>⌂</span> Home</a>
+        <a class="pe-nav" href="../run-payroll.html"><span>▤</span> Run payroll</a>
+        <a class="pe-nav" href="#"><span>☰</span> Actions</a>
+        <div class="pe-nav-group">
+          <div class="pe-nav-heading">Reports</div>
+          <a class="pe-nav active" href="payrun.html" style="margin: 0 0.5rem"><span>▦</span> Reports</a>
+          <div class="pe-nav-sub">
+            <a class="active" href="payrun.html">Pay run</a>
+            <a href="#">Pay run history</a>
+            <a href="#">Time sheet</a>
+            <a href="#">Time summary</a>
+            <a href="#">Journal (register)</a>
+            <a href="remittance.html">Remittance report</a>
+            <a href="cheques-payslips.html">Cheques / payslips</a>
+            <a href="#">E-pay direct deposit</a>
+            <a href="#">Payment register</a>
+            <a href="#">Summary</a>
+            <a href="#">Employee HX</a>
+            <a href="remittance.html">Remittance report</a>
+            <a href="accountant/index.html">Accountant</a>
+          </div>
+        </div>
+        <a class="pe-nav" href="../employees.html"><span>👤</span> Employees</a>
+        <span class="pe-nav spacer"></span>
+        <a class="pe-nav" href="#"><span>⚙</span> Settings</a>
+      </aside>
+
+      <main class="pe-main">
+        <div class="pe-report-toolbar">
+          <h1>Pay run</h1>
+          <div class="pe-report-filters">
+            <label for="y">Tax year</label>
+            <select id="y" aria-label="Tax year">
+              <option selected>2026</option>
+              <option>2025</option>
+            </select>
+            <label for="st">Status</label>
+            <select id="st" aria-label="Status">
+              <option>All</option>
+              <option>Finalized</option>
+              <option>In process</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="pe-muted-hint">Posted pay runs for the company. Links to journals and remittance reports can be added when G/L is wired.</p>
+
+        <div class="pe-table-wrap">
+          <table class="pe-table">
+            <thead>
+              <tr>
+                <th>Pay period</th>
+                <th>Payment date</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Employees</th>
+                <th>Gross</th>
+                <th>Net</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>16-Feb-2026 — 02-Mar-2026</td>
+                <td>06-Mar-2026</td>
+                <td>Regular</td>
+                <td><span style="color: var(--pe-success); font-weight: 600">Finalized</span></td>
+                <td>22</td>
+                <td>$128,450.00</td>
+                <td>$96,200.00</td>
+                <td><button type="button" class="pe-icon-action" title="View">📄</button></td>
+              </tr>
+              <tr>
+                <td>01-Feb-2026 — 15-Feb-2026</td>
+                <td>20-Feb-2026</td>
+                <td>Regular</td>
+                <td><span style="color: var(--pe-success); font-weight: 600">Finalized</span></td>
+                <td>22</td>
+                <td>$126,800.00</td>
+                <td>$95,100.00</td>
+                <td><button type="button" class="pe-icon-action" title="View">📄</button></td>
+              </tr>
+              <tr>
+                <td>16-Jan-2026 — 31-Jan-2026</td>
+                <td>05-Feb-2026</td>
+                <td>Regular</td>
+                <td><span style="color: #f9ab00; font-weight: 600">In process</span></td>
+                <td>21</td>
+                <td>—</td>
+                <td>—</td>
+                <td><button type="button" class="pe-icon-action" title="View">📄</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pe-pagination-full">
+            <div class="pe-page-btns">
+              <button type="button" title="First">«</button>
+              <button type="button" title="Previous">‹</button>
+              <span class="current">1</span>
+              <button type="button" title="Next">›</button>
+              <button type="button" title="Last">»</button>
+            </div>
+            <span>3 pay runs</span>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

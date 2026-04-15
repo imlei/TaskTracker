@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Personal details — Payroll Works</title>
+    <link rel="stylesheet" href="employees-theme.css" />
+  </head>
+  <body class="pe-app">
+    <div class="pe-shell">
+      <header class="pe-topbar">
+        <div class="pe-brand">
+          <span>PAYROLL WORKS</span>
+          <span class="sep">|</span>
+          <span class="sub">Payroll</span>
+          <span class="pe-flag">🇨🇦</span>
+          <span class="pe-tax-pill">2026</span>
+        </div>
+        <nav class="pe-topbar-nav">
+          <a href="run-payroll.html" class="pe-topbar-nav-item">Payroll</a>
+        </nav>
+        <div class="pe-topbar-right">
+          <span class="pe-badge-admin">Admin</span>
+          <span>RORO HOLDING LTD</span>
+          <button type="button" class="pe-icon-btn">📞</button>
+          <button type="button" class="pe-icon-btn">🔔</button>
+          <button type="button" class="pe-icon-btn">?</button>
+          <div class="pe-avatar">LH</div>
+        </div>
+      </header>
+
+      <div class="pe-wizard-bar">
+        <div class="pe-wizard-steps">
+          <div class="pe-wstep active">
+            <span class="circle">👤</span>
+            <span>Employee</span>
+          </div>
+          <div class="pe-wstep">
+            <span class="circle">💵</span>
+            <span>Payroll</span>
+          </div>
+          <div class="pe-wstep">
+            <span class="circle">📋</span>
+            <span>Checklist</span>
+          </div>
+        </div>
+        <div class="pe-wizard-sub">
+          <span></span>
+          <div class="pe-progress"><i style="width: 36%"></i></div>
+          <span>Onboard employee</span>
+        </div>
+      </div>
+
+      <aside class="pe-sidebar">
+        <a class="pe-nav" href="dashboard.html"><span>⌂</span> Home</a>
+        <a class="pe-nav" href="run-payroll.html"><span>▤</span> Run payroll</a>
+        <a class="pe-nav" href="#"><span>☰</span> Actions</a>
+        <a class="pe-nav" href="reports/payrun.html"><span>▦</span> Reports</a>
+        <a class="pe-nav active" href="employees.html"><span>👤</span> Employees</a>
+        <span class="pe-nav spacer"></span>
+        <a class="pe-nav" href="#"><span>⚙</span> Settings</a>
+      </aside>
+
+      <main class="pe-main">
+        <div class="pe-card">
+          <h2>Personal details</h2>
+          <div class="pe-field">
+            <label for="hireDate">Date of hire</label>
+            <input class="pe-input-line" id="hireDate" type="date" value="2026-04-06" />
+          </div>
+          <div class="pe-field">
+            <label for="province">Province of employment</label>
+            <select class="pe-input-line" id="province" style="border: 1px solid var(--pe-border); border-radius: 4px; padding: 0.4rem">
+              <option value="0">Alberta</option>
+              <option value="1" selected>British Columbia</option>
+              <option value="2">Manitoba</option>
+              <option value="3">New Brunswick</option>
+              <option value="4">Newfoundland and Labrador</option>
+              <option value="5">Nova Scotia</option>
+              <option value="6">Northwest Territories</option>
+              <option value="7">Nunavut</option>
+              <option value="8">Ontario</option>
+              <option value="9">Prince Edward Island</option>
+              <option value="10">Quebec</option>
+              <option value="11">Saskatchewan</option>
+              <option value="12">Yukon</option>
+              <option value="13">Outside Canada</option>
+            </select>
+          </div>
+          <div class="pe-field">
+            <label for="sin">SIN (Social Insurance Number)</label>
+            <input class="pe-input-line" id="sin" type="text" placeholder="###-###-###" autocomplete="off" />
+          </div>
+          <div class="pe-field">
+            <label for="dob">Date of birth</label>
+            <input class="pe-input-line" id="dob" type="date" />
+          </div>
+          <div class="pe-foot-actions">
+            <a class="pe-btn" href="onboard-setup.html">Back</a>
+            <button type="button" class="pe-btn pe-btn-primary" id="btn-continue">Continue</button>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="js/onboard.js"></script>
+    <script>
+      (function () {
+        var d = pwOnboard.load();
+        if (d.hireDate) document.getElementById("hireDate").value = d.hireDate;
+        if (d.province !== undefined) document.getElementById("province").value = String(d.province);
+        if (d.sin) document.getElementById("sin").value = d.sin;
+        if (d.dob) document.getElementById("dob").value = d.dob;
+
+        document.getElementById("btn-continue").addEventListener("click", function () {
+          pwOnboard.save({
+            hireDate: document.getElementById("hireDate").value,
+            province: parseInt(document.getElementById("province").value, 10),
+            sin: document.getElementById("sin").value.replace(/\D/g, ""),
+            dob: document.getElementById("dob").value,
+          });
+          location.href = "onboard-payroll.html";
+        });
+      })();
+    </script>
+  </body>
+</html>

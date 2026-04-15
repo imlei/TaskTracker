@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Salaries — Payroll Works</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="pages.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <a href="dashboard.html" class="muted">←</a>
+          <span>PAYROLL WORKS</span>
+          <span class="muted">Payroll</span>
+          <span class="brand-flag" aria-hidden="true">🇨🇦</span>
+          <span class="tax-year"><span>2026</span></span>
+        </div>
+        <nav class="topbar-nav">
+          <a href="run-payroll.html" class="topbar-nav-item active">Payroll</a>
+        </nav>
+        <div class="topbar-actions">
+          <span class="muted" style="font-size: 0.8rem">RORO HOLDING LTD</span>
+          <div class="avatar">LH</div>
+        </div>
+      </header>
+
+      <aside class="sidebar">
+        <a href="dashboard.html" class="nav-item"><span>⌂</span> Home</a>
+        <a href="run-payroll.html" class="nav-item active"><span>▤</span> Run Payroll</a>
+        <a href="#" class="nav-item" onclick="return false"><span>☰</span> Actions</a>
+        <a href="reports/payrun.html" class="nav-item"><span>▦</span> Reports</a>
+        <a href="employees.html" class="nav-item"><span>👤</span> Employees</a>
+      </aside>
+
+      <main class="main">
+        <div class="hero-banner">
+          <span>Approve employee earnings</span>
+          <span class="muted">Pay period · sample</span>
+        </div>
+        <div class="content">
+          <div class="payroll-steps-label">Payroll steps</div>
+          <div class="stepper">
+            <div class="step">Select pay cycle</div>
+            <div class="step active">Salaries</div>
+            <div class="step">Timesheets</div>
+            <div class="step">Calculate</div>
+            <div class="step">Review</div>
+            <div class="step">Payments</div>
+            <div class="step">Summary</div>
+          </div>
+
+          <div class="layout-2col">
+            <div style="min-width: 0">
+              <div class="table-toolbar">
+                <h2>Approve employee earnings</h2>
+                <div class="bulk-actions">
+                  <button type="button" class="btn btn-sm">✓ Approve</button>
+                  <button type="button" class="btn btn-sm">💾 Save</button>
+                  <button type="button" class="btn btn-sm">🗑 Delete</button>
+                </div>
+              </div>
+              <div class="table-toolbar">
+                <div class="search-inline">
+                  <input type="search" placeholder="Name or ID" />
+                  <button type="button" class="btn btn-primary">Search</button>
+                </div>
+              </div>
+
+              <div class="panel">
+                <table class="data">
+                  <thead>
+                    <tr>
+                      <th><input type="checkbox" /></th>
+                      <th>#</th>
+                      <th>Employee</th>
+                      <th>ID</th>
+                      <th>Earnings type</th>
+                      <th>Hours</th>
+                      <th>Rate</th>
+                      <th>Total</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><input type="checkbox" /></td>
+                      <td>1</td>
+                      <td>GONG, MINGYING</td>
+                      <td class="mono">000003</td>
+                      <td>
+                        <select class="input" style="font-size: 0.8rem">
+                          <option>Regular Hours</option>
+                        </select>
+                      </td>
+                      <td><input class="cell-input" value="86.66666" /></td>
+                      <td><input class="cell-input" value="45.00" /></td>
+                      <td class="mono">$3,900.00</td>
+                      <td><button type="button" class="icon-btn" title="Save">💾</button> <button type="button" class="icon-btn">+</button></td>
+                    </tr>
+                    <tr>
+                      <td><input type="checkbox" /></td>
+                      <td>2</td>
+                      <td>ZHANG, JIE</td>
+                      <td class="mono">000004</td>
+                      <td>
+                        <select class="input" style="font-size: 0.8rem">
+                          <option>Regular Hours</option>
+                        </select>
+                      </td>
+                      <td><input class="cell-input" value="80.00" /></td>
+                      <td><input class="cell-input" value="42.00" /></td>
+                      <td class="mono">$3,360.00</td>
+                      <td><button type="button" class="icon-btn">💾</button> <button type="button" class="icon-btn">+</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="pagination-bar">
+                  <span>← 1 / 1 →</span>
+                  <span>Per page <select class="input"><option>10</option></select></span>
+                </div>
+                <div class="footer-summary" style="padding: 0.75rem 1rem">
+                  Total gross approved: <strong>$0.00</strong> for 0 employees
+                  <span class="legend-approved" style="margin-left: 1rem">✓ Approved</span>
+                </div>
+              </div>
+
+              <div class="flow-footer">
+                <a href="run-payroll.html" class="btn">← Select pay cycle</a>
+                <a href="timesheets.html" class="btn btn-primary" style="text-decoration: none">Timesheets →</a>
+              </div>
+            </div>
+            <aside class="tips-box">
+              <strong>Quick tips</strong><br />
+              Select rows to approve in bulk. Use + to add another earning line for the same employee.
+            </aside>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

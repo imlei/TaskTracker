@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Team — Payroll Works</title>
+    <link rel="stylesheet" href="employees-theme.css" />
+  </head>
+  <body class="pe-app">
+    <div class="pe-shell">
+      <header class="pe-topbar">
+        <div class="pe-brand">
+          <span>PAYROLL WORKS</span>
+          <span class="sep">|</span>
+          <span class="sub">Payroll</span>
+          <span class="pe-flag" aria-hidden="true">🇨🇦</span>
+          <span class="pe-tax-pill">2026</span>
+        </div>
+        <nav class="pe-topbar-nav">
+          <a href="run-payroll.html" class="pe-topbar-nav-item">Payroll</a>
+        </nav>
+        <div class="pe-topbar-right">
+          <span class="pe-badge-admin">Admin</span>
+          <span>RORO HOLDING LTD</span>
+          <button type="button" class="pe-icon-btn" title="Support">📞</button>
+          <button type="button" class="pe-icon-btn" title="Notifications">🔔</button>
+          <button type="button" class="pe-icon-btn" title="Help">?</button>
+          <div class="pe-avatar">LH</div>
+        </div>
+      </header>
+
+      <div class="pe-strip">
+        <div class="pe-strip-tabs">
+          <span class="pe-strip-tab active">Team</span>
+        </div>
+        <span style="opacity: 0.85">Employee list</span>
+      </div>
+
+      <aside class="pe-sidebar">
+        <a class="pe-nav" href="dashboard.html"><span>⌂</span> Home</a>
+        <a class="pe-nav" href="run-payroll.html"><span>▤</span> Run payroll</a>
+        <a class="pe-nav" href="#"><span>☰</span> Actions</a>
+        <a class="pe-nav" href="reports/payrun.html"><span>▦</span> Reports</a>
+        <a class="pe-nav active" href="employees.html"><span>👤</span> Employees</a>
+        <span class="pe-nav spacer"></span>
+        <a class="pe-nav" href="#"><span>⚙</span> Settings</a>
+      </aside>
+
+      <main class="pe-main">
+        <div class="pe-page-head">
+          <h1 class="pe-page-title">Team</h1>
+          <div class="pe-toolbar">
+            <button type="button" class="pe-icon-btn" title="Search">🔍</button>
+            <a class="pe-btn pe-btn-primary" href="onboard-type.html">Add member +</a>
+          </div>
+        </div>
+
+        <div class="pe-banner" id="onboard-banner">
+          There are <strong id="pending-count">0</strong> employee(s) pending to be onboarded.
+          <a href="onboard-type.html">Click here to complete the onboarding.</a>
+        </div>
+
+        <div class="pe-filter-row">
+          <span class="muted" style="color: var(--pe-text-secondary)">Status:</span>
+          <span class="pe-chip">Active <strong>×</strong></span>
+        </div>
+
+        <div class="pe-table-wrap">
+          <table class="pe-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Pay frequency</th>
+                <th>Status</th>
+                <th>Type</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="employee-rows">
+              <tr>
+                <td>
+                  <div class="pe-name-cell">
+                    <span class="pe-avatar-sm">OH</span>
+                    <div class="pe-name-block">
+                      <span class="name">OU, HONGCHENG</span>
+                      <span class="id">000002</span>
+                    </div>
+                  </div>
+                </td>
+                <td></td>
+                <td>Semi-Monthly</td>
+                <td><span class="pe-dot-active">Active</span></td>
+                <td class="pe-type-cell">Time-Based<br />PERMANENT</td>
+                <td><button type="button" class="pe-kebab" aria-label="Actions">⋮</button></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="pe-name-cell">
+                    <span class="pe-avatar-sm">SJ</span>
+                    <div class="pe-name-block">
+                      <span class="name">SAWAENGPON, JIRAYU</span>
+                      <span class="id">000016</span>
+                    </div>
+                  </div>
+                </td>
+                <td></td>
+                <td>Semi-Monthly</td>
+                <td><span class="pe-dot-active">Active</span></td>
+                <td class="pe-type-cell">Time-Based<br />PERMANENT</td>
+                <td><button type="button" class="pe-kebab" aria-label="Actions">⋮</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pe-pagination">
+            <span>← 1 / 1 →</span>
+            <span>Per page <select><option>10</option></select></span>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="js/employees-list.js"></script>
+  </body>
+</html>

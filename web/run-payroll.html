@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Select Pay Cycle — Payroll Works</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="forms.css" />
+    <link rel="stylesheet" href="pages.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <a href="index.html" class="muted" style="margin-right: 0.5rem">←</a>
+          <span>PAYROLL WORKS</span>
+          <span class="muted">Payroll</span>
+          <span class="brand-flag" aria-hidden="true">🇨🇦</span>
+          <span class="tax-year"><span>2026</span></span>
+        </div>
+        <nav class="topbar-nav">
+          <a href="run-payroll.html" class="topbar-nav-item active">Payroll</a>
+        </nav>
+        <div class="topbar-actions">
+          <span class="muted" style="font-size: 0.8rem">RORO HOLDING LTD</span>
+          <button type="button" class="icon-btn" title="Help">?</button>
+          <div class="avatar">LH</div>
+        </div>
+      </header>
+
+      <aside class="sidebar">
+        <a href="dashboard.html" class="nav-item"><span>⌂</span> Home</a>
+        <a href="run-payroll.html" class="nav-item active"><span>▤</span> Run Payroll</a>
+        <a href="#" class="nav-item" onclick="return false"><span>☰</span> Actions</a>
+        <a href="reports/payrun.html" class="nav-item"><span>▦</span> Reports</a>
+        <a href="employees.html" class="nav-item"><span>👤</span> Employees</a>
+      </aside>
+
+      <main class="main">
+        <div class="hero-banner">
+          <span>Run payroll · Select pay cycle</span>
+          <span class="muted">Regular · Semi-monthly</span>
+        </div>
+
+        <div class="content">
+          <div class="payroll-steps-label">Payroll steps</div>
+          <div class="stepper" role="list">
+            <div class="step active" role="listitem">Select pay cycle</div>
+            <div class="step" role="listitem">Salaries</div>
+            <div class="step" role="listitem">Timesheets</div>
+            <div class="step" role="listitem">Calculate</div>
+            <div class="step" role="listitem">Review</div>
+            <div class="step" role="listitem">Payments</div>
+            <div class="step" role="listitem">Summary</div>
+          </div>
+
+          <div class="form-card">
+            <div class="form-row">
+              <label class="field-label" for="payDate"
+                >Payment date <span class="info-dot" title="Cheque or deposit date">i</span></label
+              >
+              <input type="text" id="payDate" class="field-input" value="06-Apr-2026" readonly />
+            </div>
+
+            <fieldset class="fieldset">
+              <legend class="field-label">Payroll type</legend>
+              <label class="radio-label"><input type="radio" name="ptype" checked /> Regular</label>
+              <label class="radio-label"><input type="radio" name="ptype" /> Special</label>
+            </fieldset>
+
+            <div class="cycle-box">
+              <div class="cycle-box-title">Pay period</div>
+              <div class="form-row">
+                <label class="field-label" for="cycle">Pay cycle</label>
+                <select id="cycle" class="field-input field-select">
+                  <option>24 — Semi-monthly</option>
+                  <option>26 — Bi-weekly</option>
+                  <option>52 — Weekly</option>
+                </select>
+              </div>
+              <div class="form-grid-2">
+                <div>
+                  <label class="field-label" for="from">From</label>
+                  <input type="text" id="from" class="field-input" value="16-Feb-2026" />
+                  <span class="hint">dd-mmm-yyyy</span>
+                </div>
+                <div>
+                  <label class="field-label" for="to">To</label>
+                  <input type="text" id="to" class="field-input" value="02-Mar-2026" />
+                  <span class="hint">dd-mmm-yyyy</span>
+                </div>
+              </div>
+              <p class="hint" style="margin-top: 0.75rem">
+                Semi-monthly uses <code>P</code> = 24 pay periods per year (<code>PayPeriodsPerYear</code>).
+              </p>
+              <div class="form-actions">
+                <button type="button" class="btn btn-primary">Submit</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-footer">
+            <a href="index.html" class="btn">← Company list</a>
+            <a href="salaries.html" class="btn btn-primary" style="text-decoration: none">Continue → Salaries</a>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

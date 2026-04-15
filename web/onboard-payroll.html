@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Payroll details — Payroll Works</title>
+    <link rel="stylesheet" href="employees-theme.css" />
+  </head>
+  <body class="pe-app">
+    <div class="pe-shell">
+      <header class="pe-topbar">
+        <div class="pe-brand">
+          <span>PAYROLL WORKS</span>
+          <span class="sep">|</span>
+          <span class="sub">Payroll</span>
+          <span class="pe-flag">🇨🇦</span>
+          <span class="pe-tax-pill">2026</span>
+        </div>
+        <nav class="pe-topbar-nav">
+          <a href="run-payroll.html" class="pe-topbar-nav-item">Payroll</a>
+        </nav>
+        <div class="pe-topbar-right">
+          <span class="pe-badge-admin">Admin</span>
+          <span>RORO HOLDING LTD</span>
+          <button type="button" class="pe-icon-btn">📞</button>
+          <button type="button" class="pe-icon-btn">🔔</button>
+          <button type="button" class="pe-icon-btn">?</button>
+          <div class="pe-avatar">LH</div>
+        </div>
+      </header>
+
+      <div class="pe-wizard-bar">
+        <div class="pe-wizard-steps">
+          <div class="pe-wstep done">
+            <span class="circle">✓</span>
+            <span>Employee</span>
+          </div>
+          <div class="pe-wstep active">
+            <span class="circle">💵</span>
+            <span>Payroll</span>
+          </div>
+          <div class="pe-wstep">
+            <span class="circle">📋</span>
+            <span>Checklist</span>
+          </div>
+        </div>
+        <div class="pe-wizard-sub">
+          <span></span>
+          <div class="pe-progress"><i style="width: 55%"></i></div>
+          <span>Onboard employee</span>
+        </div>
+      </div>
+
+      <aside class="pe-sidebar">
+        <a class="pe-nav" href="dashboard.html"><span>⌂</span> Home</a>
+        <a class="pe-nav" href="run-payroll.html"><span>▤</span> Run payroll</a>
+        <a class="pe-nav" href="#"><span>☰</span> Actions</a>
+        <a class="pe-nav" href="reports/payrun.html"><span>▦</span> Reports</a>
+        <a class="pe-nav active" href="employees.html"><span>👤</span> Employees</a>
+        <span class="pe-nav spacer"></span>
+        <a class="pe-nav" href="#"><span>⚙</span> Settings</a>
+      </aside>
+
+      <main class="pe-main">
+        <div class="pe-card">
+          <h2>Payroll details</h2>
+          <div class="pe-field">
+            <label for="salaryType">Salary type</label>
+            <select class="pe-input-line" id="salaryType" style="border: 1px solid var(--pe-border); border-radius: 4px; padding: 0.4rem">
+              <option value="">Select</option>
+              <option value="0">Salaried</option>
+              <option value="1" selected>Time-Based</option>
+            </select>
+          </div>
+          <div class="pe-field">
+            <label for="payRate">Pay rate</label>
+            <input class="pe-input-line" id="payRate" type="text" value="17.85" />
+          </div>
+          <div class="pe-field">
+            <label for="payRateUnit">Pay rate unit</label>
+            <select class="pe-input-line" id="payRateUnit" style="border: 1px solid var(--pe-border); border-radius: 4px; padding: 0.4rem">
+              <option value="">Select</option>
+              <option value="Hourly" selected>Hourly</option>
+              <option value="Annually">Annually</option>
+              <option value="Monthly">Monthly</option>
+            </select>
+          </div>
+          <div class="pe-field">
+            <label for="paysPerYear">Pays/year</label>
+            <select class="pe-input-line" id="paysPerYear" style="border: 1px solid var(--pe-border); border-radius: 4px; padding: 0.4rem">
+              <option value="">Select</option>
+              <option value="52">Weekly</option>
+              <option value="26">Bi-weekly</option>
+              <option value="24" selected>Semi-monthly</option>
+              <option value="12">Monthly</option>
+            </select>
+          </div>
+          <div class="pe-field">
+            <label for="hoursWeek">Hours/week</label>
+            <input class="pe-input-line" id="hoursWeek" type="text" placeholder="40" />
+          </div>
+          <p><a class="pe-link" href="#">Need more options? Advanced payroll options</a></p>
+          <div class="pe-foot-actions">
+            <a class="pe-btn" href="onboard-personal.html">Back</a>
+            <button type="button" class="pe-btn pe-btn-primary" id="btn-continue">Continue</button>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="js/onboard.js"></script>
+    <script>
+      (function () {
+        var d = pwOnboard.load();
+        if (d.salaryType !== undefined) document.getElementById("salaryType").value = String(d.salaryType);
+        if (d.payRate) document.getElementById("payRate").value = d.payRate;
+        if (d.payRateUnit) document.getElementById("payRateUnit").value = d.payRateUnit;
+        if (d.paysPerYear) document.getElementById("paysPerYear").value = String(d.paysPerYear);
+        if (d.hoursPerWeek) document.getElementById("hoursWeek").value = d.hoursPerWeek;
+
+        document.getElementById("btn-continue").addEventListener("click", function () {
+          var stRaw = document.getElementById("salaryType").value;
+          var st = parseInt(stRaw, 10);
+          if (isNaN(st)) st = 1;
+          pwOnboard.save({
+            salaryType: st,
+            payRate: parseFloat(document.getElementById("payRate").value) || 0,
+            payRateUnit: document.getElementById("payRateUnit").value,
+            paysPerYear: parseInt(document.getElementById("paysPerYear").value, 10) || 0,
+            hoursPerWeek: parseFloat(document.getElementById("hoursWeek").value) || 0,
+            payFrequency: labelFrequency(document.getElementById("paysPerYear").value),
+          });
+          location.href = "onboard-ytd.html";
+        });
+
+        function labelFrequency(v) {
+          var m = { 52: "Weekly", 26: "Bi-weekly", 24: "Semi-Monthly", 12: "Monthly" };
+          return m[v] || "";
+        }
+      })();
+    </script>
+  </body>
+</html>

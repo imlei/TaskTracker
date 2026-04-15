@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Remittance reports — Payroll Works</title>
+    <link rel="stylesheet" href="../employees-theme.css" />
+    <link rel="stylesheet" href="../reports.css" />
+  </head>
+  <body class="pe-app">
+    <div class="pe-shell">
+      <header class="pe-topbar">
+        <div class="pe-brand">
+          <span>PAYROLL WORKS</span>
+          <span class="sep">|</span>
+          <span class="sub">Payroll</span>
+          <span class="pe-flag">🇨🇦</span>
+          <span class="pe-tax-pill">2026</span>
+        </div>
+        <nav class="pe-topbar-nav">
+          <a href="../run-payroll.html" class="pe-topbar-nav-item">Payroll</a>
+        </nav>
+        <div class="pe-topbar-right">
+          <span class="pe-badge-admin">Admin</span>
+          <span>RORO HOLDING LTD</span>
+          <button type="button" class="pe-icon-btn">🔔</button>
+          <button type="button" class="pe-icon-btn">?</button>
+          <div class="pe-avatar">LH</div>
+        </div>
+      </header>
+
+      <div class="pe-strip">
+        <span style="opacity: 0.9">Payroll reports</span>
+        <span style="opacity: 0.85">Remittance (CRA)</span>
+      </div>
+
+      <aside class="pe-sidebar">
+        <a class="pe-nav" href="../dashboard.html"><span>⌂</span> Home</a>
+        <a class="pe-nav" href="../run-payroll.html"><span>▤</span> Run payroll</a>
+        <a class="pe-nav" href="#"><span>☰</span> Actions</a>
+        <div class="pe-nav-group">
+          <div class="pe-nav-heading">Reports</div>
+          <a class="pe-nav active" href="payrun.html" style="margin: 0 0.5rem"><span>▦</span> Reports</a>
+          <div class="pe-nav-sub">
+            <a href="payrun.html">Pay run</a>
+            <a class="active" href="remittance.html">Remittance report</a>
+            <a href="cheques-payslips.html">Cheques / payslips</a>
+            <a href="accountant/index.html">Accountant</a>
+          </div>
+        </div>
+        <a class="pe-nav" href="../employees.html"><span>👤</span> Employees</a>
+        <span class="pe-nav spacer"></span>
+        <a class="pe-nav" href="#"><span>⚙</span> Settings</a>
+      </aside>
+
+      <main class="pe-main">
+        <div class="pe-report-toolbar">
+          <h1>Remittance report</h1>
+          <div class="pe-report-filters">
+            <a class="pe-btn pe-btn-primary" href="/export/remittance/sample" target="_blank" rel="noopener"
+              >Preview sample (print / PDF)</a
+            >
+          </div>
+        </div>
+
+        <div class="pe-info" style="margin-bottom: 1rem; max-width: 720px">
+          Layout matches CRA source-deduction remittance summary (Previous / Current columns, CPP, EI, federal tax, totals).
+          Sample data is from client template PDF (report #63). Production export will use the same HTML renderer with live
+          pay-run totals from your database.
+        </div>
+
+        <div class="pe-table-wrap">
+          <table class="pe-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Created</th>
+                <th>Reporting period</th>
+                <th>Type</th>
+                <th>Total remittance</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">63</td>
+                <td>10/12/2025 16:10</td>
+                <td>— Nov 2025</td>
+                <td>CRA / source deductions</td>
+                <td>$842.42</td>
+                <td>
+                  <a class="pe-icon-action" href="/export/remittance/sample" target="_blank" title="Preview">📄</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

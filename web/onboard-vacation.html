@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vacation — Payroll Works</title>
+    <link rel="stylesheet" href="employees-theme.css" />
+  </head>
+  <body class="pe-app">
+    <div class="pe-shell">
+      <header class="pe-topbar">
+        <div class="pe-brand">
+          <span>PAYROLL WORKS</span>
+          <span class="sep">|</span>
+          <span class="sub">Payroll</span>
+          <span class="pe-flag">🇨🇦</span>
+          <span class="pe-tax-pill">2026</span>
+        </div>
+        <nav class="pe-topbar-nav">
+          <a href="run-payroll.html" class="pe-topbar-nav-item">Payroll</a>
+        </nav>
+        <div class="pe-topbar-right">
+          <span class="pe-badge-admin">Admin</span>
+          <span>RORO HOLDING LTD</span>
+          <button type="button" class="pe-icon-btn">📞</button>
+          <button type="button" class="pe-icon-btn">🔔</button>
+          <button type="button" class="pe-icon-btn">?</button>
+          <div class="pe-avatar">LH</div>
+        </div>
+      </header>
+
+      <div class="pe-wizard-bar">
+        <div class="pe-wizard-steps">
+          <div class="pe-wstep done"><span class="circle">✓</span><span>Employee</span></div>
+          <div class="pe-wstep active"><span class="circle">💵</span><span>Payroll</span></div>
+          <div class="pe-wstep"><span class="circle">📋</span><span>Checklist</span></div>
+        </div>
+        <div class="pe-wizard-sub">
+          <span></span>
+          <div class="pe-progress"><i style="width: 88%"></i></div>
+          <span>Onboard employee</span>
+        </div>
+      </div>
+
+      <aside class="pe-sidebar">
+        <a class="pe-nav" href="dashboard.html"><span>⌂</span> Home</a>
+        <a class="pe-nav" href="run-payroll.html"><span>▤</span> Run payroll</a>
+        <a class="pe-nav" href="#"><span>☰</span> Actions</a>
+        <a class="pe-nav" href="reports/payrun.html"><span>▦</span> Reports</a>
+        <a class="pe-nav active" href="employees.html"><span>👤</span> Employees</a>
+        <span class="pe-nav spacer"></span>
+        <a class="pe-nav" href="#"><span>⚙</span> Settings</a>
+      </aside>
+
+      <main class="pe-main">
+        <div class="pe-card">
+          <h2>Vacation</h2>
+          <p style="color: var(--pe-text-secondary)">Do you want to set up automatic vacation?</p>
+          <div class="pe-field" style="grid-template-columns: 1fr">
+            <label><input type="radio" name="vac" value="yes" /> Yes</label>
+            <label style="margin-top: 0.5rem"><input type="radio" name="vac" value="no" checked /> No</label>
+          </div>
+          <div class="pe-foot-actions">
+            <a class="pe-btn" href="onboard-deductions.html">Back</a>
+            <button type="button" class="pe-btn pe-btn-primary" id="btn-continue">Continue</button>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="js/onboard.js"></script>
+    <script>
+      document.getElementById("btn-continue").addEventListener("click", function () {
+        var y = document.querySelector('input[name="vac"]:checked').value;
+        pwOnboard.save({ autoVacation: y === "yes" });
+        location.href = "onboard-review.html";
+      });
+    </script>
+  </body>
+</html>

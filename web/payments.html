@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Payments — Payroll Works</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="pages.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <a href="dashboard.html" class="muted">←</a>
+          <span>PAYROLL WORKS</span>
+          <span class="muted">Payroll</span>
+          <span class="brand-flag" aria-hidden="true">🇨🇦</span>
+          <span class="tax-year"><span>2026</span></span>
+        </div>
+        <nav class="topbar-nav">
+          <a href="run-payroll.html" class="topbar-nav-item active">Payroll</a>
+        </nav>
+        <div class="topbar-actions">
+          <span class="muted" style="font-size: 0.8rem">RORO HOLDING LTD</span>
+          <div class="avatar">LH</div>
+        </div>
+      </header>
+
+      <aside class="sidebar">
+        <a href="dashboard.html" class="nav-item"><span>⌂</span> Home</a>
+        <a href="run-payroll.html" class="nav-item active"><span>▤</span> Run Payroll</a>
+        <a href="#" class="nav-item" onclick="return false"><span>☰</span> Actions</a>
+        <a href="reports/payrun.html" class="nav-item"><span>▦</span> Reports</a>
+        <a href="employees.html" class="nav-item"><span>👤</span> Employees</a>
+      </aside>
+
+      <main class="main">
+        <div class="hero-banner">
+          <span>Payments</span>
+          <span class="muted">Funding &amp; debit</span>
+        </div>
+        <div class="content">
+          <div class="payroll-steps-label">Payroll steps</div>
+          <div class="stepper">
+            <div class="step">Select pay cycle</div>
+            <div class="step">Salaries</div>
+            <div class="step">Timesheets</div>
+            <div class="step">Calculate</div>
+            <div class="step">Review</div>
+            <div class="step active">Payments</div>
+            <div class="step">Summary</div>
+          </div>
+
+          <div class="payments-section">
+            <h3>1 · Funding source</h3>
+            <div class="form-row" style="max-width: 400px">
+              <label class="field-label" for="fund">Payment method</label>
+              <select id="fund" class="field-input field-select" style="max-width: 100%">
+                <option>Bill payment · ID 004</option>
+              </select>
+            </div>
+            <div class="form-row" style="max-width: 280px">
+              <label class="field-label" for="pdate">Employee payment date</label>
+              <input id="pdate" class="field-input" type="text" value="05-Apr-2026" />
+            </div>
+          </div>
+
+          <div class="payments-section">
+            <h3>2 · Confirm payments</h3>
+            <div class="panel">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>Emp #</th>
+                    <th>Name</th>
+                    <th>Payment type</th>
+                    <th>Net pay</th>
+                    <th>Ref #</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">000016</td>
+                    <td>SAWAENGPON, JIRAYU</td>
+                    <td>
+                      <select class="input" style="font-size: 0.8rem"><option>Cheque</option></select>
+                    </td>
+                    <td class="mono">$706.32</td>
+                    <td><input class="cell-input" value="000105" style="max-width: 100px" /></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-top: 1rem; display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start">
+              <div>
+                <p class="muted" style="margin: 0.35rem 0">Gross wages <strong style="color: var(--text-primary)">$754.86</strong></p>
+                <p class="muted" style="margin: 0.35rem 0">Net <strong style="color: var(--text-primary)">$706.32</strong></p>
+                <p class="muted" style="margin: 0.35rem 0">Employee deductions (statutory) <strong style="color: var(--text-primary)">$48.54</strong></p>
+                <p class="muted" style="margin: 0.35rem 0">Employer EI <strong>$11.22</strong> · Employer CPP <strong>$36.24</strong></p>
+                <p class="grand-total">Payrun total $802.32</p>
+              </div>
+              <div class="fees-box">
+                <div class="line"><span>Per-employee fees</span><span>$1.50</span></div>
+                <div class="line"><span>Extra fees</span><span>$10.00</span></div>
+                <div class="line"><span>Tax</span><span>$0.00</span></div>
+                <div class="line total"><span>Fees total</span><span>$11.50</span></div>
+              </div>
+            </div>
+            <p class="grand-total">Total debit <span style="color: var(--success)">$813.82</span></p>
+          </div>
+
+          <div class="payments-section">
+            <h3>3 · Optional PIN security</h3>
+            <p class="muted" style="font-size: 0.85rem">🔒 PIN / two-factor verification (optional)</p>
+          </div>
+
+          <div class="flow-footer">
+            <a href="review.html" class="btn">← Review</a>
+            <a href="summary.html" class="btn btn-primary" style="text-decoration: none">Finish payroll →</a>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

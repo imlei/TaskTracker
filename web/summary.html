@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Summary — Payroll Works</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="pages.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <a href="dashboard.html" class="muted">←</a>
+          <span>PAYROLL WORKS</span>
+          <span class="muted">Payroll</span>
+          <span class="brand-flag" aria-hidden="true">🇨🇦</span>
+          <span class="tax-year"><span>2026</span></span>
+        </div>
+        <nav class="topbar-nav">
+          <a href="run-payroll.html" class="topbar-nav-item active">Payroll</a>
+        </nav>
+        <div class="topbar-actions">
+          <span class="muted" style="font-size: 0.8rem">RORO HOLDING LTD</span>
+          <div class="avatar">LH</div>
+        </div>
+      </header>
+
+      <aside class="sidebar">
+        <a href="dashboard.html" class="nav-item"><span>⌂</span> Home</a>
+        <a href="run-payroll.html" class="nav-item active"><span>▤</span> Run Payroll</a>
+        <a href="#" class="nav-item" onclick="return false"><span>☰</span> Actions</a>
+        <a href="reports/payrun.html" class="nav-item"><span>▦</span> Reports</a>
+        <a href="employees.html" class="nav-item"><span>👤</span> Employees</a>
+      </aside>
+
+      <main class="main">
+        <div class="hero-banner">
+          <span>Payroll complete</span>
+          <span class="muted">Submitted</span>
+        </div>
+        <div class="content">
+          <div class="payroll-steps-label">Payroll steps</div>
+          <div class="stepper">
+            <div class="step">Select pay cycle</div>
+            <div class="step">Salaries</div>
+            <div class="step">Timesheets</div>
+            <div class="step">Calculate</div>
+            <div class="step">Review</div>
+            <div class="step">Payments</div>
+            <div class="step active">Summary</div>
+          </div>
+
+          <div class="panel summary-hero">
+            <div class="icon-ok">✓</div>
+            <h1 class="page-title" style="margin-bottom: 0.5rem">This payroll run is submitted</h1>
+            <p class="muted">Payment date Apr 06, 2026 · Remittance calendar: follow CRA / your advisor.</p>
+          </div>
+
+          <div class="flow-footer" style="border-top: none; justify-content: center">
+            <a href="dashboard.html" class="btn btn-primary" style="text-decoration: none">Back to dashboard</a>
+            <a href="run-payroll.html" class="btn" style="text-decoration: none">New run</a>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

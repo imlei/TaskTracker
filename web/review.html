@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Review — Payroll Works</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="pages.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <a href="dashboard.html" class="muted">←</a>
+          <span>PAYROLL WORKS</span>
+          <span class="muted">Payroll</span>
+          <span class="brand-flag" aria-hidden="true">🇨🇦</span>
+          <span class="tax-year"><span>2026</span></span>
+        </div>
+        <nav class="topbar-nav">
+          <a href="run-payroll.html" class="topbar-nav-item active">Payroll</a>
+        </nav>
+        <div class="topbar-actions">
+          <span class="muted" style="font-size: 0.8rem">RORO HOLDING LTD</span>
+          <div class="avatar">LH</div>
+        </div>
+      </header>
+
+      <aside class="sidebar">
+        <a href="dashboard.html" class="nav-item"><span>⌂</span> Home</a>
+        <a href="run-payroll.html" class="nav-item active"><span>▤</span> Run Payroll</a>
+        <a href="#" class="nav-item" onclick="return false"><span>☰</span> Actions</a>
+        <a href="reports/payrun.html" class="nav-item"><span>▦</span> Reports</a>
+        <a href="employees.html" class="nav-item"><span>👤</span> Employees</a>
+      </aside>
+
+      <main class="main">
+        <div class="hero-banner">
+          <span>Review payroll</span>
+          <span class="muted">Before payments</span>
+        </div>
+        <div class="content">
+          <div class="payroll-steps-label">Payroll steps</div>
+          <div class="stepper">
+            <div class="step">Select pay cycle</div>
+            <div class="step">Salaries</div>
+            <div class="step">Timesheets</div>
+            <div class="step">Calculate</div>
+            <div class="step active">Review</div>
+            <div class="step">Payments</div>
+            <div class="step">Summary</div>
+          </div>
+
+          <div class="filter-bar">
+            <label class="muted" for="emp">Employee</label>
+            <select id="emp" class="input">
+              <option>— ALL EMPLOYEES —</option>
+            </select>
+            <div style="margin-left: auto" class="toolbar-right">
+              <button type="button" class="btn btn-sm">Journal</button>
+              <button type="button" class="btn btn-sm">Export</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>ID</th>
+                  <th>Hours</th>
+                  <th>Total gross</th>
+                  <th>Total deductions</th>
+                  <th>Net pay</th>
+                </tr>
+                <tr style="background: var(--bg-surface)">
+                  <td><input type="text" class="field-input" style="max-width: 100%" placeholder="Filter" /></td>
+                  <td><input type="text" class="field-input" style="max-width: 80px" /></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>SAWAENGPON, JIRAYU</td>
+                  <td class="mono">000016</td>
+                  <td class="mono">43.33</td>
+                  <td class="mono">$754.86</td>
+                  <td class="mono">$48.54</td>
+                  <td class="mono">$706.32</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="totals-row">
+                  <td>Total 1</td>
+                  <td></td>
+                  <td class="mono">43.33</td>
+                  <td class="mono">$754.86</td>
+                  <td class="mono">$48.54</td>
+                  <td class="mono">$706.32</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="flow-footer">
+            <a href="calculate.html" class="btn">← Calculate</a>
+            <a href="payments.html" class="btn btn-primary" style="text-decoration: none">Payments →</a>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
