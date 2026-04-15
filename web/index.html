@@ -1,101 +1,146 @@
 <!DOCTYPE html>
-<html lang="en-CA">
+<html lang="en-CA" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Companies — Payroll Works</title>
-    <link rel="stylesheet" href="theme.css" />
-    <link rel="stylesheet" href="app.css" />
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daisyui@5/cdn.js"></script>
+    <style type="text/tailwindcss">@import "tailwindcss";</style>
   </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <span>PAYROLL WORKS</span>
-          <span class="muted">Payroll</span>
-          <span class="brand-flag" aria-hidden="true">🇨🇦</span>
-          <span class="tax-year" title="Tax year"><span>2026</span></span>
-        </div>
-        <nav class="topbar-nav">
-          <a href="run-payroll.html" class="topbar-nav-item">Payroll</a>
-        </nav>
-        <div class="topbar-actions">
-          <button type="button" class="icon-btn" title="Help">?</button>
-          <div class="avatar" id="topbar-avatar" title="Signed in">—</div>
-        </div>
-      </header>
+  <body class="bg-base-200 min-h-screen">
 
-      <aside class="sidebar">
-        <a href="index.html" class="nav-item active"><span>⌂</span> Home</a>
-        <a href="run-payroll.html" class="nav-item"><span>▤</span> Run Payroll</a>
-        <a href="reports/payrun.html" class="nav-item"><span>▦</span> Reports</a>
-        <a href="employees.html" class="nav-item"><span>👤</span> Employees</a>
-      </aside>
-
-      <main class="main">
-        <div class="hero-banner">
-          <span>Companies</span>
-          <span class="muted" id="company-count">Loading…</span>
-        </div>
-
-        <div class="content">
-          <div class="panel">
-            <div class="panel-toolbar">
-              <div style="display:flex;gap:0.5rem;align-items:center">
-                <label class="muted" for="status-filter">Status</label>
-                <select id="status-filter" class="input">
-                  <option value="active">Active</option>
-                  <option value="all">All</option>
-                </select>
-              </div>
-              <button type="button" class="btn btn-primary" id="btn-add-company">+ Company</button>
-            </div>
-
-            <table class="data" id="companies-table">
-              <thead>
-                <tr>
-                  <th>Company</th>
-                  <th>Business No.</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Province</th>
-                  <th>Pay Cycle</th>
-                  <th>Status</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="companies-body">
-                <tr><td colspan="8" class="muted" style="text-align:center;padding:2rem">Loading…</td></tr>
-              </tbody>
-            </table>
+    <!-- Navbar -->
+    <div class="navbar bg-base-100 border-b border-base-300 px-4 min-h-12 sticky top-0 z-30 shadow-sm">
+      <div class="navbar-start gap-2">
+        <span class="font-bold text-sm tracking-wide">PAYROLL WORKS</span>
+        <span class="badge badge-ghost badge-sm">🇨🇦</span>
+        <span class="text-base-content/40 text-xs" id="taxYear">2025</span>
+      </div>
+      <div class="navbar-center">
+        <span class="text-sm font-medium text-base-content/70">Payroll</span>
+      </div>
+      <div class="navbar-end gap-3">
+        <button class="btn btn-ghost btn-sm btn-circle" title="Help">?</button>
+        <div class="avatar placeholder">
+          <div class="bg-primary text-primary-content rounded-full w-8 text-xs">
+            <span id="topbar-avatar">PW</span>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside class="w-56 bg-base-100 border-r border-base-300 min-h-[calc(100vh-3rem)] hidden md:flex flex-col gap-1 p-3 shrink-0">
+        <a href="index.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal bg-primary/10 text-primary">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Home
+        </a>
+        <a href="run-payroll.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          Run Payroll
+        </a>
+        <a href="reports/payrun.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Reports
+        </a>
+        <a href="employees.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Employees
+        </a>
+      </aside>
+
+      <!-- Main -->
+      <main class="flex-1 p-4 md:p-6 min-w-0">
+
+        <!-- Page header -->
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-xl font-bold">Multi Company List</h1>
+            <p class="text-sm text-base-content/50 mt-0.5" id="company-count">Loading…</p>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm gap-1" id="btn-add-company">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            New Company
+          </button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-sm text-base-content/50">Filter Status:</span>
+          <select class="select select-bordered select-xs" id="status-filter">
+            <option value="active">Active</option>
+            <option value="all">All</option>
+          </select>
+        </div>
+
+        <!-- Alert -->
+        <div id="alertBox" class="hidden mb-4"></div>
+
+        <!-- Company table -->
+        <div class="card bg-base-100 shadow-sm overflow-x-auto">
+          <table class="table table-sm">
+            <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
+              <tr>
+                <th>Company Name</th>
+                <th>Email Address</th>
+                <th>Business #</th>
+                <th>Province</th>
+                <th>Pay Cycle</th>
+                <th>Status</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="companies-body">
+              <tr><td colspan="7" class="text-center py-8 text-base-content/40">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
       </main>
     </div>
 
-    <!-- ── Create / Edit Modal ──────────────────────────────── -->
-    <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center">
-      <div style="background:var(--surface,#1e2028);border:1px solid var(--border,#2e3240);border-radius:0.75rem;padding:1.75rem;width:min(520px,95vw);max-height:90vh;overflow-y:auto">
-        <h2 id="modal-title" style="margin:0 0 1.25rem;font-size:1rem;font-weight:600">Add Company</h2>
-        <form id="company-form" novalidate>
+    <!-- ══ New / Edit Company Modal ══════════════════════════════════════════ -->
+    <dialog id="companyModal" class="modal modal-bottom sm:modal-middle">
+      <div class="modal-box w-full max-w-lg p-0 overflow-hidden">
+
+        <!-- Modal header -->
+        <div class="bg-primary px-5 py-4 text-primary-content">
+          <h3 class="font-bold text-base" id="modal-title">Create Company Profile</h3>
+        </div>
+
+        <form id="company-form" novalidate class="px-5 py-4">
           <input type="hidden" id="f-id" />
 
-          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem 1rem">
-            <div class="form-group" style="grid-column:1/-1">
-              <label class="label" for="f-name">Display Name <span style="color:var(--danger,#e05)">*</span></label>
-              <input id="f-name" type="text" class="input" placeholder="RORO Holding Ltd." required />
+          <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+
+            <!-- Display Name (full width) -->
+            <div class="form-control col-span-2">
+              <label class="label py-0.5"><span class="label-text text-xs font-semibold">Company Name <span class="text-error">*</span></span></label>
+              <input id="f-name" type="text" class="input input-bordered input-sm"
+                     placeholder="e.g. RORO Holdings Ltd." required />
             </div>
-            <div class="form-group" style="grid-column:1/-1">
-              <label class="label" for="f-legal-name">CRA Legal Name</label>
-              <input id="f-legal-name" type="text" class="input" placeholder="Full registered name" />
+
+            <!-- CRA Legal Name (full width) -->
+            <div class="form-control col-span-2">
+              <label class="label py-0.5"><span class="label-text text-xs">CRA Legal Name</span></label>
+              <input id="f-legal-name" type="text" class="input input-bordered input-sm"
+                     placeholder="Full registered name (if different)" />
             </div>
-            <div class="form-group">
-              <label class="label" for="f-bn">Business Number (BN)</label>
-              <input id="f-bn" type="text" class="input" placeholder="123456789" maxlength="15" />
+
+            <!-- Business Number -->
+            <div class="form-control">
+              <label class="label py-0.5"><span class="label-text text-xs">Business Number (BN)</span></label>
+              <input id="f-bn" type="text" class="input input-bordered input-sm"
+                     placeholder="123456789" maxlength="15" />
             </div>
-            <div class="form-group">
-              <label class="label" for="f-province">Province</label>
-              <select id="f-province" class="input">
+
+            <!-- Province -->
+            <div class="form-control">
+              <label class="label py-0.5"><span class="label-text text-xs">Province</span></label>
+              <select id="f-province" class="select select-bordered select-sm">
                 <option value="">— select —</option>
                 <option value="AB">Alberta</option>
                 <option value="BC">British Columbia</option>
@@ -112,161 +157,221 @@
                 <option value="YT">Yukon</option>
               </select>
             </div>
-            <div class="form-group">
-              <label class="label" for="f-email">Email</label>
-              <input id="f-email" type="email" class="input" placeholder="pay@example.com" />
+
+            <!-- Email -->
+            <div class="form-control">
+              <label class="label py-0.5"><span class="label-text text-xs">Email</span></label>
+              <input id="f-email" type="email" class="input input-bordered input-sm"
+                     placeholder="pay@example.com" />
             </div>
-            <div class="form-group">
-              <label class="label" for="f-phone">Phone</label>
-              <input id="f-phone" type="tel" class="input" placeholder="(604) 555-0100" />
+
+            <!-- Phone -->
+            <div class="form-control">
+              <label class="label py-0.5"><span class="label-text text-xs">Phone</span></label>
+              <input id="f-phone" type="tel" class="input input-bordered input-sm"
+                     placeholder="(604) 555-0100" />
             </div>
-            <div class="form-group" style="grid-column:1/-1">
-              <label class="label" for="f-address">Address</label>
-              <input id="f-address" type="text" class="input" placeholder="123 Main St, Vancouver BC V6B 1A1" />
+
+            <!-- Address (full width) -->
+            <div class="form-control col-span-2">
+              <label class="label py-0.5"><span class="label-text text-xs">Address</span></label>
+              <input id="f-address" type="text" class="input input-bordered input-sm"
+                     placeholder="123 Main St, Vancouver BC V6B 1A1" />
             </div>
-            <div class="form-group">
-              <label class="label" for="f-freq">Pay Frequency</label>
-              <select id="f-freq" class="input">
+
+            <!-- Pay Frequency -->
+            <div class="form-control">
+              <label class="label py-0.5"><span class="label-text text-xs">Pay Frequency</span></label>
+              <select id="f-freq" class="select select-bordered select-sm">
                 <option value="biweekly">Bi-weekly (26/yr)</option>
                 <option value="semimonthly">Semi-monthly (24/yr)</option>
                 <option value="monthly">Monthly (12/yr)</option>
                 <option value="weekly">Weekly (52/yr)</option>
               </select>
             </div>
-            <div class="form-group">
-              <label class="label" for="f-status">Status</label>
-              <select id="f-status" class="input">
+
+            <!-- Status -->
+            <div class="form-control">
+              <label class="label py-0.5"><span class="label-text text-xs">Status</span></label>
+              <select id="f-status" class="select select-bordered select-sm">
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
             </div>
+
           </div>
 
-          <div id="form-error" style="display:none;color:var(--danger,#e05);font-size:.85rem;margin-top:.75rem"></div>
+          <div id="form-error" class="alert alert-error text-xs py-2 px-3 mt-3 hidden"></div>
 
-          <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.25rem">
-            <button type="button" class="btn" id="btn-cancel-modal">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="btn-save-modal">Save</button>
+          <div class="modal-action mt-4 gap-2">
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-cancel-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm" id="btn-save-modal">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Save Company
+            </button>
           </div>
         </form>
+
       </div>
-    </div>
+      <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <!-- Delete confirm modal -->
+    <dialog id="deleteModal" class="modal modal-middle">
+      <div class="modal-box max-w-sm">
+        <div class="text-center mb-4">
+          <div class="w-12 h-12 bg-error/20 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </div>
+          <h3 class="font-bold text-base">Delete Company</h3>
+          <p class="text-sm text-base-content/60 mt-1">Are you sure you want to delete <strong id="deleteCompanyName">—</strong>?</p>
+          <p class="text-xs text-base-content/40 mt-1">This cannot be undone.</p>
+        </div>
+        <div class="modal-action justify-between">
+          <form method="dialog"><button class="btn btn-ghost btn-sm">Cancel</button></form>
+          <button type="button" class="btn btn-error btn-sm" id="btn-confirm-delete">Delete</button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
 
     <script>
-      const FREQ_LABEL = {
-        biweekly: 'Bi-weekly',
+      var FREQ_LABEL = {
+        biweekly:    'Bi-weekly',
         semimonthly: 'Semi-monthly',
-        monthly: 'Monthly',
-        weekly: 'Weekly',
+        monthly:     'Monthly',
+        weekly:      'Weekly',
       };
 
-      function escHtml(s) {
-        const d = document.createElement('div');
-        d.textContent = String(s ?? '');
-        return d.innerHTML;
+      var companyModal = document.getElementById('companyModal');
+      var deleteModal  = document.getElementById('deleteModal');
+      var deleteTarget = { id: '', name: '' };
+      var allCompanies = [];
+
+      // ── Auth + init ───────────────────────────────────────────────────────
+      fetch('/api/me', { credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(me) {
+          if (!me.authenticated) { window.location.href = '/'; return; }
+          var av = document.getElementById('topbar-avatar');
+          if (av && me.user) av.textContent = me.user.slice(0, 2).toUpperCase();
+          document.getElementById('taxYear').textContent = new Date().getFullYear();
+        })
+        .catch(function() {});
+
+      document.getElementById('status-filter').addEventListener('change', loadCompanies);
+      loadCompanies();
+
+      // ── Load & render ─────────────────────────────────────────────────────
+      function loadCompanies() {
+        var filter = document.getElementById('status-filter').value;
+        apiFetch('/api/payroll/companies?status=' + encodeURIComponent(filter))
+          .then(function(list) {
+            allCompanies = list || [];
+            renderCompanies(allCompanies);
+          })
+          .catch(function(err) {
+            document.getElementById('companies-body').innerHTML =
+              '<tr><td colspan="7" class="text-center py-6 text-error">' + esc(err.message) + '</td></tr>';
+          });
       }
 
-      async function apiFetch(path, opts = {}) {
-        const r = await fetch(path, {
-          credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json; charset=utf-8', ...opts.headers },
-          ...opts,
-        });
-        const text = await r.text();
-        if (!r.ok) {
-          let msg = text;
-          try { msg = JSON.parse(text)?.error || text; } catch { /* ignore */ }
-          throw new Error(msg || r.statusText);
-        }
-        return text ? JSON.parse(text) : null;
-      }
-
-      // ── Render ────────────────────────────────────────────────────
       function renderCompanies(list) {
-        const tbody = document.getElementById('companies-body');
-        const count = document.getElementById('company-count');
-        count.textContent = `${list.length} compan${list.length === 1 ? 'y' : 'ies'}`;
+        var tbody = document.getElementById('companies-body');
+        var count = document.getElementById('company-count');
+        count.textContent = list.length + ' compan' + (list.length === 1 ? 'y' : 'ies');
 
-        if (list.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="8" class="muted" style="text-align:center;padding:2rem">No companies yet. Click <strong>+ Company</strong> to add one.</td></tr>`;
+        if (!list.length) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="text-center py-12">' +
+            '<div class="flex flex-col items-center gap-2 text-base-content/40">' +
+            '<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>' +
+            '<p class="text-sm font-medium">No companies yet</p>' +
+            '<p class="text-xs">Click <strong>New Company</strong> to get started.</p>' +
+            '</div></td></tr>';
           return;
         }
 
-        tbody.innerHTML = list.map(c => `
-          <tr>
-            <td><a href="dashboard.html?company=${escHtml(c.id)}">${escHtml(c.name)}</a></td>
-            <td>${escHtml(c.businessNumber || '—')}</td>
-            <td>${escHtml(c.email || '—')}</td>
-            <td>${escHtml(c.phone || '—')}</td>
-            <td>${escHtml(c.province || '—')}</td>
-            <td>${escHtml(FREQ_LABEL[c.payFrequency] || c.payFrequency || '—')}</td>
-            <td><span class="status-pill${c.status === 'inactive' ? ' status-inactive' : ''}">${escHtml(c.status)}</span></td>
-            <td class="row-actions">
-              <button type="button" title="Edit" data-id="${escHtml(c.id)}" class="btn-edit-company">✎</button>
-              <button type="button" title="Delete" data-id="${escHtml(c.id)}" data-name="${escHtml(c.name)}" class="btn-del-company" style="color:var(--danger,#e05)">🗑</button>
-            </td>
-          </tr>`).join('');
+        tbody.innerHTML = list.map(function(c) {
+          var statusBadge = c.status === 'inactive'
+            ? '<span class="badge badge-ghost badge-xs">Inactive</span>'
+            : '<span class="badge badge-success badge-xs">Active</span>';
+          var freq = FREQ_LABEL[c.payFrequency] || c.payFrequency || '—';
 
-        tbody.querySelectorAll('.btn-edit-company').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const c = list.find(x => x.id === btn.dataset.id);
-            if (c) openModal(c);
-          });
-        });
-
-        tbody.querySelectorAll('.btn-del-company').forEach(btn => {
-          btn.addEventListener('click', () => deleteCompany(btn.dataset.id, btn.dataset.name));
-        });
+          return '<tr class="hover">' +
+            '<td>' +
+              '<div class="flex items-center gap-2">' +
+                '<div class="avatar placeholder shrink-0">' +
+                  '<div class="bg-primary/10 text-primary rounded-lg w-8 text-xs font-bold">' +
+                    '<span>' + esc((c.name || '?').slice(0, 2).toUpperCase()) + '</span>' +
+                  '</div>' +
+                '</div>' +
+                '<div>' +
+                  '<p class="font-semibold text-sm leading-tight">' + esc(c.name) + '</p>' +
+                  (c.legalName && c.legalName !== c.name ? '<p class="text-xs text-base-content/40">' + esc(c.legalName) + '</p>' : '') +
+                '</div>' +
+              '</div>' +
+            '</td>' +
+            '<td class="text-sm text-base-content/70">' + esc(c.email || '—') + '</td>' +
+            '<td class="font-mono text-xs text-base-content/60">' + esc(c.businessNumber || '—') + '</td>' +
+            '<td class="text-xs">' + esc(c.province || '—') + '</td>' +
+            '<td class="text-xs text-base-content/60">' + freq + '</td>' +
+            '<td>' + statusBadge + '</td>' +
+            '<td>' +
+              '<div class="flex items-center justify-center gap-1">' +
+                '<a href="run-payroll.html?company=' + esc(c.id) + '" class="btn btn-xs btn-primary gap-1" title="Run Payroll">' +
+                  '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' +
+                  'Run' +
+                '</a>' +
+                '<button type="button" class="btn btn-xs btn-ghost" title="Edit" data-id="' + esc(c.id) + '" onclick="openEdit(\'' + esc(c.id) + '\')">✎</button>' +
+                '<a href="pay-rules.html?company=' + esc(c.id) + '" class="btn btn-xs btn-ghost" title="Pay Rules">⚙</a>' +
+                '<button type="button" class="btn btn-xs btn-ghost text-error" title="Delete" onclick="confirmDelete(\'' + esc(c.id) + '\',\'' + esc(c.name).replace(/'/g, "\\'") + '\')">🗑</button>' +
+              '</div>' +
+            '</td>' +
+            '</tr>';
+        }).join('');
       }
 
-      // ── Load ──────────────────────────────────────────────────────
-      async function loadCompanies() {
-        const filter = document.getElementById('status-filter').value;
-        try {
-          const list = await apiFetch(`/api/payroll/companies?status=${filter}`);
-          renderCompanies(list ?? []);
-        } catch (err) {
-          document.getElementById('companies-body').innerHTML =
-            `<tr><td colspan="8" style="color:var(--danger,#e05);text-align:center;padding:1rem">Failed to load: ${escHtml(err.message)}</td></tr>`;
-        }
+      // ── Modal: New Company ────────────────────────────────────────────────
+      document.getElementById('btn-add-company').addEventListener('click', function() {
+        openModal(null);
+      });
+
+      function openEdit(id) {
+        var c = allCompanies.find(function(x) { return x.id === id; });
+        if (c) openModal(c);
       }
 
-      // ── Modal ─────────────────────────────────────────────────────
-      const overlay = document.getElementById('modal-overlay');
-
-      function openModal(company = null) {
-        const form = document.getElementById('company-form');
+      function openModal(company) {
+        var form = document.getElementById('company-form');
         form.reset();
-        document.getElementById('form-error').style.display = 'none';
-        document.getElementById('modal-title').textContent = company ? 'Edit Company' : 'Add Company';
-        document.getElementById('f-id').value = company?.id ?? '';
-        document.getElementById('f-name').value = company?.name ?? '';
-        document.getElementById('f-legal-name').value = company?.legalName ?? '';
-        document.getElementById('f-bn').value = company?.businessNumber ?? '';
-        document.getElementById('f-email').value = company?.email ?? '';
-        document.getElementById('f-phone').value = company?.phone ?? '';
-        document.getElementById('f-address').value = company?.address ?? '';
-        document.getElementById('f-province').value = company?.province ?? '';
-        document.getElementById('f-freq').value = company?.payFrequency ?? 'biweekly';
-        document.getElementById('f-status').value = company?.status ?? 'active';
-        overlay.style.display = 'flex';
+        document.getElementById('form-error').classList.add('hidden');
+        document.getElementById('modal-title').textContent = company ? 'Edit Company' : 'Create Company Profile';
+        document.getElementById('f-id').value           = company ? company.id : '';
+        document.getElementById('f-name').value         = company ? (company.name || '') : '';
+        document.getElementById('f-legal-name').value   = company ? (company.legalName || '') : '';
+        document.getElementById('f-bn').value           = company ? (company.businessNumber || '') : '';
+        document.getElementById('f-email').value        = company ? (company.email || '') : '';
+        document.getElementById('f-phone').value        = company ? (company.phone || '') : '';
+        document.getElementById('f-address').value      = company ? (company.address || '') : '';
+        document.getElementById('f-province').value     = company ? (company.province || '') : '';
+        document.getElementById('f-freq').value         = company ? (company.payFrequency || 'biweekly') : 'biweekly';
+        document.getElementById('f-status').value       = company ? (company.status || 'active') : 'active';
+        companyModal.showModal();
       }
 
-      function closeModal() {
-        overlay.style.display = 'none';
-      }
+      document.getElementById('btn-cancel-modal').addEventListener('click', function() {
+        companyModal.close();
+      });
 
-      document.getElementById('btn-add-company').addEventListener('click', () => openModal());
-      document.getElementById('btn-cancel-modal').addEventListener('click', closeModal);
-      overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
-
-      document.getElementById('company-form').addEventListener('submit', async e => {
+      document.getElementById('company-form').addEventListener('submit', function(e) {
         e.preventDefault();
-        const errEl = document.getElementById('form-error');
-        errEl.style.display = 'none';
+        var errEl  = document.getElementById('form-error');
+        var saveBtn = document.getElementById('btn-save-modal');
+        errEl.classList.add('hidden');
 
-        const id = document.getElementById('f-id').value;
-        const payload = {
+        var id      = document.getElementById('f-id').value;
+        var payload = {
           name:           document.getElementById('f-name').value.trim(),
           legalName:      document.getElementById('f-legal-name').value.trim(),
           businessNumber: document.getElementById('f-bn').value.trim(),
@@ -278,51 +383,80 @@
           status:         document.getElementById('f-status').value,
         };
 
-        const saveBtn = document.getElementById('btn-save-modal');
-        saveBtn.disabled = true;
-        try {
-          if (id) {
-            await apiFetch(`/api/payroll/companies/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
-          } else {
-            await apiFetch('/api/payroll/companies', { method: 'POST', body: JSON.stringify(payload) });
-          }
-          closeModal();
-          loadCompanies();
-        } catch (err) {
-          errEl.textContent = err.message || 'Save failed';
-          errEl.style.display = 'block';
-        } finally {
-          saveBtn.disabled = false;
+        if (!payload.name) {
+          errEl.textContent = 'Company Name is required.';
+          errEl.classList.remove('hidden');
+          document.getElementById('f-name').focus();
+          return;
         }
+
+        saveBtn.disabled = true;
+        var url    = id ? '/api/payroll/companies/' + encodeURIComponent(id) : '/api/payroll/companies';
+        var method = id ? 'PUT' : 'POST';
+
+        apiFetch(url, { method: method, body: JSON.stringify(payload) })
+          .then(function() {
+            companyModal.close();
+            loadCompanies();
+            showAlert((id ? 'Company updated.' : 'Company created.'), false);
+          })
+          .catch(function(err) {
+            errEl.textContent = err.message || 'Save failed';
+            errEl.classList.remove('hidden');
+          })
+          .finally(function() { saveBtn.disabled = false; });
       });
 
-      // ── Delete ────────────────────────────────────────────────────
-      async function deleteCompany(id, name) {
-        if (!confirm(`Delete "${name}"?\n\nThis cannot be undone.`)) return;
-        try {
-          await apiFetch(`/api/payroll/companies/${id}`, { method: 'DELETE' });
-          loadCompanies();
-        } catch (err) {
-          alert('Delete failed: ' + err.message);
-        }
+      // ── Delete ────────────────────────────────────────────────────────────
+      function confirmDelete(id, name) {
+        deleteTarget = { id: id, name: name };
+        document.getElementById('deleteCompanyName').textContent = name;
+        deleteModal.showModal();
       }
 
-      // ── Auth guard + init ──────────────────────────────────────────
-      fetch('/api/me', { credentials: 'same-origin' })
-        .then(r => r.json())
-        .then(me => {
-          if (!me.authenticated) {
-            window.location.href = '/';
-            return;
-          }
-          const av = document.getElementById('topbar-avatar');
-          if (av && me.user) av.textContent = me.user.slice(0, 2).toUpperCase();
-        })
-        .catch(() => {});
+      document.getElementById('btn-confirm-delete').addEventListener('click', function() {
+        deleteModal.close();
+        apiFetch('/api/payroll/companies/' + encodeURIComponent(deleteTarget.id), { method: 'DELETE' })
+          .then(function() {
+            loadCompanies();
+            showAlert('Company deleted.', false);
+          })
+          .catch(function(err) { showAlert('Delete failed: ' + err.message, true); });
+      });
 
-      document.getElementById('status-filter').addEventListener('change', loadCompanies);
+      // ── Helpers ───────────────────────────────────────────────────────────
+      function apiFetch(path, opts) {
+        opts = opts || {};
+        return fetch(path, Object.assign({ credentials: 'same-origin',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {}) }, opts))
+          .then(function(r) {
+            return r.text().then(function(text) {
+              if (!r.ok) {
+                var msg = text;
+                try { msg = JSON.parse(text).error || text; } catch(e) {}
+                throw new Error(msg || r.statusText);
+              }
+              return text ? JSON.parse(text) : null;
+            });
+          });
+      }
 
-      loadCompanies();
+      function showAlert(msg, isErr) {
+        var el = document.getElementById('alertBox');
+        el.className = isErr
+          ? 'alert alert-error text-sm py-2 px-4 mb-4'
+          : 'alert alert-success text-sm py-2 px-4 mb-4';
+        el.textContent = msg;
+        el.classList.remove('hidden');
+        clearTimeout(el._t);
+        el._t = setTimeout(function() { el.classList.add('hidden'); }, 4000);
+      }
+
+      function esc(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+          .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
     </script>
   </body>
 </html>
