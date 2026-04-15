@@ -267,15 +267,13 @@ Type=simple
 User=simpletask
 Group=simpletask
 WorkingDirectory=${PREFIX}
+Environment=DATA_DIR=${PREFIX}/data
 ${env_block}
 ExecStart=${PREFIX}/SimpleTask
 Restart=on-failure
 RestartSec=5
-# 安全加固
 NoNewPrivileges=true
 PrivateTmp=true
-ProtectSystem=strict
-ReadWritePaths=${PREFIX}/data
 
 [Install]
 WantedBy=multi-user.target
@@ -283,8 +281,8 @@ EOF
 	chmod 0644 "/etc/systemd/system/SimpleTask.service"
 	systemctl daemon-reload
 	ok "systemd 服务已更新"
-	[[ "$secure_cookie" == "true" ]] && ok "  AUTH_SECURE_COOKIE=true"
-	[[ -n "$base_url" ]]             && ok "  BASE_URL=${base_url}"
+	[[ "$secure_cookie" == "true" ]] && ok "  AUTH_SECURE_COOKIE=true" || true
+	[[ -n "$base_url" ]]             && ok "  BASE_URL=${base_url}" || true
 }
 
 # ── UFW 防火墙 ────────────────────────────────────────────────────────────────
@@ -561,12 +559,14 @@ main() {
 	# 启动服务
 	step "启动服务"
 	systemctl enable SimpleTask >/dev/null 2>&1 || true
-	systemctl start SimpleTask || die "启动失败，查看日志: journalctl -u SimpleTask -n 50 --no-pager"
-	sleep 1
+	systemctl restart SimpleTask || die "启动失败，查看日志: journalctl -u SimpleTask -n 50 --no-pager"
+	sleep 2
 	if systemctl is-active --quiet SimpleTask; then
-		ok "SimpleTask 正在运行"
+		ok "SimpleTask 正在运行 ✓"
 	else
-		die "服务启动异常，查看: journalctl -u SimpleTask -n 50 --no-pager"
+		warn "服务可能启动异常，最近日志："
+		journalctl -u SimpleTask -n 20 --no-pager || true
+		die "服务未能正常运行，请检查以上日志"
 	fi
 
 	# 完成摘要
