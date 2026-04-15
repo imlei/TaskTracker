@@ -26,6 +26,7 @@
         <button type="button" class="invoices-nav-btn" data-settings-view="expense-code">Expense Code</button>
         <button type="button" class="invoices-nav-btn" data-settings-view="exchange-currencies">汇率货币</button>
         <button type="button" class="invoices-nav-btn" data-settings-view="smtp">SMTP Setting</button>
+        <button type="button" class="invoices-nav-btn" data-settings-view="users" id="nav-btn-users" hidden>User Management</button>
       </aside>
       <div class="invoices-main settings-main">
         <div id="settings-view-company" class="invoices-view settings-view">
@@ -135,9 +136,62 @@
             <span id="save-msg-smtp" class="hint"></span>
           </div>
         </div>
+        <div id="settings-view-users" class="invoices-view settings-view" hidden>
+          <section class="settings-card">
+            <h2>User Management</h2>
+            <p class="hint">admin 可创建/删除用户，并设置角色。<br><strong>User Level 1</strong>：仅 Payroll &nbsp;|&nbsp; <strong>User Level 2</strong>：全部功能（不含用户管理）</p>
+            <div class="settings-subtoolbar">
+              <button type="button" class="primary" id="btn-user-new">新建用户</button>
+            </div>
+            <div class="table-wrap">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>用户名</th>
+                    <th>角色</th>
+                    <th>重置密码</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="users-body"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   </main>
+
+  <dialog id="dlg-user" class="dlg-task-wide">
+    <form method="dialog" id="form-user">
+      <h2>新建用户</h2>
+      <label>用户名 <input id="user-name" type="text" maxlength="60" autocomplete="off" required /></label>
+      <label>密码 <input id="user-pwd" type="password" autocomplete="new-password" /></label>
+      <p class="hint">密码需 8 位以上，含大小写字母、数字、特殊符号。</p>
+      <label>角色
+        <select id="user-role">
+          <option value="user2">User Level 2（全功能）</option>
+          <option value="user1">User Level 1（仅 Payroll）</option>
+        </select>
+      </label>
+      <div class="dlg-actions">
+        <button type="submit" class="primary">创建</button>
+        <button type="button" id="user-cancel">取消</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-reset-pwd" class="dlg-task-wide">
+    <form method="dialog" id="form-reset-pwd">
+      <h2>重置密码 — <span id="reset-pwd-username"></span></h2>
+      <label>新密码 <input id="reset-pwd-new" type="password" autocomplete="new-password" /></label>
+      <p class="hint">密码需 8 位以上，含大小写字母、数字、特殊符号。</p>
+      <div class="dlg-actions">
+        <button type="submit" class="primary">确认重置</button>
+        <button type="button" id="reset-pwd-cancel">取消</button>
+      </div>
+    </form>
+  </dialog>
 
   <dialog id="dlg-expense-code" class="dlg-task-wide">
     <form method="dialog" id="form-expense-code">

@@ -123,7 +123,7 @@ document.getElementById("btn-save-settings")?.addEventListener("click", () => su
 document.getElementById("btn-save-smtp")?.addEventListener("click", () => submitSettings("save-msg-smtp"));
 
 function showSettingsView(view) {
-  const ids = ["company", "password", "expense-code", "exchange-currencies", "smtp"];
+  const ids = ["company", "password", "expense-code", "exchange-currencies", "smtp", "users"];
   for (const v of ids) {
     const el = document.getElementById(`settings-view-${v}`);
     if (el) el.hidden = v !== view;
@@ -131,6 +131,9 @@ function showSettingsView(view) {
   document.querySelectorAll("[data-settings-view]").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.settingsView === view);
   });
+  if (view === "users") {
+    loadUsers();
+  }
   if (view === "expense-code") {
     loadExpenseCodes();
   }
@@ -357,6 +360,130 @@ document.getElementById("btn-save-password")?.addEventListener("click", async ()
   }
 });
 
+function escHtml(s) {
+  const d = document.createElement("div");
+  d.textContent = String(s || "");
+  return d.innerHTML;
+}
+
+const ROLE_LABELS = { admin: "Admin", user2: "User Level 2", user1: "User Level 1（仅 Payroll）" };
+
+async function loadUsers() {
+  const tbody = document.getElementById("users-body");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="4" class="hint">加载中…</td></tr>`;
+  try {
+    const users = await api("/api/users");
+    tbody.innerHTML = users.map((u) => `
+      <tr>
+        <td>${escHtml(u.username)}</td>
+        <td>
+          ${u.role === "admin"
+            ? `<span class="hint">${ROLE_LABELS.admin}</span>`
+            : `<select class="user-role-sel" data-username="${escHtml(u.username)}">
+                 <option value="user2" ${u.role === "user2" ? "selected" : ""}>User Level 2</option>
+                 <option value="user1" ${u.role === "user1" ? "selected" : ""}>User Level 1（仅 Payroll）</option>
+               </select>`
+          }
+        </td>
+        <td>
+          <button type="button" class="ghost small btn-reset-pwd" data-username="${escHtml(u.username)}">重置密码</button>
+        </td>
+        <td>
+          ${u.role !== "admin"
+            ? `<button type="button" class="ghost small btn-del-user" data-username="${escHtml(u.username)}">删除</button>`
+            : ""}
+        </td>
+      </tr>
+    `).join("");
+
+    tbody.querySelectorAll(".user-role-sel").forEach((sel) => {
+      sel.addEventListener("change", async () => {
+        try {
+          await api("/api/users", { method: "PUT", body: JSON.stringify({ username: sel.dataset.username, role: sel.value }) });
+        } catch (e) {
+          alert(e.message || "修改失败");
+          loadUsers();
+        }
+      });
+    });
+
+    tbody.querySelectorAll(".btn-reset-pwd").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.getElementById("reset-pwd-username").textContent = btn.dataset.username;
+        document.getElementById("reset-pwd-new").value = "";
+        document.getElementById("reset-pwd-new").dataset.username = btn.dataset.username;
+        document.getElementById("dlg-reset-pwd")?.showModal();
+      });
+    });
+
+    tbody.querySelectorAll(".btn-del-user").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (!confirm(`确认删除用户「${btn.dataset.username}」？`)) return;
+        try {
+          await api("/api/users", { method: "DELETE", body: JSON.stringify({ username: btn.dataset.username }) });
+          loadUsers();
+        } catch (e) {
+          alert(e.message || "删除失败");
+        }
+      });
+    });
+  } catch (e) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="hint">加载失败: ${escHtml(e.message)}</td></tr>`;
+  }
+}
+
+function initUserManagement() {
+  const dlg = document.getElementById("dlg-user");
+  const form = document.getElementById("form-user");
+
+  document.getElementById("btn-user-new")?.addEventListener("click", () => {
+    document.getElementById("user-name").value = "";
+    document.getElementById("user-pwd").value = "";
+    document.getElementById("user-role").value = "user2";
+    dlg?.showModal();
+  });
+  document.getElementById("user-cancel")?.addEventListener("click", () => dlg?.close());
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await api("/api/users", {
+        method: "POST",
+        body: JSON.stringify({
+          username: document.getElementById("user-name").value,
+          password: document.getElementById("user-pwd").value,
+          role: document.getElementById("user-role").value,
+        }),
+      });
+      dlg?.close();
+      loadUsers();
+    } catch (e) {
+      alert(e.message || "创建失败");
+    }
+  });
+
+  const resetDlg = document.getElementById("dlg-reset-pwd");
+  const resetForm = document.getElementById("form-reset-pwd");
+
+  document.getElementById("reset-pwd-cancel")?.addEventListener("click", () => resetDlg?.close());
+
+  resetForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const pwdInput = document.getElementById("reset-pwd-new");
+    try {
+      await api("/api/users", {
+        method: "PUT",
+        body: JSON.stringify({ username: pwdInput.dataset.username, newPassword: pwdInput.value }),
+      });
+      resetDlg?.close();
+      alert("密码已重置。");
+    } catch (e) {
+      alert(e.message || "重置失败");
+    }
+  });
+}
+
 (async function init() {
   try {
     const me = await fetch("/api/me", { credentials: "same-origin" }).then((r) => r.json());
@@ -371,6 +498,12 @@ document.getElementById("btn-save-password")?.addEventListener("click", async ()
     if (me.authEnabled && !me.authenticated) {
       window.location.href = "/login.html";
       return;
+    }
+    // 仅 admin 显示用户管理
+    if (me.role === "admin") {
+      const navBtn = document.getElementById("nav-btn-users");
+      if (navBtn) navBtn.hidden = false;
+      initUserManagement();
     }
     await loadSettings();
     showSettingsView("company");

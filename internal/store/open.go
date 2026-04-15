@@ -108,6 +108,14 @@ func Open(dir string) (*sql.DB, error) {
 		_ = db.Close()
 		return nil, err
 	}
+	if err := ensureAppUserRoleColumn(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	if err := ensureSubUsersTable(db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
 	if err := ensureInvoiceColumns(db); err != nil {
 		_ = db.Close()
 		return nil, err
@@ -823,4 +831,43 @@ func ensureExpenseVendorIDColumn(db *sql.DB) error {
 		}
 	}
 	return nil
+}
+
+func ensureAppUserRoleColumn(db *sql.DB) error {
+	existing := map[string]bool{}
+	rows, err := db.Query(`PRAGMA table_info(app_user)`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var cid int
+		var name, ctype string
+		var notnull int
+		var dflt sql.NullString
+		var pk int
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk); err != nil {
+			continue
+		}
+		existing[name] = true
+	}
+	if !existing["role"] {
+		_, err := db.Exec(`ALTER TABLE app_user ADD COLUMN role TEXT NOT NULL DEFAULT 'admin'`)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ensureSubUsersTable(db *sql.DB) error {
+	_, err := db.Exec(`
+CREATE TABLE IF NOT EXISTS app_sub_users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL DEFAULT '',
+  session_secret TEXT NOT NULL DEFAULT '',
+  role TEXT NOT NULL DEFAULT 'user2'
+);`)
+	return err
 }

@@ -2076,6 +2076,11 @@ document.getElementById("btn-report-export")?.addEventListener("click", () => ex
     window.location.href = "/login.html";
     return;
   }
+  // user1 只能访问 Payroll，直接跳转
+  if (me.authEnabled && me.authenticated && me.role === "user1") {
+    window.location.href = "/payroll/dashboard.html";
+    return;
+  }
   try {
     const pub = await fetch("/api/settings/public").then((r) => r.json());
     const title = document.getElementById("app-title");
