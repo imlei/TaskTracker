@@ -49,10 +49,11 @@ type Store struct {
 	db      *sql.DB
 	mu      sync.Mutex
 	taskSeq int
+	encKey  []byte // AES-256 key for encrypting sensitive data (SMTP password etc.)
 }
 
-func New(db *sql.DB) *Store {
-	s := &Store{db: db}
+func New(db *sql.DB, encKey []byte) *Store {
+	s := &Store{db: db, encKey: encKey}
 	s.rebuildTaskSeq()
 	return s
 }
@@ -180,7 +181,17 @@ func currencyKey(c models.Currency) string {
 	return k
 }
 
-// recomputeTaskPricesFromSelection 与前端 applyTaskPriceSelection 一致：按勾选顺序汇总服务名与首币种金额
+// applyPriceSelection 从价目表中根据 selectedPriceIDs 统一计算 service1/price1（单一来源，前端仅做预览）
+func (s *Store) applyPriceSelection(t *models.Task) {
+	prices := s.ListPrices()
+	priceMap := make(map[string]models.PriceItem, len(prices))
+	for _, p := range prices {
+		priceMap[p.ID] = p
+	}
+	t.Service1, t.Price1 = recomputeTaskPricesFromSelection(t.SelectedPriceIDs, priceMap)
+}
+
+// recomputeTaskPricesFromSelection 按勾选顺序汇总服务名与首币种金额
 func recomputeTaskPricesFromSelection(ids []string, priceMap map[string]models.PriceItem) (service1 string, price1 float64) {
 	var names []string
 	byCur := map[string]float64{}
@@ -250,6 +261,10 @@ func (s *Store) CreateTask(t models.Task) models.Task {
 	if t.Status == "" {
 		t.Status = models.StatusPending
 	}
+	// 如果有价格选择，统一由后端计算 service1/price1（单一来源）
+	if len(t.SelectedPriceIDs) > 0 {
+		s.applyPriceSelection(&t)
+	}
 	sel, _ := json.Marshal(t.SelectedPriceIDs)
 	if sel == nil {
 		sel = []byte("[]")
@@ -265,6 +280,10 @@ func (s *Store) CreateTask(t models.Task) models.Task {
 func (s *Store) updateTaskCore(id string, t models.Task) (models.Task, error) {
 	if t.Status == "" {
 		t.Status = models.StatusPending
+	}
+	// 如果有价格选择，统一由后端计算 service1/price1（单一来源）
+	if len(t.SelectedPriceIDs) > 0 {
+		s.applyPriceSelection(&t)
 	}
 	sel, _ := json.Marshal(t.SelectedPriceIDs)
 	if sel == nil {
@@ -359,6 +378,16 @@ func (s *Store) DeleteTask(id string) error {
 	}
 	if existing.Status != models.StatusPending {
 		return ErrTaskDeleteLocked
+	}
+	// 检查是否有关联的费用记录
+	var expCount int
+	if err := s.db.QueryRow(`SELECT COUNT(*) FROM expenses WHERE task_id=?`, id).Scan(&expCount); err == nil && expCount > 0 {
+		return fmt.Errorf("cannot delete task: %d expense(s) linked", expCount)
+	}
+	// 检查是否有关联的发票
+	var invCount int
+	if err := s.db.QueryRow(`SELECT COUNT(*) FROM invoices WHERE task_id=? OR task_ids_json LIKE ?`, id, `%"`+id+`"%`).Scan(&invCount); err == nil && invCount > 0 {
+		return fmt.Errorf("cannot delete task: %d invoice(s) linked", invCount)
 	}
 	res, err := s.db.Exec(`DELETE FROM tasks WHERE id=?`, id)
 	if err != nil {
@@ -650,6 +679,8 @@ func (s *Store) DeletePrice(id string) error {
 	return nil
 }
 
+// normalizeInvoiceTaskIDs 统一 TaskID 和 TaskIDs：TaskIDs 为权威来源，TaskID 始终等于 TaskIDs[0]。
+// 兼容旧数据：如果只有 TaskID 没有 TaskIDs，自动升级为 TaskIDs。
 func normalizeInvoiceTaskIDs(inv *models.Invoice) {
 	if len(inv.TaskIDs) == 0 && inv.TaskID != "" {
 		inv.TaskIDs = []string{inv.TaskID}
@@ -659,6 +690,7 @@ func normalizeInvoiceTaskIDs(inv *models.Invoice) {
 	}
 }
 
+// invoiceLinkedTaskIDs 返回发票关联的所有任务 ID（normalizeInvoiceTaskIDs 后直接用 TaskIDs）
 func invoiceLinkedTaskIDs(inv models.Invoice) []string {
 	if len(inv.TaskIDs) > 0 {
 		return inv.TaskIDs
@@ -682,7 +714,7 @@ func (s *Store) CreateInvoice(inv models.Invoice) (models.Invoice, error) {
 	if err := s.validateInvoiceTasksCustomersActiveLocked(&inv); err != nil {
 		return models.Invoice{}, err
 	}
-	now := time.Now()
+	now := time.Now().UTC()
 	if inv.ID == "" {
 		inv.ID = fmt.Sprintf("I%s", now.Format("20060102150405"))
 	}
@@ -788,7 +820,7 @@ func (s *Store) ListInvoices(status string) ([]models.Invoice, error) {
 
 func (s *Store) MarkInvoiceSent(id, email, sentAt string) (models.Invoice, error) {
 	if sentAt == "" {
-		sentAt = time.Now().Format(time.RFC3339)
+		sentAt = time.Now().UTC().Format(time.RFC3339)
 	}
 	_, err := s.db.Exec(`UPDATE invoices SET status='Sent', bill_to_email=?, sent_at=? WHERE id=?`, email, sentAt, id)
 	if err != nil {

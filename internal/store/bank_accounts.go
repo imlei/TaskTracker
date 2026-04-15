@@ -100,7 +100,7 @@ func (s *Store) CreateBankAccount(in models.BankAccount) (models.BankAccount, er
 	if strings.TrimSpace(in.ID) == "" {
 		in.ID = s.nextBankAccountIDLocked()
 	}
-	now := time.Now().Format(time.RFC3339)
+	now := time.Now().UTC().Format(time.RFC3339)
 	_, err := s.db.Exec(`INSERT INTO bank_accounts (id, label, bank_name, micr_country, bank_institution, bank_transit, bank_routing_aba, bank_account, bank_iban, bank_swift,
 		bank_cheque_number, micr_line_override, default_cheque_currency, created_at, updated_at)
 		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
@@ -128,7 +128,7 @@ func (s *Store) UpdateBankAccount(id string, patch models.BankAccount) (models.B
 	}
 	patch.ID = id
 	patch = normalizeBankAccount(patch)
-	now := time.Now().Format(time.RFC3339)
+	now := time.Now().UTC().Format(time.RFC3339)
 	res, err := s.db.Exec(`UPDATE bank_accounts SET label=?, bank_name=?, micr_country=?, bank_institution=?, bank_transit=?, bank_routing_aba=?, bank_account=?, bank_iban=?, bank_swift=?,
 		bank_cheque_number=?, micr_line_override=?, default_cheque_currency=?, updated_at=?
 		WHERE id=?`,
@@ -206,7 +206,7 @@ func (s *Store) IncrementDefaultChequeNumber() (string, error) {
 		return "", err
 	}
 	next := incrementChequeString(cur)
-	_, err = s.db.Exec(`UPDATE bank_accounts SET bank_cheque_number=?, updated_at=? WHERE id=?`, next, time.Now().Format(time.RFC3339), def)
+	_, err = s.db.Exec(`UPDATE bank_accounts SET bank_cheque_number=?, updated_at=? WHERE id=?`, next, time.Now().UTC().Format(time.RFC3339), def)
 	if err != nil {
 		return "", err
 	}

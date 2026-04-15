@@ -65,7 +65,12 @@ func (s *Server) handleExpenses(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		list := s.Store.ListExpenses()
-		writeJSON(w, http.StatusOK, list)
+		limit, offset := parsePagination(r)
+		if limit > 0 {
+			writeJSON(w, http.StatusOK, paginateSlice(list, limit, offset))
+		} else {
+			writeJSON(w, http.StatusOK, list)
+		}
 	case http.MethodPost:
 		var e models.Expense
 		if err := json.NewDecoder(r.Body).Decode(&e); err != nil {

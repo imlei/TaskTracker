@@ -342,11 +342,52 @@ func isPublicPath(c *Config, path string, r *http.Request) bool {
 	return false
 }
 
+// csrfSafe 对状态变更请求验证 Origin/Referer 防止跨站请求伪造
+func csrfSafe(r *http.Request) bool {
+	if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
+		return true
+	}
+	host := r.Host
+	if host == "" {
+		return true // 无法判断，放行（本地开发等场景）
+	}
+	origin := r.Header.Get("Origin")
+	if origin != "" {
+		// Origin 存在时只需比较 host 部分
+		// Origin 格式: scheme://host[:port]
+		if idx := strings.Index(origin, "://"); idx >= 0 {
+			originHost := origin[idx+3:]
+			return originHost == host
+		}
+		return false
+	}
+	referer := r.Header.Get("Referer")
+	if referer != "" {
+		// Referer 格式: scheme://host[:port]/path
+		if idx := strings.Index(referer, "://"); idx >= 0 {
+			rest := referer[idx+3:]
+			refHost := rest
+			if slashIdx := strings.Index(rest, "/"); slashIdx >= 0 {
+				refHost = rest[:slashIdx]
+			}
+			return refHost == host
+		}
+		return false
+	}
+	// 无 Origin 和 Referer 时放行（某些旧浏览器或直接 API 调用）
+	return true
+}
+
 // Middleware 保护页面与 API
 func Middleware(c *Config, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if c.Disabled {
 			next.ServeHTTP(w, r)
+			return
+		}
+		// CSRF 防护：状态变更请求必须来自同源
+		if !csrfSafe(r) {
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "cross-origin request blocked"})
 			return
 		}
 		path := r.URL.Path

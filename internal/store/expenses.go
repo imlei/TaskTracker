@@ -70,14 +70,13 @@ func (s *Store) CreateExpense(e models.Expense) (models.Expense, error) {
 	if strings.TrimSpace(e.TaskID) == "" {
 		return models.Expense{}, errors.New("taskId is required")
 	}
-	if _, err := s.GetTask(e.TaskID); err != nil {
-		if errors.Is(err, ErrNotFound) {
-			return models.Expense{}, ErrExpenseTaskNotFound
-		}
-		return models.Expense{}, err
-	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	// 在锁内检查 task 是否存在，避免竞态条件
+	var taskExists int
+	if err := s.db.QueryRow(`SELECT COUNT(*) FROM tasks WHERE id=?`, e.TaskID).Scan(&taskExists); err != nil || taskExists == 0 {
+		return models.Expense{}, ErrExpenseTaskNotFound
+	}
 	if e.ID == "" {
 		e.ID = s.nextExpenseIDLocked()
 	}
@@ -90,7 +89,7 @@ func (s *Store) CreateExpense(e models.Expense) (models.Expense, error) {
 		e.ExpenseDate = time.Now().Format("2006-01-02")
 	}
 	e.VendorID = strings.TrimSpace(e.VendorID)
-	now := time.Now().Format(time.RFC3339)
+	now := time.Now().UTC().Format(time.RFC3339)
 	_, err := s.db.Exec(`INSERT INTO expenses (id, task_id, vendor_id, expense_date, description, account_code, amount, currency, created_at) VALUES (?,?,?,?,?,?,?,?,?)`,
 		e.ID, e.TaskID, e.VendorID, e.ExpenseDate, strings.TrimSpace(e.Description), e.AccountCode, e.Amount, e.Currency, now)
 	if err != nil {
@@ -108,12 +107,6 @@ func (s *Store) UpdateExpense(id string, e models.Expense) (models.Expense, erro
 	if strings.TrimSpace(e.TaskID) == "" {
 		return models.Expense{}, errors.New("taskId is required")
 	}
-	if _, err := s.GetTask(e.TaskID); err != nil {
-		if errors.Is(err, ErrNotFound) {
-			return models.Expense{}, ErrExpenseTaskNotFound
-		}
-		return models.Expense{}, err
-	}
 	if strings.TrimSpace(e.Currency) == "" {
 		e.Currency = "CAD"
 	}
@@ -125,6 +118,11 @@ func (s *Store) UpdateExpense(id string, e models.Expense) (models.Expense, erro
 	e.VendorID = strings.TrimSpace(e.VendorID)
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	// 在锁内检查 task 是否存在，避免竞态条件
+	var taskExists int
+	if err := s.db.QueryRow(`SELECT COUNT(*) FROM tasks WHERE id=?`, e.TaskID).Scan(&taskExists); err != nil || taskExists == 0 {
+		return models.Expense{}, ErrExpenseTaskNotFound
+	}
 	res, err := s.db.Exec(`UPDATE expenses SET task_id=?, vendor_id=?, expense_date=?, description=?, account_code=?, amount=?, currency=? WHERE id=?`,
 		e.TaskID, e.VendorID, e.ExpenseDate, strings.TrimSpace(e.Description), e.AccountCode, e.Amount, e.Currency, id)
 	if err != nil {

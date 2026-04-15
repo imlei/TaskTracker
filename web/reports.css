@@ -1,0 +1,150 @@
+/* Reports module — sidebar sub-nav, report toolbar, action icons (PayEvo-style) */
+
+.pe-nav-group {
+  margin: 0.25rem 0 0.5rem;
+}
+
+.pe-nav-heading {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--pe-text-secondary);
+  padding: 0.35rem 1rem 0.25rem;
+  font-weight: 600;
+}
+
+.pe-nav-sub {
+  padding: 0 0.35rem 0.5rem 0.85rem;
+  border-left: 2px solid var(--pe-border);
+  margin-left: 1rem;
+}
+
+.pe-nav-sub a {
+  display: block;
+  padding: 0.38rem 0.65rem;
+  border-radius: 4px;
+  color: var(--pe-text-secondary);
+  text-decoration: none;
+  font-size: 0.83rem;
+}
+
+.pe-nav-sub a:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--pe-text);
+}
+
+.pe-nav-sub a.active {
+  background: #e8f0fe;
+  color: var(--pe-blue);
+  font-weight: 600;
+}
+
+.pe-report-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.pe-report-toolbar h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--pe-text);
+}
+
+.pe-report-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pe-report-filters label {
+  font-size: 0.85rem;
+  color: var(--pe-text-secondary);
+}
+
+.pe-report-filters select {
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--pe-border);
+  border-radius: 6px;
+  background: var(--pe-surface);
+  font-size: 0.875rem;
+  min-width: 200px;
+}
+
+.pe-icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 6px;
+  background: #e8f0fe;
+  color: var(--pe-blue);
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.pe-icon-action:hover {
+  background: #d2e3fc;
+}
+
+.pe-pagination-full {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.82rem;
+  color: var(--pe-text-secondary);
+  border-top: 1px solid var(--pe-border);
+  background: #fafafa;
+}
+
+.pe-page-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pe-page-btns button,
+.pe-page-btns a {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.35rem;
+  border: 1px solid var(--pe-border);
+  background: var(--pe-surface);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  text-decoration: none;
+  color: var(--pe-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pe-page-btns .current {
+  background: var(--pe-nav-strip);
+  color: #fff;
+  border-color: var(--pe-nav-strip);
+}
+
+.pe-muted-hint {
+  font-size: 0.8rem;
+  color: var(--pe-text-secondary);
+  margin-top: 0.5rem;
+}
+
+.pe-table td.mono {
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, "Cascadia Mono", monospace;
+  font-size: 0.9rem;
+}

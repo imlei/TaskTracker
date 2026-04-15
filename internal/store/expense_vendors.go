@@ -66,7 +66,7 @@ func (s *Store) CreateExpenseVendor(v models.ExpenseVendor) (models.ExpenseVendo
 	if v.ID == "" {
 		v.ID = s.nextExpenseVendorIDLocked()
 	}
-	now := time.Now().Format(time.RFC3339)
+	now := time.Now().UTC().Format(time.RFC3339)
 	_, err := s.db.Exec(`INSERT INTO expense_vendors (id, name, currency, email, address, created_at) VALUES (?,?,?,?,?,?)`,
 		v.ID, name, cur, strings.TrimSpace(v.Email), strings.TrimSpace(v.Address), now)
 	if err != nil {

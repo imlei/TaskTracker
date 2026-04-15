@@ -5,6 +5,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"simpletask/internal/crypto"
 )
 
 const maxLogoDataLen = 600000 // ~450KB base64
@@ -98,6 +100,32 @@ func (s *Store) GetPublicBranding() (companyName, logoDataURL string) {
 	return strings.TrimSpace(st.CompanyName), st.LogoDataURL
 }
 
+// PublicBranding 公开品牌信息（用于登录页、发票页等无需认证的场景）
+type PublicBranding struct {
+	CompanyName    string `json:"companyName"`
+	LogoDataURL    string `json:"logoDataUrl"`
+	CompanyAddress string `json:"companyAddress,omitempty"`
+	CompanyEmail   string `json:"companyEmail,omitempty"`
+	CompanyPhone   string `json:"companyPhone,omitempty"`
+	CompanyFax     string `json:"companyFax,omitempty"`
+}
+
+// GetPublicBrandingFull 返回公司公开信息（含联系方式，用于 invoice 等公开页面）
+func (s *Store) GetPublicBrandingFull() PublicBranding {
+	st, err := s.loadSettingsRow()
+	if err != nil {
+		return PublicBranding{}
+	}
+	return PublicBranding{
+		CompanyName:    strings.TrimSpace(st.CompanyName),
+		LogoDataURL:    st.LogoDataURL,
+		CompanyAddress: strings.TrimSpace(st.CompanyAddress),
+		CompanyEmail:   strings.TrimSpace(st.CompanyEmail),
+		CompanyPhone:   strings.TrimSpace(st.CompanyPhone),
+		CompanyFax:     strings.TrimSpace(st.CompanyFax),
+	}
+}
+
 // GetBaseURL 优先数据库
 func (s *Store) GetBaseURL() string {
 	st, err := s.loadSettingsRow()
@@ -162,6 +190,14 @@ func (s *Store) UpdateSettings(in AppSettings, updateSMTPPass bool, smtpPassNew 
 	}
 
 	if updateSMTPPass {
+		encPass := smtpPassNew
+		if smtpPassNew != "" && len(s.encKey) > 0 {
+			var encErr error
+			encPass, encErr = crypto.Encrypt(s.encKey, []byte(smtpPassNew))
+			if encErr != nil {
+				return fmt.Errorf("encrypt SMTP password: %w", encErr)
+			}
+		}
 		_, err := s.db.Exec(`UPDATE app_settings SET
 			company_name=?, logo_data_url=?, base_url=?,
 			smtp_host=?, smtp_port=?, smtp_user=?, smtp_pass=?, smtp_from=?, smtp_starttls=?, smtp_tls=?,
@@ -170,7 +206,7 @@ func (s *Store) UpdateSettings(in AppSettings, updateSMTPPass bool, smtpPassNew 
 			company_phone=?, company_fax=?, company_address=?, company_email=?
 			WHERE id=1`,
 			in.CompanyName, in.LogoDataURL, in.BaseURL,
-			strings.TrimSpace(in.SMTPHost), in.SMTPPort, strings.TrimSpace(in.SMTPUser), smtpPassNew, strings.TrimSpace(in.SMTPFrom), start, tls,
+			strings.TrimSpace(in.SMTPHost), in.SMTPPort, strings.TrimSpace(in.SMTPUser), encPass, strings.TrimSpace(in.SMTPFrom), start, tls,
 			in.MICRCountry, in.BankInstitution, in.BankTransit, in.BankRoutingABA, in.BankAccount, in.BankChequeNumber, in.MICRLineOverride,
 			in.DefaultChequeCurrency, in.BaseCurrency,
 			in.CompanyPhone, in.CompanyFax, in.CompanyAddress, in.CompanyEmail,
@@ -209,21 +245,26 @@ func (s *Store) MailConfiguredInDB() bool {
 	return strings.TrimSpace(st.SMTPHost) != ""
 }
 
-// GetSMTPPassword 仅内部用于组装 Mailer
+// GetSMTPPassword 仅内部用于组装 Mailer（自动解密）
 func (s *Store) GetSMTPPassword() string {
 	var pass string
 	_ = s.db.QueryRow(`SELECT smtp_pass FROM app_settings WHERE id=1`).Scan(&pass)
+	if len(s.encKey) > 0 && pass != "" {
+		decrypted, err := crypto.Decrypt(s.encKey, pass)
+		if err == nil {
+			return decrypted
+		}
+	}
 	return pass
 }
 
-// BuildMailConfig 若库中有 smtp_host 则返回完整配置（含库中密码）；否则 nil（由调用方用环境变量）
+// BuildMailConfig 若库中有 smtp_host 则返回完整配置（含库中密码，自动解密）；否则 nil（由调用方用环境变量）
 func (s *Store) BuildMailConfig() (host string, port int, user, pass, from string, startTLS, implicitTLS bool, baseURL string) {
 	st, err := s.loadSettingsRow()
 	if err != nil || strings.TrimSpace(st.SMTPHost) == "" {
 		return "", 0, "", "", "", false, false, ""
 	}
-	pass = ""
-	_ = s.db.QueryRow(`SELECT smtp_pass FROM app_settings WHERE id=1`).Scan(&pass)
+	pass = s.GetSMTPPassword()
 	return strings.TrimSpace(st.SMTPHost), st.SMTPPort, strings.TrimSpace(st.SMTPUser), pass,
 		strings.TrimSpace(st.SMTPFrom), st.SMTPStartTLS, st.SMTPImplicitTLS, strings.TrimSpace(st.BaseURL)
 }

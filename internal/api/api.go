@@ -47,11 +47,43 @@ func validateCustomerContact(c models.Customer) error {
 	return nil
 }
 
+// parsePagination 解析可选的 limit/offset 查询参数；不传则返回 0,0（表示不分页）
+func parsePagination(r *http.Request) (limit, offset int) {
+	if v := r.URL.Query().Get("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			limit = n
+		}
+	}
+	if v := r.URL.Query().Get("offset"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+			offset = n
+		}
+	}
+	return
+}
+
+// paginateSlice 对切片做分页；limit=0 表示不分页
+func paginateSlice[T any](items []T, limit, offset int) []T {
+	if offset >= len(items) {
+		return []T{}
+	}
+	items = items[offset:]
+	if limit > 0 && limit < len(items) {
+		items = items[:limit]
+	}
+	return items
+}
+
 func (s *Server) handleTasks(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		list := s.Store.ListTasks()
-		writeJSON(w, http.StatusOK, list)
+		limit, offset := parsePagination(r)
+		if limit > 0 {
+			writeJSON(w, http.StatusOK, paginateSlice(list, limit, offset))
+		} else {
+			writeJSON(w, http.StatusOK, list)
+		}
 	case http.MethodPost:
 		var t models.Task
 		if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
@@ -249,7 +281,12 @@ func (s *Server) handleInvoices(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		writeJSON(w, http.StatusOK, list)
+		limit, offset := parsePagination(r)
+		if limit > 0 {
+			writeJSON(w, http.StatusOK, paginateSlice(list, limit, offset))
+		} else {
+			writeJSON(w, http.StatusOK, list)
+		}
 	case http.MethodPost:
 		var inv models.Invoice
 		if err := json.NewDecoder(r.Body).Decode(&inv); err != nil {
@@ -356,7 +393,7 @@ func (s *Server) handleInvoiceSend(w http.ResponseWriter, r *http.Request, id st
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	updated, err := s.Store.MarkInvoiceSent(inv.ID, to, time.Now().Format(time.RFC3339))
+	updated, err := s.Store.MarkInvoiceSent(inv.ID, to, time.Now().UTC().Format(time.RFC3339))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

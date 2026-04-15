@@ -11,6 +11,7 @@ import (
 
 	"simpletask/internal/api"
 	"simpletask/internal/auth"
+	"simpletask/internal/crypto"
 	"simpletask/internal/mail"
 	"simpletask/internal/store"
 )
@@ -29,7 +30,11 @@ func main() {
 	}
 	defer db.Close()
 
-	st := store.New(db)
+	encKey, err := crypto.LoadOrCreateKey(dataDir)
+	if err != nil {
+		log.Fatal("encryption key: ", err)
+	}
+	st := store.New(db, encKey)
 
 	var mailer *mail.Mailer
 	if os.Getenv("SMTP_HOST") != "" {
@@ -73,7 +78,7 @@ func main() {
 		fileServer.ServeHTTP(w, r)
 	}))
 
-	handler := auth.Middleware(authCfg, mux)
+	handler := api.RecoverMiddleware(auth.Middleware(authCfg, mux))
 
 	addr := os.Getenv("LISTEN_ADDR")
 	if addr == "" {

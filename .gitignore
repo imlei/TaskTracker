@@ -1,6 +1,8 @@
 /data/
 /SimpleTask
+/SimpleTask.new
 *.exe
 .env
 .DS_Store
 *.db
+.claude/

@@ -64,6 +64,30 @@ async function loadInvoice() {
   document.getElementById("balance").textContent = fmtMoney(inv.balanceDue, c);
 }
 
+async function loadCompanyInfo() {
+  try {
+    const r = await fetch("/api/settings/public");
+    if (!r.ok) return;
+    const info = await r.json();
+    const el = (id) => document.getElementById(id);
+    if (info.companyName) el("company-name").textContent = info.companyName;
+    if (info.companyAddress) el("company-address").textContent = info.companyAddress;
+    if (info.companyEmail) el("company-email").textContent = info.companyEmail;
+    if (info.companyPhone) el("company-phone").textContent = info.companyPhone;
+    if (info.logoDataUrl) {
+      const logo = el("company-logo");
+      logo.style.background = "none";
+      const img = document.createElement("img");
+      img.src = info.logoDataUrl;
+      img.alt = "";
+      img.style.maxWidth = "100px";
+      img.style.maxHeight = "100px";
+      logo.appendChild(img);
+    }
+  } catch { /* ignore */ }
+}
+
 document.getElementById("btn-print").addEventListener("click", () => window.print());
 document.getElementById("btn-back").addEventListener("click", () => (window.location.href = "/"));
+loadCompanyInfo();
 loadInvoice();

@@ -29,11 +29,8 @@ func (s *Server) handleSettingsPublic(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	name, logo := s.Store.GetPublicBranding()
-	writeJSON(w, http.StatusOK, map[string]string{
-		"companyName": name,
-		"logoDataUrl": logo,
-	})
+	branding := s.Store.GetPublicBrandingFull()
+	writeJSON(w, http.StatusOK, branding)
 }
 
 func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {

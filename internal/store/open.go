@@ -574,7 +574,7 @@ func migrateBankAccountsFromLegacySettings(db *sql.DB) error {
 	if strings.TrimSpace(mc) == "" {
 		mc = "CA"
 	}
-	now := time.Now().Format(time.RFC3339)
+	now := time.Now().UTC().Format(time.RFC3339)
 	_, err := db.Exec(`INSERT INTO bank_accounts (id, label, micr_country, bank_institution, bank_transit, bank_routing_aba, bank_account,
 		bank_cheque_number, micr_line_override, default_cheque_currency, created_at, updated_at)
 		VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+  <meta charset="utf-8" />
+  <title>Payslip — {{.EmployeeName}}</title>
+  <style>
+    @page { size: letter; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 10px;
+      color: #111;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 14px;
+    }
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-bottom: 2px solid #111;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    .head strong { font-size: 12px; }
+    .cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .blk { margin-bottom: 10px; }
+    .blk h3 {
+      margin: 0 0 4px;
+      font-size: 10px;
+      letter-spacing: 0.04em;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    td {
+      padding: 2px 4px;
+      border-bottom: 1px solid #ddd;
+    }
+    td:first-child { text-align: left; width: 42%; }
+    td:nth-child(2), td:nth-child(3) { text-align: right; font-variant-numeric: tabular-nums; }
+    .sum td { font-weight: 600; border-bottom: 1px solid #333; }
+    .cheque {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 2px dashed #999;
+    }
+    .amt { font-size: 14px; font-weight: 700; text-align: center; margin: 8px 0; }
+    .addr { margin-top: 8px; font-size: 10px; line-height: 1.4; }
+    @media print {
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="head">
+    <div>
+      <strong>{{.EmployeeID}}</strong> {{.EmployeeName}}<br />
+      <span style="color:#444">Payroll from {{.PeriodFrom}} to {{.PeriodTo}}</span>
+    </div>
+    <div style="text-align:right;font-size:10px;">
+      <div>Doc # {{.DocumentNumber}}</div>
+      <div>{{.PaymentDate}}</div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <div class="blk">
+        <h3>== HOURS ==</h3>
+        <table>
+          <tr><td>Regular hours</td><td>{{.RegularHours.Current}}</td><td>{{.RegularHours.YTD}}</td></tr>
+          <tr><td>Total (non-taxable)</td><td>{{.NonTaxableTotal.Current}}</td><td>{{.NonTaxableTotal.YTD}}</td></tr>
+        </table>
+      </div>
+      <div class="blk">
+        <h3>== EARNINGS ==</h3>
+        <table>
+          <tr><td>Regular earnings</td><td>{{.RegularEarnings.Current}}</td><td>{{.RegularEarnings.YTD}}</td></tr>
+          <tr><td>Tips</td><td>{{.Tips.Current}}</td><td>{{.Tips.YTD}}</td></tr>
+          <tr><td>Basic rate</td><td colspan="2">{{.BasicRate}} {{.BasicRateUnit}}</td></tr>
+        </table>
+      </div>
+      <div class="blk">
+        <h3>== DEDUCTIONS ==</h3>
+        <table>
+          <tr><td>EI</td><td>{{.EI.Current}}</td><td>{{.EI.YTD}}</td></tr>
+          <tr><td>Canada Pension Plan</td><td>{{.CPP.Current}}</td><td>{{.CPP.YTD}}</td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="blk">
+        <h3>== SUMMARY ==</h3>
+        <table>
+          <tr class="sum"><td>Total taxable gross</td><td>{{.TotalTaxableGross.Current}}</td><td>{{.TotalTaxableGross.YTD}}</td></tr>
+          <tr class="sum"><td>Total deductions</td><td>{{.TotalDeductions.Current}}</td><td>{{.TotalDeductions.YTD}}</td></tr>
+          <tr class="sum"><td>Net pay</td><td>{{.NetPay.Current}}</td><td>{{.NetPay.YTD}}</td></tr>
+          <tr><td>Vacation balance</td><td>{{.VacationBalance.Current}}</td><td>{{.VacationBalance.YTD}}</td></tr>
+        </table>
+      </div>
+      <div style="font-size:9px;color:#555;margin-top:6px;">DESCRIPTION · CURRENT · YTD</div>
+    </div>
+  </div>
+
+  <div class="cheque">
+    <div style="text-align:center;font-size:10px;">{{.NetPayWords}}</div>
+    <div class="amt">{{.NetPayAmount}}</div>
+    <div style="text-align:center;font-weight:600;">{{.PayeeName}}</div>
+    <div class="addr">
+      {{range .AddressLines}}{{.}}<br />{{end}}
+    </div>
+  </div>
+  <p style="font-size:8px;color:#888;margin-top:12px;">— Payroll slip · print or Save as PDF from browser —</p>
+</body>
+</html>

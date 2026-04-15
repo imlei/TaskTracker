@@ -1,0 +1,72 @@
+/**
+ * PAYROLL WORKS — Dark theme tokens
+ * Reference: PayEvo-style IA — multi-company list, dashboard, run-payroll stepper, dark surfaces.
+ * Pair with Go core: TaxYear, RateBook, province, pay cycle P.
+ */
+
+:root {
+  /* Surfaces — avoid pure #000 for large areas (reduces eye strain) */
+  --bg-app: #0f1114;
+  --bg-surface: #161a20;
+  --bg-elevated: #1c2129;
+  --bg-header: linear-gradient(135deg, #152238 0%, #0d2847 45%, #122a4a 100%);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Text */
+  --text-primary: #e8eaed;
+  --text-secondary: #9aa0a6;
+  --text-muted: #6b7280;
+
+  /* Brand accent — blue tuned for dark bg (not neon; WCAG-friendly on buttons) */
+  --accent: #3b82f6;
+  --accent-dim: rgba(59, 130, 246, 0.18);
+  --accent-hover: #60a5fa;
+  --on-accent: #0b1220;
+
+  /* Semantic */
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+
+  /* Table */
+  --table-header-bg: #1e3a5f;
+  --table-row-hover: rgba(255, 255, 255, 0.04);
+  --table-stripe: rgba(255, 255, 255, 0.02);
+
+  /* Stepper */
+  --step-active-bg: #1e3a5f;
+  --step-inactive-bg: #252b35;
+  --step-text-inactive: #7c8490;
+
+  /* Radius & shadow */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --shadow-elev: 0 4px 24px rgba(0, 0, 0, 0.45);
+
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-app);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg-app);
+}
+
+a {
+  color: var(--accent-hover);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}

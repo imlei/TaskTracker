@@ -1,0 +1,26 @@
+# Example systemd unit for Debian 12.
+# Copy: sudo cp deploy/payroll-web.service.example /etc/systemd/system/payroll-web.service
+# Edit WorkingDirectory and User, then:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now payroll-web
+#
+# The process must run with WorkingDirectory set to the repo root so ./web is found,
+# or set Environment=PRWORKS_WEB=/opt/prworks/web
+
+[Unit]
+Description=prworks payroll-web (static UI + API)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/prworks
+ExecStart=/opt/prworks/bin/payroll-web
+# Listen only on localhost if using nginx reverse proxy:
+Environment=LISTEN_ADDR=127.0.0.1:8080
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

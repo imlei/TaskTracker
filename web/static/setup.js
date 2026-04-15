@@ -22,8 +22,28 @@
     const username = document.getElementById("setup-user").value.trim();
     const password = document.getElementById("setup-pass").value;
     const pass2 = document.getElementById("setup-pass2").value;
-    if (password.length < 6) {
-      errEl.textContent = "密码至少 6 位";
+    if (password.length < 8) {
+      errEl.textContent = "密码至少 8 位";
+      errEl.hidden = false;
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      errEl.textContent = "密码须包含至少一个大写字母";
+      errEl.hidden = false;
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      errEl.textContent = "密码须包含至少一个小写字母";
+      errEl.hidden = false;
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      errEl.textContent = "密码须包含至少一个数字";
+      errEl.hidden = false;
+      return;
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      errEl.textContent = "密码须包含至少一个特殊字符";
       errEl.hidden = false;
       return;
     }

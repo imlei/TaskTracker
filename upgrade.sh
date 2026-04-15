@@ -83,8 +83,11 @@ ensure_go() {
 
 build_if_needed() {
 	if [[ "${NO_BUILD:-}" != "1" ]]; then
+		# 构建到 .new 文件，避免源路径与安装路径相同时 install 报错
+		# （当脚本在 PREFIX 目录下运行时，ROOT == PREFIX）
+		rm -f "$ROOT/SimpleTask.new"
 		log "Building SimpleTask..."
-		go build -o SimpleTask . || die "编译失败"
+		go build -o SimpleTask.new . || die "编译失败"
 		log "SimpleTask binary generated successfully"
 		BUILD_SUCCESSFUL=true
 	fi
@@ -131,7 +134,8 @@ ensure_service_stopped() {
 upgrade_binary() {
 	log "Replacing SimpleTask binary..."
 	install -d -m 0755 "$PREFIX"
-	install -m 0755 "$ROOT/SimpleTask" "$PREFIX/SimpleTask"
+	install -m 0755 "$ROOT/SimpleTask.new" "$PREFIX/SimpleTask"
+	rm -f "$ROOT/SimpleTask.new"
 	
 	# 检查是否存在SimpleTask用户，不存在则创建
 	if ! id "SimpleTask" &>/dev/null; then
@@ -260,7 +264,7 @@ main() {
 	if [[ "$BUILD_SUCCESSFUL" != "true" ]]; then
 		die "编译未执行，无法升级"
 	fi
-	if [[ ! -f "$ROOT/SimpleTask" ]]; then
+	if [[ ! -f "$ROOT/SimpleTask.new" ]]; then
 		die "编译失败：未生成 SimpleTask 二进制"
 	fi
 

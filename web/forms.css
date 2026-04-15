@@ -1,0 +1,132 @@
+/* Forms & pay cycle panel */
+.form-card {
+  max-width: 560px;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.info-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 0.65rem;
+  border-radius: 50%;
+  background: var(--border-strong);
+  color: var(--text-muted);
+  cursor: help;
+  vertical-align: middle;
+}
+
+.field-input {
+  width: 100%;
+  max-width: 280px;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
+.field-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239aa0a6'%3E%3Cpath d='M3 4.5L6 8l3-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  padding-right: 2rem;
+}
+
+.form-row {
+  margin-bottom: 1.1rem;
+}
+
+.fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+}
+
+.fieldset legend {
+  margin-bottom: 0.5rem;
+}
+
+.radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-right: 1.25rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.radio-label input {
+  accent-color: var(--accent);
+}
+
+.cycle-box {
+  margin-top: 0.5rem;
+  padding: 1.1rem 1.15rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(30, 58, 95, 0.55) 0%, rgba(22, 26, 32, 0.9) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.cycle-box-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 1rem;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 560px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hint {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+code {
+  font-size: 0.8rem;
+  background: var(--bg-app);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  color: var(--accent-hover);
+}
