@@ -306,6 +306,12 @@
 
         tbody.innerHTML = entries.map(function(e, i) {
           var isSalaried  = e.hours === 0;
+          // For hourly entries, always recompute base gross from hours × rate
+          if (!isSalaried) {
+            var baseGross = Math.round(parseFloat(e.hours) * parseFloat(e.payRate) * 100) / 100;
+            entries[i].grossPay = baseGross;
+            e.grossPay = baseGross;
+          }
           var typeLabel   = isSalaried ? 'Salaried' : 'Hourly';
           var typeBadge   = isSalaried
             ? '<span class="badge badge-ghost badge-xs">Salary</span>'
@@ -357,15 +363,14 @@
               '<td>' + typeBadge + '</td>' +
               '<td class="text-right">' +
                 '<input class="input input-xs text-right w-20 font-mono" type="number" min="0" step="0.01"' +
-                '  data-idx="' + i + '" data-field="hours" value="' + (e.hours || 0) + '" />' +
+                '  data-idx="' + i + '" data-field="hours" value="' + parseFloat(e.hours || 0).toFixed(2) + '" />' +
               '</td>' +
               '<td class="text-right">' +
                 '<input class="input input-xs text-right w-24 font-mono" type="number" min="0" step="0.01"' +
-                '  data-idx="' + i + '" data-field="payRate" value="' + (e.payRate || 0) + '" />' +
+                '  data-idx="' + i + '" data-field="payRate" value="' + parseFloat(e.payRate || 0).toFixed(2) + '" />' +
               '</td>' +
               '<td class="text-right">' +
-                '<input class="input input-xs text-right w-24 font-mono font-semibold" type="number" min="0" step="0.01"' +
-                '  data-idx="' + i + '" data-field="grossPay" value="' + (e.grossPay || 0) + '" />' +
+                '<span id="gross-' + i + '" class="font-mono font-semibold text-sm">' + fmtAcct(e.grossPay || 0) + '</span>' +
               '</td>' +
               '<td class="text-center">' + earningsBtn + '</td>' +
               '<td class="text-center">' + statusBadge + '</td>' +
@@ -384,8 +389,8 @@
             if (field === 'hours' || field === 'payRate') {
               var newGross = Math.round(entries[idx].hours * entries[idx].payRate * 100) / 100;
               entries[idx].grossPay = newGross;
-              var gpInp = tbody.querySelector('[data-idx="' + idx + '"][data-field="grossPay"]');
-              if (gpInp) gpInp.value = newGross.toFixed(2);
+              var grossSpan = document.getElementById('gross-' + idx);
+              if (grossSpan) grossSpan.textContent = fmtAcct(newGross);
             }
             var row = document.getElementById('row-' + idx);
             if (row) row.classList.add('bg-warning/5');
@@ -720,6 +725,7 @@
       }
 
       // ── Formatters ────────────────────────────────────────────────────────
+      function fmtAcct(v) { return '$' + parseFloat(v||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
       function fmt2(v)  { return parseFloat(v).toFixed(2); }
       function fmt3(v)  { return parseFloat(v).toFixed(3); }
       function fmt5(v)  { return parseFloat(v).toFixed(5); }
