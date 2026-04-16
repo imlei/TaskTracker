@@ -63,6 +63,207 @@ type SurtaxThreshold struct {
 	Rate float64 // additional % applied to provincial tax
 }
 
+// Rates2026 returns the official 2026 parameters.
+// Source: T4127 Payroll Deductions Formulas (122nd edition, effective January 1, 2026).
+//
+// Key changes from 2025:
+//   - Federal bottom rate: 15% → 14% (affects K1 credit calculation)
+//   - Federal brackets indexed up; BPA raised to $16,452
+//   - CPP: YMPE $71,300 → $74,600; max EE $4,034.10 → $4,230.45
+//   - CPP2: YAMPE $81,200 → $85,000; max $396.00 → $416.00
+//   - EI: max insurable $65,700 → $68,900; max EE $1,077.48 → $1,123.07
+//   - EI rate QC: 1.31% → 1.30%
+//   - Provincial BPA and bracket thresholds indexed in most provinces
+func Rates2026() TaxYear {
+	return TaxYear{
+		Year: 2026,
+
+		// CPP — T4127 122nd ed. (2026)
+		CPPRate:               0.0595,
+		YMPE:                  74_600,
+		YBE:                   3_500,
+		CPPMaxEmployeeAnnual:  4_230.45,
+		CPP2Rate:              0.04,
+		YAMPE:                 85_000,
+		CPP2MaxEmployeeAnnual: (85_000 - 74_600) * 0.04, // $416.00
+
+		// QPP (Quebec) — rates unchanged; max derived from new YMPE/YAMPE
+		QPPRate:               0.0640,
+		QPP2Rate:              0.04,
+		QPPMaxEmployeeAnnual:  (74_600 - 3_500) * 0.0640, // $4,550.40
+		QPP2MaxEmployeeAnnual: (85_000 - 74_600) * 0.04,  // $416.00
+
+		// EI — T4127 122nd ed. (2026)
+		EIRate:                0.0164,
+		EIRateQC:              0.0130,
+		MaxInsurableEarnings:  68_900,
+		EIMaxEmployeeAnnual:   1_123.07,
+		EIMaxEmployeeAnnualQC: 895.70,
+		EIEmployerFactor:      1.4,
+
+		// Federal — T4127 122nd ed. (2026)
+		// Note: BPA is variable for high-income earners ($16,452 max → $14,538 min);
+		// we store the maximum here as a simplification (same approach as 2025).
+		FederalBPA:  16_452,
+		FederalRate: 0.14,
+		FederalBands: []TaxBand{
+			{Upper: 58_523, Rate: 0.14},
+			{Upper: 117_045, Rate: 0.205},
+			{Upper: 181_440, Rate: 0.26},
+			{Upper: 258_482, Rate: 0.29},
+			{Upper: 0, Rate: 0.33},
+		},
+
+		Provincial: map[string]ProvincialRates{
+			"BC": {
+				BPA:        13_216,
+				BottomRate: 0.0506,
+				Bands: []TaxBand{
+					{Upper: 47_937, Rate: 0.0506},
+					{Upper: 95_875, Rate: 0.0770},
+					{Upper: 110_076, Rate: 0.1050},
+					{Upper: 133_664, Rate: 0.1229},
+					{Upper: 181_232, Rate: 0.1470},
+					{Upper: 252_752, Rate: 0.1680},
+					{Upper: 0, Rate: 0.2050},
+				},
+			},
+			"ON": {
+				BPA:        12_989,
+				BottomRate: 0.0505,
+				Bands: []TaxBand{
+					{Upper: 53_359, Rate: 0.0505},
+					{Upper: 106_717, Rate: 0.0915},
+					{Upper: 150_000, Rate: 0.1116},
+					{Upper: 220_000, Rate: 0.1216},
+					{Upper: 0, Rate: 0.1316},
+				},
+				SurtaxThresholds: []SurtaxThreshold{
+					{Over: 5_818, Rate: 0.20},
+					{Over: 7_446, Rate: 0.36},
+				},
+			},
+			"AB": {
+				// Lowest bracket reduced to 8% (mid-2025 legislative change, in effect 2026).
+				BPA:        22_769,
+				BottomRate: 0.08,
+				Bands: []TaxBand{
+					{Upper: 148_269, Rate: 0.08},
+					{Upper: 177_922, Rate: 0.09},
+					{Upper: 237_230, Rate: 0.10},
+					{Upper: 355_845, Rate: 0.12},
+					{Upper: 0, Rate: 0.15},
+				},
+			},
+			"QC": {
+				BPA:        17_183,
+				BottomRate: 0.14,
+				Bands: []TaxBand{
+					{Upper: 53_255, Rate: 0.14},
+					{Upper: 106_495, Rate: 0.19},
+					{Upper: 129_590, Rate: 0.24},
+					{Upper: 0, Rate: 0.2575},
+				},
+			},
+			"MB": {
+				BPA:        15_780,
+				BottomRate: 0.108,
+				Bands: []TaxBand{
+					{Upper: 47_000, Rate: 0.108},
+					{Upper: 100_000, Rate: 0.1275},
+					{Upper: 0, Rate: 0.174},
+				},
+			},
+			"SK": {
+				BPA:        20_381,
+				BottomRate: 0.105,
+				Bands: []TaxBand{
+					{Upper: 49_720, Rate: 0.105},
+					{Upper: 142_058, Rate: 0.125},
+					{Upper: 0, Rate: 0.145},
+				},
+			},
+			"NB": {
+				BPA:        13_664,
+				BottomRate: 0.094,
+				Bands: []TaxBand{
+					{Upper: 49_958, Rate: 0.094},
+					{Upper: 99_916, Rate: 0.1482},
+					{Upper: 185_064, Rate: 0.1652},
+					{Upper: 0, Rate: 0.1784},
+				},
+			},
+			"NS": {
+				// BPA fixed at $11,932 (simplified formula removed for 2026).
+				BPA:        11_932,
+				BottomRate: 0.0879,
+				Bands: []TaxBand{
+					{Upper: 29_590, Rate: 0.0879},
+					{Upper: 59_180, Rate: 0.1495},
+					{Upper: 93_000, Rate: 0.1667},
+					{Upper: 150_000, Rate: 0.175},
+					{Upper: 0, Rate: 0.21},
+				},
+			},
+			"NL": {
+				BPA:        11_188,
+				BottomRate: 0.087,
+				Bands: []TaxBand{
+					{Upper: 43_198, Rate: 0.087},
+					{Upper: 86_395, Rate: 0.145},
+					{Upper: 154_244, Rate: 0.158},
+					{Upper: 215_943, Rate: 0.178},
+					{Upper: 275_870, Rate: 0.198},
+					{Upper: 0, Rate: 0.213},
+				},
+			},
+			"PE": {
+				// BPA raised significantly: $12,000 → $15,000.
+				BPA:        15_000,
+				BottomRate: 0.0965,
+				Bands: []TaxBand{
+					{Upper: 32_656, Rate: 0.0965},
+					{Upper: 64_313, Rate: 0.1363},
+					{Upper: 105_000, Rate: 0.1665},
+					{Upper: 140_000, Rate: 0.18},
+					{Upper: 0, Rate: 0.1875},
+				},
+			},
+			"NT": {
+				BPA:        18_198,
+				BottomRate: 0.059,
+				Bands: []TaxBand{
+					{Upper: 52_496, Rate: 0.059},
+					{Upper: 104_996, Rate: 0.086},
+					{Upper: 170_767, Rate: 0.122},
+					{Upper: 0, Rate: 0.1405},
+				},
+			},
+			"NU": {
+				BPA:        19_659,
+				BottomRate: 0.04,
+				Bands: []TaxBand{
+					{Upper: 55_277, Rate: 0.04},
+					{Upper: 110_556, Rate: 0.07},
+					{Upper: 179_683, Rate: 0.09},
+					{Upper: 0, Rate: 0.115},
+				},
+			},
+			"YT": {
+				// Yukon BPA mirrors federal BPA (T4127 122nd ed. 2026).
+				BPA:        16_452,
+				BottomRate: 0.064,
+				Bands: []TaxBand{
+					{Upper: 58_523, Rate: 0.064},
+					{Upper: 117_045, Rate: 0.09},
+					{Upper: 500_000, Rate: 0.109},
+					{Upper: 0, Rate: 0.128},
+				},
+			},
+		},
+	}
+}
+
 // Rates2025 returns the official 2025 parameters.
 // Source: T4001(E) Rev. 25, T4127 Payroll Deductions Formulas (113th edition, 2025).
 func Rates2025() TaxYear {

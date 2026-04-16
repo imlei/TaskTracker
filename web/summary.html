@@ -192,16 +192,14 @@
 
       function withC(href) { return companyId ? href + '?company=' + encodeURIComponent(companyId) : href; }
 
-      document.getElementById('nav-home').href       = companyId ? 'company.html?company=' + encodeURIComponent(companyId) : 'dashboard.html';
-      document.getElementById('nav-runSide').href    = withC('run-payroll.html');
-      document.getElementById('nav-run').href        = withC('run-payroll.html');
-      document.getElementById('nav-employees').href  = withC('employees.html');
-      document.getElementById('nav-reports').href    = withC('reports/payrun.html');
-      document.getElementById('nav-remittance').href = withC('reports/remittance.html');
-      document.getElementById('nav-dashboard').href  = withC('dashboard.html');
-      document.getElementById('btnNewRun').href      = withC('run-payroll.html');
-      document.getElementById('backBrand').href      = withC('run-payroll.html');
-      document.getElementById('btnPayslips').href    = withC('reports/cheques-payslips.html');
+      document.getElementById('nav-home').href      = companyId ? 'company.html?company=' + encodeURIComponent(companyId) : 'dashboard.html';
+      document.getElementById('nav-runSide').href   = withC('run-payroll.html');
+      document.getElementById('nav-run').href       = withC('run-payroll.html');
+      document.getElementById('nav-employees').href = withC('employees.html');
+      document.getElementById('nav-reports').href   = withC('reports/payrun.html');
+      document.getElementById('btnNewRun').href     = withC('run-payroll.html');
+      document.getElementById('backBrand').href     = withC('run-payroll.html');
+      document.getElementById('btnPayslips').href   = withC('reports/cheques-payslips.html');
 
       var periodInfo = null;
 
@@ -216,9 +214,12 @@
           fetch('/api/payroll/periods/' + encodeURIComponent(periodId), { credentials: 'same-origin' }).then(function(r){ return r.ok ? r.json() : null; }),
           fetch('/api/payroll/periods/' + encodeURIComponent(periodId) + '/entries', { credentials: 'same-origin' }).then(function(r){ return r.ok ? r.json() : []; })
         ]).then(function(results) {
-          periodInfo    = results[0];
-          var entries   = results[1] || [];
+          periodInfo  = results[0];
+          var entries = results[1] || [];
           renderPage(periodInfo, entries);
+        }).catch(function(err) {
+          document.getElementById('summaryTbody').innerHTML =
+            '<tr><td colspan="5" class="text-center py-6 text-error">Failed to load period data: ' + err.message + '</td></tr>';
         });
       }
 
@@ -231,7 +232,7 @@
         if (p) {
           if (p.payDate) document.getElementById('taxYear').textContent = p.payDate.slice(0, 4);
           document.getElementById('successSub').textContent = 'Pay date ' + (p.payDate || '—') + ' · ' + (p.payFrequency || '') + ' · Period finalized';
-          document.getElementById('detPeriod').textContent  = (p.startDate || '—') + ' → ' + (p.endDate || '—');
+          document.getElementById('detPeriod').textContent  = (p.periodStart || '—') + ' → ' + (p.periodEnd || '—');
           document.getElementById('detPayDate').textContent = p.payDate || '—';
           if (p.companyId) {
             fetch('/api/payroll/companies/' + encodeURIComponent(p.companyId), { credentials: 'same-origin' })

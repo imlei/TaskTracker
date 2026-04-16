@@ -1176,24 +1176,42 @@ func ensureEmployeeExtraColumns(db *sql.DB) error {
 
 	// ── Payroll Rate Settings ────────────────────────────────────────
 	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS payroll_rate_settings (
-		year          INTEGER PRIMARY KEY,
-		cpp_rate      REAL    NOT NULL DEFAULT 0.0595,
-		ympe          REAL    NOT NULL DEFAULT 71300,
-		ybe           REAL    NOT NULL DEFAULT 3500,
-		cpp_max_ee    REAL    NOT NULL DEFAULT 4034.10,
-		cpp2_rate     REAL    NOT NULL DEFAULT 0.04,
-		yampe         REAL    NOT NULL DEFAULT 81200,
-		cpp2_max_ee   REAL    NOT NULL DEFAULT 396.00,
-		ei_rate       REAL    NOT NULL DEFAULT 0.0164,
-		ei_rate_qc    REAL    NOT NULL DEFAULT 0.0131,
-		max_insurable REAL    NOT NULL DEFAULT 65700,
-		ei_max_ee     REAL    NOT NULL DEFAULT 1077.48,
-		ei_max_ee_qc  REAL    NOT NULL DEFAULT 860.67,
-		ei_er_factor  REAL    NOT NULL DEFAULT 1.4,
-		federal_bpa   REAL    NOT NULL DEFAULT 16129,
-		updated_at    TEXT    NOT NULL DEFAULT ''
+		year             INTEGER PRIMARY KEY,
+		cpp_rate         REAL    NOT NULL DEFAULT 0.0595,
+		ympe             REAL    NOT NULL DEFAULT 71300,
+		ybe              REAL    NOT NULL DEFAULT 3500,
+		cpp_max_ee       REAL    NOT NULL DEFAULT 4034.10,
+		cpp2_rate        REAL    NOT NULL DEFAULT 0.04,
+		yampe            REAL    NOT NULL DEFAULT 81200,
+		cpp2_max_ee      REAL    NOT NULL DEFAULT 396.00,
+		ei_rate          REAL    NOT NULL DEFAULT 0.0164,
+		ei_rate_qc       REAL    NOT NULL DEFAULT 0.0131,
+		max_insurable    REAL    NOT NULL DEFAULT 65700,
+		ei_max_ee        REAL    NOT NULL DEFAULT 1077.48,
+		ei_max_ee_qc     REAL    NOT NULL DEFAULT 860.67,
+		ei_er_factor     REAL    NOT NULL DEFAULT 1.4,
+		federal_bpa      REAL    NOT NULL DEFAULT 16129,
+		provincial_json  TEXT    NOT NULL DEFAULT '[]',
+		updated_at       TEXT    NOT NULL DEFAULT ''
 	)`); err != nil {
 		return err
+	}
+	// Add provincial_json column to existing tables
+	{
+		rows2, _ := db.Query(`PRAGMA table_info(payroll_rate_settings)`)
+		hasProv := false
+		if rows2 != nil {
+			for rows2.Next() {
+				var cid int; var name, ctype string; var notnull int; var dflt sql.NullString; var pk int
+				if rows2.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk) == nil && name == "provincial_json" {
+					hasProv = true
+				}
+			}
+			rows2.Close()
+		}
+		if !hasProv {
+			_, _ = db.Exec(`ALTER TABLE payroll_rate_settings ADD COLUMN provincial_json TEXT NOT NULL DEFAULT '[]'`)
+		}
 	}
 
 	// ── Payroll Plans ────────────────────────────────────────────────

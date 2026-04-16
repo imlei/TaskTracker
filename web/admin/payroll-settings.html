@@ -57,7 +57,7 @@
                 </div>
                 <div>
                   <p class="font-bold text-sm">RATE SETTING</p>
-                  <p class="text-xs text-base-content/50 mt-0.5">CPP / EI rates by tax year</p>
+                  <p class="text-xs text-base-content/50 mt-0.5">CPP / EI / Tax rates by year</p>
                 </div>
               </div>
             </button>
@@ -81,18 +81,20 @@
 
             <!-- ── RATE SETTING ── -->
             <div id="section-rates" class="card bg-base-100 shadow-sm p-6">
-              <div class="flex items-center justify-between mb-5">
+              <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
                 <div>
                   <h3 class="font-bold text-base">Rate Setting</h3>
-                  <p class="text-xs text-base-content/50 mt-0.5">CRA CPP / EI parameters per tax year</p>
+                  <p class="text-xs text-base-content/50 mt-0.5">CRA CPP / EI / Income Tax parameters per tax year</p>
                 </div>
                 <div class="flex items-center gap-2">
                   <label class="text-sm text-base-content/60">Tax Year</label>
                   <select id="rateYear" class="select select-bordered select-sm w-24">
-                    <option value="2025">2025</option>
-                    <option value="2026">2026</option>
-                    <option value="2027">2027</option>
+                    <!-- populated by JS -->
                   </select>
+                  <button id="btnAddYear" class="btn btn-outline btn-sm gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Add New
+                  </button>
                 </div>
               </div>
 
@@ -169,9 +171,9 @@
                 </div>
               </div>
 
-              <!-- Federal BPA -->
-              <div class="mb-6">
-                <p class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-3">Federal</p>
+              <!-- Federal -->
+              <div class="mb-5">
+                <p class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-3">Federal Income Tax</p>
                 <div class="grid grid-cols-2 gap-3">
                   <div class="form-control">
                     <label class="label py-1"><span class="label-text text-xs">Federal BPA ($)</span><span class="label-text-alt text-base-content/40 text-xs">Basic Personal Amount</span></label>
@@ -180,10 +182,17 @@
                 </div>
               </div>
 
+              <!-- Provincial Income Tax -->
+              <div class="mb-6">
+                <p class="text-xs font-semibold uppercase tracking-wider text-base-content/40 mb-3">Provincial Income Tax</p>
+                <div id="provincial-accordion" class="space-y-2">
+                  <!-- populated by JS -->
+                </div>
+              </div>
+
               <div class="flex items-center gap-3">
                 <button id="btnSaveRates" class="btn btn-primary btn-sm">Save Rates</button>
-                <button id="btnResetRates" class="btn btn-ghost btn-sm">Reset to 2025 Defaults</button>
-                <span id="ratesSavedMsg" class="text-xs text-success hidden">✓ Saved</span>
+                <span id="ratesSavedMsg" class="text-xs text-success hidden">&#10003; Saved</span>
               </div>
             </div>
 
@@ -239,6 +248,14 @@
                 Payroll Settings
               </a>
             </li>
+            <li>
+              <a href="/admin/global-settings.html" class="rounded-xl text-base-content/70 hover:bg-base-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/>
+                </svg>
+                Global Settings
+              </a>
+            </li>
           </ul>
           <div class="divider my-3 text-base-content/20"></div>
           <p class="px-3 mb-2 text-xs font-semibold uppercase tracking-widest text-base-content/35">Application</p>
@@ -263,6 +280,24 @@
       </aside>
     </div>
   </div>
+
+  <!-- Add New Year Modal -->
+  <dialog id="modal-add-year" class="modal">
+    <div class="modal-box max-w-sm">
+      <h3 class="font-bold text-lg mb-1">Add New Tax Year</h3>
+      <p class="text-sm text-base-content/60 mb-4">Current year's rates will be copied as a starting point.</p>
+      <div class="form-control">
+        <label class="label py-1"><span class="label-text text-sm">New Year</span></label>
+        <input type="number" id="new-year-input" min="2020" max="2100" step="1" class="input input-bordered input-sm font-mono w-full" placeholder="e.g. 2026" />
+      </div>
+      <div id="add-year-error" class="alert alert-error text-sm py-2 mt-3 hidden"></div>
+      <div class="modal-action">
+        <button id="btnConfirmAddYear" class="btn btn-primary btn-sm">Add Year</button>
+        <form method="dialog"><button class="btn btn-ghost btn-sm">Cancel</button></form>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+  </dialog>
 
   <!-- Edit Plan Modal -->
   <dialog id="modal-plan" class="modal">
@@ -309,8 +344,21 @@
   <script src="/admin/admin.js"></script>
   <script>
     var currentSection = 'rates';
-    var currentRates = null;
+    var currentRates = null;  // full rates object including provincial
     var plans = [];
+    var knownYears = [];      // years in DB
+
+    // Province display names
+    var PROV_NAMES = {
+      AB: 'Alberta', BC: 'British Columbia', MB: 'Manitoba',
+      NB: 'New Brunswick', NL: 'Newfoundland & Labrador', NS: 'Nova Scotia',
+      NT: 'Northwest Territories', NU: 'Nunavut', ON: 'Ontario',
+      PE: 'Prince Edward Island', QC: 'Quebec', SK: 'Saskatchewan', YT: 'Yukon'
+    };
+
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
 
     function showSection(s) {
       currentSection = s;
@@ -322,35 +370,247 @@
       document.getElementById('tab-plans').classList.toggle('border-transparent', s !== 'plans');
     }
 
-    // ── Rates ──────────────────────────────────────────────────────────────
+    // ── Year selector ──────────────────────────────────────────────────────────
+    function populateYearSelect(years, selectedYear) {
+      var sel = document.getElementById('rateYear');
+      sel.innerHTML = '';
+      years.forEach(function(y) {
+        var opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        if (y === selectedYear) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
+    function loadYears(thenSelectYear) {
+      fetch('/api/admin/payroll-settings/years', { credentials: 'same-origin' })
+        .then(function(r) { return r.ok ? r.json() : []; })
+        .then(function(list) {
+          list = list || [];
+          var curYear = new Date().getFullYear();
+          // Always include current year
+          if (list.indexOf(curYear) === -1) list.push(curYear);
+          list.sort(function(a,b){ return a-b; });
+          knownYears = list;
+          var sel = thenSelectYear || curYear;
+          populateYearSelect(list, sel);
+          loadRates(sel);
+        });
+    }
+
+    // ── Rates ──────────────────────────────────────────────────────────────────
     function loadRates(year) {
       fetch('/api/admin/payroll-settings/rates?year=' + year, { credentials: 'same-origin' })
         .then(function(r) { return r.ok ? r.json() : null; })
         .then(function(d) {
           if (!d) return;
           currentRates = d;
-          document.getElementById('r-cppRate').value     = d.cppRate;
-          document.getElementById('r-ympe').value        = d.ympe;
-          document.getElementById('r-ybe').value         = d.ybe;
-          document.getElementById('r-cppMaxEe').value    = d.cppMaxEe;
-          document.getElementById('r-cpp2Rate').value    = d.cpp2Rate;
-          document.getElementById('r-yampe').value       = d.yampe;
-          document.getElementById('r-cpp2MaxEe').value   = d.cpp2MaxEe;
-          document.getElementById('r-eiRate').value      = d.eiRate;
-          document.getElementById('r-eiRateQc').value    = d.eiRateQc;
+          document.getElementById('r-cppRate').value      = d.cppRate;
+          document.getElementById('r-ympe').value         = d.ympe;
+          document.getElementById('r-ybe').value          = d.ybe;
+          document.getElementById('r-cppMaxEe').value     = d.cppMaxEe;
+          document.getElementById('r-cpp2Rate').value     = d.cpp2Rate;
+          document.getElementById('r-yampe').value        = d.yampe;
+          document.getElementById('r-cpp2MaxEe').value    = d.cpp2MaxEe;
+          document.getElementById('r-eiRate').value       = d.eiRate;
+          document.getElementById('r-eiRateQc').value     = d.eiRateQc;
           document.getElementById('r-maxInsurable').value = d.maxInsurable;
-          document.getElementById('r-eiMaxEe').value     = d.eiMaxEe;
-          document.getElementById('r-eiMaxEeQc').value   = d.eiMaxEeQc;
-          document.getElementById('r-eiErFactor').value  = d.eiErFactor;
-          document.getElementById('r-federalBpa').value  = d.federalBpa;
+          document.getElementById('r-eiMaxEe').value      = d.eiMaxEe;
+          document.getElementById('r-eiMaxEeQc').value    = d.eiMaxEeQc;
+          document.getElementById('r-eiErFactor').value   = d.eiErFactor;
+          document.getElementById('r-federalBpa').value   = d.federalBpa;
+          renderProvincialAccordion(d.provincial || []);
         });
     }
 
     document.getElementById('rateYear').addEventListener('change', function() {
-      loadRates(this.value);
+      loadRates(parseInt(this.value, 10));
       document.getElementById('ratesSavedMsg').classList.add('hidden');
     });
 
+    // ── Provincial accordion ───────────────────────────────────────────────────
+    function renderProvincialAccordion(provincial) {
+      var container = document.getElementById('provincial-accordion');
+      container.innerHTML = '';
+      // Sort alphabetically
+      var sorted = (provincial || []).slice().sort(function(a,b) {
+        return (a.code||'').localeCompare(b.code||'');
+      });
+      sorted.forEach(function(prov, pi) {
+        var name = PROV_NAMES[prov.code] || prov.code;
+        var hasSurtax = prov.surtax && prov.surtax.length > 0;
+        var el = document.createElement('div');
+        el.className = 'collapse collapse-arrow border border-base-300 rounded-xl bg-base-50';
+        el.setAttribute('data-prov-code', prov.code);
+
+        var bandsRows = (prov.bands || []).map(function(b, bi) {
+          return bandRow(pi, bi, b.upper, b.rate);
+        }).join('');
+
+        var surtaxSection = '';
+        if (hasSurtax) {
+          var stRows = (prov.surtax || []).map(function(st, si) {
+            return surtaxRow(pi, si, st.over, st.rate);
+          }).join('');
+          surtaxSection = '<div class="mt-3">' +
+            '<p class="text-xs text-base-content/40 font-semibold uppercase mb-2">Surtax</p>' +
+            '<table class="w-full text-xs mb-1"><thead><tr>' +
+              '<th class="text-left font-medium text-base-content/50 pb-1 w-1/2">Over ($)</th>' +
+              '<th class="text-left font-medium text-base-content/50 pb-1 w-1/2">Rate</th>' +
+              '<th class="w-6"></th></tr></thead>' +
+              '<tbody id="surtax-body-' + pi + '">' + stRows + '</tbody></table>' +
+            '<button type="button" class="btn btn-xs btn-ghost text-base-content/50" onclick="addSurtaxRow(' + pi + ')">+ Add Surtax Row</button>' +
+          '</div>';
+        }
+
+        el.innerHTML =
+          '<input type="checkbox" class="collapse-checkbox" />' +
+          '<div class="collapse-title text-sm font-semibold flex items-center gap-2 py-3 min-h-0">' +
+            '<span class="badge badge-outline badge-sm font-mono">' + esc(prov.code) + '</span>' +
+            '<span>' + esc(name) + '</span>' +
+          '</div>' +
+          '<div class="collapse-content pb-4">' +
+            '<div class="grid grid-cols-2 gap-3 mb-4">' +
+              '<div class="form-control">' +
+                '<label class="label py-1"><span class="label-text text-xs">BPA ($)</span><span class="label-text-alt text-base-content/40 text-xs">Basic Personal Amount</span></label>' +
+                '<input type="number" step="1" class="input input-bordered input-xs font-mono" id="prov-bpa-' + pi + '" value="' + (prov.bpa||0) + '" />' +
+              '</div>' +
+              '<div class="form-control">' +
+                '<label class="label py-1"><span class="label-text text-xs">Bottom Rate</span><span class="label-text-alt text-base-content/40 text-xs">e.g. 0.0506</span></label>' +
+                '<input type="number" step="0.0001" class="input input-bordered input-xs font-mono" id="prov-bottomRate-' + pi + '" value="' + (prov.bottomRate||0) + '" />' +
+              '</div>' +
+            '</div>' +
+            '<p class="text-xs text-base-content/40 font-semibold uppercase mb-2">Tax Brackets</p>' +
+            '<table class="w-full text-xs mb-1">' +
+              '<thead><tr>' +
+                '<th class="text-left font-medium text-base-content/50 pb-1">Upper ($) <span class="font-normal text-base-content/30 normal-case">(0 = no limit)</span></th>' +
+                '<th class="text-left font-medium text-base-content/50 pb-1 w-28">Rate</th>' +
+                '<th class="w-6"></th>' +
+              '</tr></thead>' +
+              '<tbody id="bands-body-' + pi + '">' + bandsRows + '</tbody>' +
+            '</table>' +
+            '<button type="button" class="btn btn-xs btn-ghost text-base-content/50" onclick="addBandRow(' + pi + ')">+ Add Bracket</button>' +
+            surtaxSection +
+          '</div>';
+        container.appendChild(el);
+      });
+    }
+
+    function bandRow(pi, bi, upper, rate) {
+      return '<tr id="band-row-' + pi + '-' + bi + '">' +
+        '<td class="pr-2 pb-1"><input type="number" step="1" min="0" class="input input-bordered input-xs font-mono w-full" id="band-upper-' + pi + '-' + bi + '" value="' + (upper||0) + '" /></td>' +
+        '<td class="pr-2 pb-1 w-28"><input type="number" step="0.0001" min="0" max="1" class="input input-bordered input-xs font-mono w-full" id="band-rate-' + pi + '-' + bi + '" value="' + (rate||0) + '" /></td>' +
+        '<td class="pb-1"><button type="button" class="btn btn-xs btn-ghost text-error px-1" onclick="removeBandRow(' + pi + ',' + bi + ')" title="Remove">&#10005;</button></td>' +
+      '</tr>';
+    }
+
+    function surtaxRow(pi, si, over, rate) {
+      return '<tr id="surtax-row-' + pi + '-' + si + '">' +
+        '<td class="pr-2 pb-1"><input type="number" step="1" min="0" class="input input-bordered input-xs font-mono w-full" id="surtax-over-' + pi + '-' + si + '" value="' + (over||0) + '" /></td>' +
+        '<td class="pr-2 pb-1"><input type="number" step="0.0001" min="0" max="1" class="input input-bordered input-xs font-mono w-full" id="surtax-rate-' + pi + '-' + si + '" value="' + (rate||0) + '" /></td>' +
+        '<td class="pb-1"><button type="button" class="btn btn-xs btn-ghost text-error px-1" onclick="removeSurtaxRow(' + pi + ',' + si + ')" title="Remove">&#10005;</button></td>' +
+      '</tr>';
+    }
+
+    function addBandRow(pi) {
+      var tbody = document.getElementById('bands-body-' + pi);
+      var rows = tbody.querySelectorAll('tr');
+      var bi = rows.length;
+      tbody.insertAdjacentHTML('beforeend', bandRow(pi, bi, 0, 0));
+    }
+
+    function removeBandRow(pi, bi) {
+      var row = document.getElementById('band-row-' + pi + '-' + bi);
+      if (row) row.remove();
+      // Re-index remaining rows
+      reindexRows('band-row-' + pi + '-', 'bands-body-' + pi, pi, 'band');
+    }
+
+    function addSurtaxRow(pi) {
+      var tbody = document.getElementById('surtax-body-' + pi);
+      var rows = tbody.querySelectorAll('tr');
+      var si = rows.length;
+      tbody.insertAdjacentHTML('beforeend', surtaxRow(pi, si, 0, 0));
+    }
+
+    function removeSurtaxRow(pi, si) {
+      var row = document.getElementById('surtax-row-' + pi + '-' + si);
+      if (row) row.remove();
+      reindexRows('surtax-row-' + pi + '-', 'surtax-body-' + pi, pi, 'surtax');
+    }
+
+    function reindexRows(rowPrefix, tbodyId, pi, type) {
+      var tbody = document.getElementById(tbodyId);
+      if (!tbody) return;
+      var rows = tbody.querySelectorAll('tr');
+      rows.forEach(function(row, newIdx) {
+        // Update row id
+        row.id = (type === 'band' ? 'band-row-' : 'surtax-row-') + pi + '-' + newIdx;
+        // Update remove button onclick
+        var btn = row.querySelector('button');
+        if (btn) {
+          btn.setAttribute('onclick', (type === 'band' ? 'removeBandRow(' : 'removeSurtaxRow(') + pi + ',' + newIdx + ')');
+        }
+        // Update input ids
+        if (type === 'band') {
+          var uInput = row.querySelector('[id^="band-upper-"]');
+          var rInput = row.querySelector('[id^="band-rate-"]');
+          if (uInput) uInput.id = 'band-upper-' + pi + '-' + newIdx;
+          if (rInput) rInput.id = 'band-rate-' + pi + '-' + newIdx;
+        } else {
+          var oInput = row.querySelector('[id^="surtax-over-"]');
+          var rInput = row.querySelector('[id^="surtax-rate-"]');
+          if (oInput) oInput.id = 'surtax-over-' + pi + '-' + newIdx;
+          if (rInput) rInput.id = 'surtax-rate-' + pi + '-' + newIdx;
+        }
+      });
+    }
+
+    // Collect provincial data from the DOM
+    function collectProvincial() {
+      var container = document.getElementById('provincial-accordion');
+      var provDivs = container.querySelectorAll('[data-prov-code]');
+      var result = [];
+      provDivs.forEach(function(el, pi) {
+        var code = el.getAttribute('data-prov-code');
+        var bpa = parseFloat(document.getElementById('prov-bpa-' + pi).value) || 0;
+        var bottomRate = parseFloat(document.getElementById('prov-bottomRate-' + pi).value) || 0;
+
+        var bands = [];
+        var bandsBody = document.getElementById('bands-body-' + pi);
+        if (bandsBody) {
+          var bandRows = bandsBody.querySelectorAll('tr');
+          bandRows.forEach(function(row, bi) {
+            var uInput = document.getElementById('band-upper-' + pi + '-' + bi);
+            var rInput = document.getElementById('band-rate-' + pi + '-' + bi);
+            if (uInput && rInput) {
+              bands.push({ upper: parseFloat(uInput.value) || 0, rate: parseFloat(rInput.value) || 0 });
+            }
+          });
+        }
+
+        var surtax = [];
+        var surtaxBody = document.getElementById('surtax-body-' + pi);
+        if (surtaxBody) {
+          var stRows = surtaxBody.querySelectorAll('tr');
+          stRows.forEach(function(row, si) {
+            var oInput = document.getElementById('surtax-over-' + pi + '-' + si);
+            var rInput = document.getElementById('surtax-rate-' + pi + '-' + si);
+            if (oInput && rInput) {
+              surtax.push({ over: parseFloat(oInput.value) || 0, rate: parseFloat(rInput.value) || 0 });
+            }
+          });
+        }
+
+        var entry = { code: code, bpa: bpa, bottomRate: bottomRate, bands: bands };
+        if (surtax.length > 0) entry.surtax = surtax;
+        result.push(entry);
+      });
+      return result;
+    }
+
+    // ── Save Rates ─────────────────────────────────────────────────────────────
     document.getElementById('btnSaveRates').addEventListener('click', function() {
       var year = parseInt(document.getElementById('rateYear').value, 10);
       var body = {
@@ -369,6 +629,7 @@
         eiMaxEeQc:    parseFloat(document.getElementById('r-eiMaxEeQc').value),
         eiErFactor:   parseFloat(document.getElementById('r-eiErFactor').value),
         federalBpa:   parseFloat(document.getElementById('r-federalBpa').value),
+        provincial:   collectProvincial(),
       };
       fetch('/api/admin/payroll-settings/rates', {
         method: 'PUT', credentials: 'same-origin',
@@ -376,18 +637,77 @@
         body: JSON.stringify(body)
       }).then(function(r) {
         if (!r.ok) return r.text().then(function(t) { throw new Error(t); });
-        document.getElementById('ratesSavedMsg').classList.remove('hidden');
-        setTimeout(function() { document.getElementById('ratesSavedMsg').classList.add('hidden'); }, 3000);
+        // Add year to selector if new
+        if (knownYears.indexOf(year) === -1) {
+          knownYears.push(year);
+          knownYears.sort(function(a,b){ return a-b; });
+          populateYearSelect(knownYears, year);
+        }
+        var msg = document.getElementById('ratesSavedMsg');
+        msg.classList.remove('hidden');
+        setTimeout(function() { msg.classList.add('hidden'); }, 3000);
       }).catch(function(err) { alert('Save failed: ' + err.message); });
     });
 
-    document.getElementById('btnResetRates').addEventListener('click', function() {
-      if (!confirm('Reset to 2025 CRA defaults?')) return;
-      // Reload without DB override by deleting — just re-fetch (defaults are returned if no row)
-      loadRates(document.getElementById('rateYear').value);
+    // ── Add New Year ───────────────────────────────────────────────────────────
+    document.getElementById('btnAddYear').addEventListener('click', function() {
+      var nextYear = (parseInt(document.getElementById('rateYear').value, 10) || new Date().getFullYear()) + 1;
+      document.getElementById('new-year-input').value = nextYear;
+      document.getElementById('add-year-error').classList.add('hidden');
+      document.getElementById('modal-add-year').showModal();
     });
 
-    // ── Plans ──────────────────────────────────────────────────────────────
+    document.getElementById('btnConfirmAddYear').addEventListener('click', function() {
+      var newYear = parseInt(document.getElementById('new-year-input').value, 10);
+      var errEl = document.getElementById('add-year-error');
+      if (!newYear || newYear < 2020 || newYear > 2100) {
+        errEl.textContent = 'Please enter a valid year (2020–2100).';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (knownYears.indexOf(newYear) !== -1) {
+        errEl.textContent = 'Year ' + newYear + ' already exists. Select it from the dropdown.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      // Copy current form values to new year and save
+      var body = {
+        year:         newYear,
+        cppRate:      parseFloat(document.getElementById('r-cppRate').value),
+        ympe:         parseFloat(document.getElementById('r-ympe').value),
+        ybe:          parseFloat(document.getElementById('r-ybe').value),
+        cppMaxEe:     parseFloat(document.getElementById('r-cppMaxEe').value),
+        cpp2Rate:     parseFloat(document.getElementById('r-cpp2Rate').value),
+        yampe:        parseFloat(document.getElementById('r-yampe').value),
+        cpp2MaxEe:    parseFloat(document.getElementById('r-cpp2MaxEe').value),
+        eiRate:       parseFloat(document.getElementById('r-eiRate').value),
+        eiRateQc:     parseFloat(document.getElementById('r-eiRateQc').value),
+        maxInsurable: parseFloat(document.getElementById('r-maxInsurable').value),
+        eiMaxEe:      parseFloat(document.getElementById('r-eiMaxEe').value),
+        eiMaxEeQc:    parseFloat(document.getElementById('r-eiMaxEeQc').value),
+        eiErFactor:   parseFloat(document.getElementById('r-eiErFactor').value),
+        federalBpa:   parseFloat(document.getElementById('r-federalBpa').value),
+        provincial:   collectProvincial(),
+      };
+      fetch('/api/admin/payroll-settings/rates', {
+        method: 'PUT', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      }).then(function(r) {
+        if (!r.ok) return r.text().then(function(t) { throw new Error(t); });
+        knownYears.push(newYear);
+        knownYears.sort(function(a,b){ return a-b; });
+        populateYearSelect(knownYears, newYear);
+        document.getElementById('modal-add-year').close();
+        loadRates(newYear);
+      }).catch(function(err) {
+        errEl.textContent = 'Save failed: ' + err.message;
+        errEl.classList.remove('hidden');
+      });
+    });
+
+    // ── Plans ──────────────────────────────────────────────────────────────────
     function loadPlans() {
       fetch('/api/admin/payroll-settings/plans', { credentials: 'same-origin' })
         .then(function(r) { return r.ok ? r.json() : []; })
@@ -401,8 +721,9 @@
         return;
       }
       grid.innerHTML = plans.map(function(p) {
-        var priceLabel = p.priceMonthly === 0 ? '<span class="text-success font-bold">Free</span>' :
-          '<span class="font-bold">$' + p.priceMonthly.toFixed(2) + '</span><span class="text-xs text-base-content/50">/month</span>';
+        var priceLabel = p.priceMonthly === 0
+          ? '<span class="text-success font-bold">Free</span>'
+          : '<span class="font-bold">$' + p.priceMonthly.toFixed(2) + '</span><span class="text-xs text-base-content/50">/month</span>';
         var activeBadge = p.isActive
           ? '<span class="badge badge-success badge-xs">Active</span>'
           : '<span class="badge badge-ghost badge-xs">Inactive</span>';
@@ -413,8 +734,8 @@
             '</div>' +
             '<p class="text-sm text-base-content/60 mb-2">' + esc(p.description) + '</p>' +
             '<div class="flex gap-4 text-xs text-base-content/50">' +
-              '<span>🏢 ' + p.maxCompanies + ' compan' + (p.maxCompanies === 1 ? 'y' : 'ies') + '</span>' +
-              '<span>👤 ' + p.maxEmployees + ' employee' + (p.maxEmployees === 1 ? '' : 's') + '</span>' +
+              '<span>' + p.maxCompanies + ' compan' + (p.maxCompanies === 1 ? 'y' : 'ies') + '</span>' +
+              '<span>' + p.maxEmployees + ' employee' + (p.maxEmployees === 1 ? '' : 's') + '</span>' +
             '</div>' +
           '</div>' +
           '<div class="flex flex-col items-end gap-2">' +
@@ -428,12 +749,12 @@
     function openPlanModal(id) {
       var p = plans.find(function(x) { return x.id === id; });
       if (!p) return;
-      document.getElementById('plan-id').value      = p.id;
-      document.getElementById('plan-name').value    = p.name;
-      document.getElementById('plan-maxCo').value   = p.maxCompanies;
-      document.getElementById('plan-maxEmp').value  = p.maxEmployees;
-      document.getElementById('plan-price').value   = p.priceMonthly;
-      document.getElementById('plan-desc').value    = p.description;
+      document.getElementById('plan-id').value       = p.id;
+      document.getElementById('plan-name').value     = p.name;
+      document.getElementById('plan-maxCo').value    = p.maxCompanies;
+      document.getElementById('plan-maxEmp').value   = p.maxEmployees;
+      document.getElementById('plan-price').value    = p.priceMonthly;
+      document.getElementById('plan-desc').value     = p.description;
       document.getElementById('plan-active').checked = p.isActive;
       document.getElementById('plan-error').classList.add('hidden');
       document.getElementById('modal-plan').showModal();
@@ -468,15 +789,8 @@
       });
     });
 
-    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-    // ── Init ───────────────────────────────────────────────────────────────
-    // Auth guard is handled by admin.js initDashboard; we piggyback by running both.
-    // Set year selector to current year
-    var curYear = new Date().getFullYear().toString();
-    document.getElementById('rateYear').value = curYear;
-
-    loadRates(curYear);
+    // ── Init ───────────────────────────────────────────────────────────────────
+    loadYears();
     loadPlans();
   </script>
 </body>

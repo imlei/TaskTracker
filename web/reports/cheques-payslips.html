@@ -120,19 +120,27 @@
           .then(function (r) { return r.ok ? r.json() : []; })
           .then(function (list) {
             var sel = document.getElementById('periodSel');
-            (list || []).forEach(function (p) {
-              if (p.status === 'open') return; // nothing to show for open periods
+            // Only show finalized periods — these are the completed pay runs
+            var finalized = (list || []).filter(function (p) { return p.status === 'finalized'; });
+            finalized.forEach(function (p) {
               var opt = document.createElement('option');
               opt.value = p.id;
-              opt.textContent = p.payDate + ' · ' + (p.periodStart || '') + ' – ' + (p.periodEnd || '') + ' [' + p.status + ']';
+              opt.textContent = p.payDate + ' · ' + (p.periodStart || '') + ' – ' + (p.periodEnd || '');
               sel.appendChild(opt);
             });
-            if (initPeriod) {
-              sel.value = initPeriod;
-              loadEntries(initPeriod);
+            // Auto-select: prefer initPeriod from URL, else most recent finalized
+            var target = initPeriod || (finalized.length ? finalized[0].id : '');
+            if (target) {
+              sel.value = target;
+              loadEntries(target);
             }
           });
       }
+
+      document.getElementById('periodSel').addEventListener('change', function () {
+        var pid = this.value;
+        if (pid) loadEntries(pid);
+      });
 
       document.getElementById('btnLoad').addEventListener('click', function () {
         var pid = document.getElementById('periodSel').value;

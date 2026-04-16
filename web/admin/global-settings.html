@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Global Settings — SimpleTask Admin</title>
+  <link href="/vendor/daisyui-themes.css" rel="stylesheet" />
+  <link href="/vendor/daisyui-components.css" rel="stylesheet" />
+  <script src="/vendor/tailwind-browser.js"></script>
+  <style type="text/tailwindcss">@import "tailwindcss";</style>
+</head>
+<body class="bg-base-200 min-h-screen">
+
+  <div class="drawer lg:drawer-open">
+    <input id="sidebar-toggle" type="checkbox" class="drawer-toggle" />
+
+    <!-- Main Content -->
+    <div class="drawer-content flex flex-col min-h-screen">
+
+      <!-- Top Navbar -->
+      <header class="sticky top-0 z-30 bg-base-100 border-b border-base-300 px-4 h-16 flex items-center gap-3">
+        <label for="sidebar-toggle" class="btn btn-ghost btn-sm btn-square lg:hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </label>
+        <div class="flex-1">
+          <h2 class="text-base font-semibold text-base-content">Global Settings</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="hidden sm:flex items-center gap-2">
+            <div class="avatar placeholder">
+              <div class="bg-primary text-primary-content rounded-full w-8">
+                <span id="nav-avatar" class="text-xs font-bold">AD</span>
+              </div>
+            </div>
+            <span id="nav-username" class="text-sm font-medium text-base-content/70"></span>
+          </div>
+          <button id="btn-logout" class="btn btn-ghost btn-sm">Logout</button>
+        </div>
+      </header>
+
+      <!-- Page Body -->
+      <main class="flex-1 p-4 md:p-6 w-full max-w-3xl mx-auto">
+
+        <div id="alertBox" class="hidden mb-4"></div>
+
+        <!-- Website Setting card -->
+        <div class="card bg-base-100 shadow-sm p-6 mb-5">
+          <div class="mb-5">
+            <h3 class="font-bold text-base">Website Setting</h3>
+            <p class="text-xs text-base-content/50 mt-0.5">Displayed on the login page and site footer</p>
+          </div>
+
+          <div class="space-y-4 max-w-md">
+            <div class="form-control">
+              <label class="label py-1">
+                <span class="label-text font-medium">Website Name</span>
+                <span class="label-text-alt text-base-content/40 text-xs">Shown on login page header</span>
+              </label>
+              <input type="text" id="inp-siteName" class="input input-bordered" placeholder="e.g. Taxbox Services Inc." />
+            </div>
+
+            <div class="form-control">
+              <label class="label py-1">
+                <span class="label-text font-medium">Base URL</span>
+                <span class="label-text-alt text-base-content/40 text-xs">Used in email links (no trailing slash)</span>
+              </label>
+              <input type="url" id="inp-baseUrl" class="input input-bordered" placeholder="e.g. https://app.example.com" />
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 mt-5">
+            <button id="btnSave" class="btn btn-primary btn-sm">Save</button>
+            <span id="savedMsg" class="text-xs text-success hidden">&#10003; Saved</span>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- ─── Sidebar ─────────────────────────────────────────────── -->
+    <div class="drawer-side z-40">
+      <label for="sidebar-toggle" class="drawer-overlay"></label>
+      <aside class="w-64 bg-base-100 border-r border-base-300 min-h-screen flex flex-col">
+        <div class="px-5 py-4 border-b border-base-300 shrink-0">
+          <a href="/admin/" class="flex items-center gap-2.5">
+            <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-content text-sm font-bold shrink-0">A</div>
+            <span class="font-bold text-base text-base-content">Admin Panel</span>
+          </a>
+        </div>
+        <nav class="flex-1 px-3 py-5 overflow-y-auto">
+          <p class="px-3 mb-2 text-xs font-semibold uppercase tracking-widest text-base-content/35">Management</p>
+          <ul class="menu menu-sm p-0 gap-0.5">
+            <li>
+              <a href="/admin/" class="rounded-xl text-base-content/70 hover:bg-base-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                Users
+              </a>
+            </li>
+            <li>
+              <a href="/admin/payroll-settings.html" class="rounded-xl text-base-content/70 hover:bg-base-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                Payroll Settings
+              </a>
+            </li>
+            <li>
+              <a href="/admin/global-settings.html" class="rounded-xl font-medium bg-primary/10 text-primary hover:bg-primary/15">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/>
+                </svg>
+                Global Settings
+              </a>
+            </li>
+          </ul>
+          <div class="divider my-3 text-base-content/20"></div>
+          <p class="px-3 mb-2 text-xs font-semibold uppercase tracking-widest text-base-content/35">Application</p>
+          <ul class="menu menu-sm p-0 gap-0.5">
+            <li><a href="/" class="rounded-xl text-base-content/70"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Main App</a></li>
+            <li><a href="/payroll/dashboard.html" class="rounded-xl text-base-content/70"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>Payroll</a></li>
+          </ul>
+        </nav>
+        <div class="px-4 py-4 border-t border-base-300 shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="avatar placeholder shrink-0">
+              <div class="bg-primary/15 text-primary rounded-full w-9">
+                <span id="sidebar-avatar" class="text-xs font-bold">AD</span>
+              </div>
+            </div>
+            <div class="min-w-0">
+              <p id="sidebar-username" class="text-sm font-semibold text-base-content truncate">Admin</p>
+              <p class="text-xs text-base-content/40">Administrator</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // ── Auth ──────────────────────────────────────────────────────
+    fetch('/api/me', { credentials: 'same-origin' })
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(u) {
+        if (!u) { location.href = '/admin/login.html'; return; }
+        var initials = (u.username || 'AD').slice(0, 2).toUpperCase();
+        document.getElementById('nav-avatar').textContent     = initials;
+        document.getElementById('sidebar-avatar').textContent = initials;
+        document.getElementById('nav-username').textContent   = u.username || '';
+        document.getElementById('sidebar-username').textContent = u.username || '';
+      });
+
+    document.getElementById('btn-logout').addEventListener('click', function() {
+      fetch('/api/logout', { method: 'POST', credentials: 'same-origin' })
+        .finally(function() { location.href = '/admin/login.html'; });
+    });
+
+    // ── Load settings ─────────────────────────────────────────────
+    fetch('/api/settings', { credentials: 'same-origin' })
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(s) {
+        if (!s) return;
+        document.getElementById('inp-siteName').value = s.companyName || '';
+        document.getElementById('inp-baseUrl').value  = s.baseUrl     || '';
+      });
+
+    // ── Save ──────────────────────────────────────────────────────
+    document.getElementById('btnSave').addEventListener('click', function() {
+      var btn = this;
+      btn.disabled = true;
+
+      // Read current settings first to avoid overwriting unrelated fields
+      fetch('/api/settings', { credentials: 'same-origin' })
+        .then(function(r) { return r.ok ? r.json() : {}; })
+        .then(function(cur) {
+          var body = Object.assign({}, cur, {
+            companyName: document.getElementById('inp-siteName').value.trim(),
+            baseUrl:     document.getElementById('inp-baseUrl').value.trim(),
+          });
+          return fetch('/api/settings', {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+        })
+        .then(function(r) {
+          if (!r.ok) return r.text().then(function(t) { throw new Error(t); });
+          var msg = document.getElementById('savedMsg');
+          msg.classList.remove('hidden');
+          setTimeout(function() { msg.classList.add('hidden'); }, 2500);
+        })
+        .catch(function(err) { showAlert(err.message, true); })
+        .finally(function() { btn.disabled = false; });
+    });
+
+    function showAlert(msg, isError) {
+      var el = document.getElementById('alertBox');
+      el.className = 'mb-4 alert ' + (isError ? 'alert-error' : 'alert-success');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      setTimeout(function() { el.classList.add('hidden'); }, 4000);
+    }
+  </script>
+</body>
+</html>

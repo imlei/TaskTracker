@@ -55,7 +55,9 @@ type Result struct {
 	Province     string
 }
 
-// Calculate computes all payroll deductions per CRA T4127 (2025) formulas.
+// Calculate computes all payroll deductions per CRA T4127 annualized method.
+// Supports 2025 (113th ed.) and 2026 (122nd ed.) rate tables.
+// Note: federal BPA uses the maximum value; high-income BPA phase-down is not applied.
 func Calculate(in Input, rates TaxYear) Result {
 	if in.PayPeriods <= 0 {
 		in.PayPeriods = 26
@@ -290,7 +292,8 @@ func grossTaxFromBands(income float64, bands []TaxBand) float64 {
 }
 
 // applyONSurtax applies Ontario surtax to an annual provincial tax amount.
-// Rules: 20% on provincial tax > $5,710; additional 36% on provincial tax > $7,307.
+// The two tiers are additive: >threshold1 adds 20%, >threshold2 adds another 36% (total 56% on top portion).
+// Threshold values come from provRates.SurtaxThresholds so they update automatically with the rates year.
 func applyONSurtax(annualProvTax float64, thresholds []SurtaxThreshold) float64 {
 	surtax := 0.0
 	for _, t := range thresholds {

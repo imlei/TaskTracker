@@ -17,6 +17,8 @@ func (s *Server) handleAdminPayrollSettings(w http.ResponseWriter, r *http.Reque
 	switch {
 	case rest == "rates" || rest == "rates/":
 		s.handleAdminRates(w, r)
+	case rest == "years" || rest == "years/":
+		s.handleAdminRateYears(w, r)
 	case rest == "plans" || rest == "plans/":
 		s.handleAdminPlans(w, r)
 	default:
@@ -62,6 +64,21 @@ func (s *Server) handleAdminRates(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
+}
+
+// ── Years ──────────────────────────────────────────────────────────────────────
+
+// GET /api/admin/payroll-settings/years — returns list of years stored in DB
+func (s *Server) handleAdminRateYears(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	years := s.Store.ListPayrollRateYears()
+	if years == nil {
+		years = []int{}
+	}
+	writeJSON(w, http.StatusOK, years)
 }
 
 // ── Plans ──────────────────────────────────────────────────────────────────────

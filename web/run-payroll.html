@@ -129,7 +129,17 @@
           <button type="button" class="btn btn-primary btn-sm" id="btnCreate">Create &amp; Continue →</button>
         </div>
 
-        <!-- Recent Pay Periods -->
+        <!-- Unfinished period banner -->
+        <div id="unfinishedBanner" class="hidden alert alert-warning shadow-sm mb-4 py-3 px-4 flex items-center gap-3">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-sm">Unfinished pay run</p>
+            <p class="text-xs" id="unfinishedDesc">A pay period has been started but not yet finalized.</p>
+          </div>
+          <a id="unfinishedLink" href="#" class="btn btn-sm btn-warning shrink-0">Continue →</a>
+        </div>
+
+        <!-- Recent Pay Periods (finalized only) -->
         <div class="card bg-base-100 shadow-sm p-5">
           <h2 class="font-semibold mb-4">Recent Pay Periods</h2>
           <div class="overflow-x-auto">
@@ -140,12 +150,11 @@
                   <th>Period</th>
                   <th>Frequency</th>
                   <th>Type</th>
-                  <th>Status</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="periodsTbody">
-                <tr><td colspan="6" class="text-center py-4 text-base-content/40">Loading…</td></tr>
+                <tr><td colspan="5" class="text-center py-4 text-base-content/40">Loading…</td></tr>
               </tbody>
             </table>
           </div>
@@ -215,30 +224,47 @@
 
       function renderPeriods(list) {
         var tbody = document.getElementById('periodsTbody');
-        if (!list || list.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-base-content/40">No periods yet.</td></tr>';
+
+        // Backend guarantees at most one unfinished period per company.
+        var unfinished = null;
+        var finalized = [];
+        (list || []).forEach(function (p) {
+          if (p.status !== 'finalized') {
+            unfinished = p;
+          } else {
+            finalized.push(p);
+          }
+        });
+
+        // Show/hide the unfinished banner
+        var banner = document.getElementById('unfinishedBanner');
+        if (unfinished) {
+          var reviewHref   = 'review.html?period='   + encodeURIComponent(unfinished.id) + (companyId ? '&company=' + encodeURIComponent(companyId) : '');
+          var salariesHref = 'salaries.html?period=' + encodeURIComponent(unfinished.id) + (companyId ? '&company=' + encodeURIComponent(companyId) : '');
+          var continueHref = unfinished.status === 'calculated' ? reviewHref : salariesHref;
+          document.getElementById('unfinishedDesc').textContent =
+            'Pay date ' + (unfinished.payDate || '—') +
+            '  (' + (unfinished.periodStart || '—') + ' – ' + (unfinished.periodEnd || '—') + ')' +
+            '  — status: ' + (unfinished.status || 'draft');
+          document.getElementById('unfinishedLink').href = continueHref;
+          banner.classList.remove('hidden');
+        } else {
+          banner.classList.add('hidden');
+        }
+
+        // Render only finalized periods in the table
+        if (finalized.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-base-content/40">No finalized periods yet.</td></tr>';
           return;
         }
-        tbody.innerHTML = list.map(function (p) {
-          var statusBadge = p.status === 'finalized'
-            ? '<span class="badge badge-success badge-xs">finalized</span>'
-            : p.status === 'calculated'
-            ? '<span class="badge badge-info badge-xs">calculated</span>'
-            : p.status === 'open'
-            ? '<span class="badge badge-warning badge-xs">open</span>'
-            : '<span class="badge badge-ghost badge-xs">' + (p.status || 'draft') + '</span>';
-          var salariesHref = 'salaries.html?period=' + encodeURIComponent(p.id) + (companyId ? '&company=' + encodeURIComponent(companyId) : '');
-          var reviewHref   = 'review.html?period='   + encodeURIComponent(p.id) + (companyId ? '&company=' + encodeURIComponent(companyId) : '');
-          var actionLink   = p.status === 'calculated' || p.status === 'finalized'
-            ? '<a href="' + reviewHref   + '" class="btn btn-xs btn-ghost">Review</a>'
-            : '<a href="' + salariesHref + '" class="btn btn-xs btn-primary">Open</a>';
+        tbody.innerHTML = finalized.map(function (p) {
+          var summaryHref = 'summary.html?period=' + encodeURIComponent(p.id) + (companyId ? '&company=' + encodeURIComponent(companyId) : '');
           return '<tr class="hover">' +
             '<td class="font-mono text-xs">' + (p.payDate || '—') + '</td>' +
             '<td class="font-mono text-xs text-base-content/60">' + (p.periodStart || '—') + ' – ' + (p.periodEnd || '—') + '</td>' +
             '<td class="text-sm">' + (p.payFrequency || p.paysPerYear + 'x/yr') + '</td>' +
             '<td class="text-sm">' + (p.payrollType || 'regular') + '</td>' +
-            '<td>' + statusBadge + '</td>' +
-            '<td class="text-right">' + actionLink + '</td>' +
+            '<td class="text-right"><a href="' + summaryHref + '" class="btn btn-xs btn-ghost">View</a></td>' +
             '</tr>';
         }).join('');
       }

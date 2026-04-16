@@ -64,6 +64,26 @@ func (s *Store) CreatePayrollPeriod(p models.PayrollPeriod) models.PayrollPeriod
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// Enforce at most one unfinished period per company:
+	// delete any existing draft/open/calculated periods (and their entries) before creating a new one.
+	rows, _ := s.db.Query(`
+		SELECT id FROM payroll_periods
+		WHERE company_id = ? AND status NOT IN ('finalized')`, p.CompanyID)
+	var staleIDs []string
+	if rows != nil {
+		for rows.Next() {
+			var id string
+			if rows.Scan(&id) == nil {
+				staleIDs = append(staleIDs, id)
+			}
+		}
+		rows.Close()
+	}
+	for _, id := range staleIDs {
+		_, _ = s.db.Exec(`DELETE FROM payroll_entries WHERE period_id = ?`, id)
+		_, _ = s.db.Exec(`DELETE FROM payroll_periods WHERE id = ?`, id)
+	}
+
 	p.ID = s.nextPeriodID()
 	now := time.Now().UTC().Format(time.RFC3339)
 	p.CreatedAt = now
