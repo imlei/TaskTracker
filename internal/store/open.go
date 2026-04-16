@@ -941,7 +941,41 @@ CREATE TABLE IF NOT EXISTS payroll_companies (
 	if err != nil {
 		return err
 	}
-	return migratePayrollCompaniesOwner(db)
+	if err := migratePayrollCompaniesOwner(db); err != nil {
+		return err
+	}
+	return migratePayrollCompaniesAddress(db)
+}
+
+// migratePayrollCompaniesAddress adds city / postal_code / country columns if missing.
+func migratePayrollCompaniesAddress(db *sql.DB) error {
+	rows, err := db.Query(`PRAGMA table_info(payroll_companies)`)
+	if err != nil {
+		return err
+	}
+	existing := map[string]bool{}
+	for rows.Next() {
+		var cid, notnull, pk int
+		var name, ctype string
+		var dflt sql.NullString
+		if rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk) == nil {
+			existing[name] = true
+		}
+	}
+	rows.Close()
+	want := []struct{ col, ddl string }{
+		{"city",        `ALTER TABLE payroll_companies ADD COLUMN city TEXT NOT NULL DEFAULT ''`},
+		{"postal_code", `ALTER TABLE payroll_companies ADD COLUMN postal_code TEXT NOT NULL DEFAULT ''`},
+		{"country",     `ALTER TABLE payroll_companies ADD COLUMN country TEXT NOT NULL DEFAULT 'Canada'`},
+	}
+	for _, w := range want {
+		if !existing[w.col] {
+			if _, err := db.Exec(w.ddl); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // migratePayrollCompaniesOwner adds owner_username column if missing,

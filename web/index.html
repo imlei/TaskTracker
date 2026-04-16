@@ -176,11 +176,22 @@
                      placeholder="(604) 555-0100" />
             </div>
 
-            <!-- Address (full width) -->
+            <!-- Address fields -->
             <div class="form-control col-span-2">
-              <label class="label py-0.5"><span class="label-text text-xs">Address</span></label>
-              <input id="f-address" type="text" class="input input-bordered input-sm"
-                     placeholder="123 Main St, Vancouver BC V6B 1A1" />
+              <label class="label py-0.5"><span class="label-text text-xs">Street Address</span></label>
+              <input id="f-address" type="text" class="input input-bordered input-sm" placeholder="123 Main St" />
+            </div>
+            <div class="form-control">
+              <label class="label py-0.5"><span class="label-text text-xs">City</span></label>
+              <input id="f-city" type="text" class="input input-bordered input-sm" placeholder="Vancouver" />
+            </div>
+            <div class="form-control">
+              <label class="label py-0.5"><span class="label-text text-xs">Postal Code</span></label>
+              <input id="f-postal" type="text" class="input input-bordered input-sm" placeholder="V6B 1A1" maxlength="10" />
+            </div>
+            <div class="form-control col-span-2">
+              <label class="label py-0.5"><span class="label-text text-xs">Country</span></label>
+              <input id="f-country" type="text" class="input input-bordered input-sm" placeholder="Canada" value="Canada" />
             </div>
 
             <!-- Pay Frequency -->
@@ -374,7 +385,10 @@
         document.getElementById('f-email').value        = company ? (company.email || '') : '';
         document.getElementById('f-phone').value        = company ? (company.phone || '') : '';
         document.getElementById('f-address').value      = company ? (company.address || '') : '';
+        document.getElementById('f-city').value         = company ? (company.city || '') : '';
         document.getElementById('f-province').value     = company ? (company.province || '') : '';
+        document.getElementById('f-postal').value       = company ? (company.postalCode || '') : '';
+        document.getElementById('f-country').value      = company ? (company.country || 'Canada') : 'Canada';
         document.getElementById('f-freq').value         = company ? (company.payFrequency || 'biweekly') : 'biweekly';
         document.getElementById('f-status').value       = company ? (company.status || 'active') : 'active';
         companyModal.showModal();
@@ -398,7 +412,10 @@
           email:          document.getElementById('f-email').value.trim(),
           phone:          document.getElementById('f-phone').value.trim(),
           address:        document.getElementById('f-address').value.trim(),
+          city:           document.getElementById('f-city').value.trim(),
           province:       document.getElementById('f-province').value,
+          postalCode:     document.getElementById('f-postal').value.trim(),
+          country:        document.getElementById('f-country').value.trim() || 'Canada',
           payFrequency:   document.getElementById('f-freq').value,
           status:         document.getElementById('f-status').value,
         };

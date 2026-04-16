@@ -143,10 +143,13 @@ type PayrollCompany struct {
 	BusinessNumber string `json:"businessNumber"` // CRA BN（9位数字，如 123456789）
 	Email          string `json:"email"`
 	Phone          string `json:"phone"`
-	Address        string `json:"address"`
-	Province       string `json:"province"`      // 主要营业省份，如 BC / ON / AB
-	PayFrequency   string `json:"payFrequency"`  // biweekly | semimonthly | monthly | weekly
-	Status         string `json:"status"`        // active | inactive
+	Address        string `json:"address"`        // 街道地址
+	City           string `json:"city"`
+	Province       string `json:"province"`       // 主要营业省份，如 BC / ON / AB
+	PostalCode     string `json:"postalCode"`
+	Country        string `json:"country"`        // 默认 Canada
+	PayFrequency   string `json:"payFrequency"`   // biweekly | semimonthly | monthly | weekly
+	Status         string `json:"status"`         // active | inactive
 	CreatedAt      string `json:"createdAt,omitempty"`
 	UpdatedAt      string `json:"updatedAt,omitempty"`
 	OwnerUsername  string `json:"-"` // 归属用户，不暴露给前端

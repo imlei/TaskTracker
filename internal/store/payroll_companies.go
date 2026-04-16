@@ -32,7 +32,7 @@ func (s *Store) ListPayrollCompanies(username, role, statusFilter string) []mode
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	q := `SELECT id, name, legal_name, business_number, email, phone, address, province, pay_frequency, status, created_at, updated_at
+	q := `SELECT id, name, legal_name, business_number, email, phone, address, city, province, postal_code, country, pay_frequency, status, created_at, updated_at
 	      FROM payroll_companies WHERE 1=1`
 	args := []any{}
 	if role != "admin" {
@@ -55,7 +55,7 @@ func (s *Store) ListPayrollCompanies(username, role, statusFilter string) []mode
 	for rows.Next() {
 		var c models.PayrollCompany
 		if err := rows.Scan(&c.ID, &c.Name, &c.LegalName, &c.BusinessNumber,
-			&c.Email, &c.Phone, &c.Address, &c.Province,
+			&c.Email, &c.Phone, &c.Address, &c.City, &c.Province, &c.PostalCode, &c.Country,
 			&c.PayFrequency, &c.Status, &c.CreatedAt, &c.UpdatedAt); err != nil {
 			continue
 		}
@@ -74,10 +74,10 @@ func (s *Store) GetPayrollCompany(id string) (models.PayrollCompany, error) {
 
 	var c models.PayrollCompany
 	err := s.db.QueryRow(
-		`SELECT id, name, legal_name, business_number, email, phone, address, province, pay_frequency, status, created_at, updated_at, owner_username
+		`SELECT id, name, legal_name, business_number, email, phone, address, city, province, postal_code, country, pay_frequency, status, created_at, updated_at, owner_username
 		 FROM payroll_companies WHERE id = ?`, id,
 	).Scan(&c.ID, &c.Name, &c.LegalName, &c.BusinessNumber,
-		&c.Email, &c.Phone, &c.Address, &c.Province,
+		&c.Email, &c.Phone, &c.Address, &c.City, &c.Province, &c.PostalCode, &c.Country,
 		&c.PayFrequency, &c.Status, &c.CreatedAt, &c.UpdatedAt, &c.OwnerUsername)
 	if err != nil {
 		return c, ErrNotFound
@@ -115,10 +115,10 @@ func (s *Store) CreatePayrollCompany(username string, c models.PayrollCompany) m
 	}
 
 	_, _ = s.db.Exec(
-		`INSERT INTO payroll_companies (id, name, legal_name, business_number, email, phone, address, province, pay_frequency, status, created_at, updated_at, owner_username)
-		 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+		`INSERT INTO payroll_companies (id, name, legal_name, business_number, email, phone, address, city, province, postal_code, country, pay_frequency, status, created_at, updated_at, owner_username)
+		 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 		c.ID, c.Name, c.LegalName, c.BusinessNumber,
-		c.Email, c.Phone, c.Address, c.Province,
+		c.Email, c.Phone, c.Address, c.City, c.Province, c.PostalCode, c.Country,
 		c.PayFrequency, c.Status, c.CreatedAt, c.UpdatedAt, c.OwnerUsername,
 	)
 	return c
@@ -152,10 +152,10 @@ func (s *Store) UpdatePayrollCompany(username, role, id string, patch models.Pay
 	}
 
 	_, err = s.db.Exec(
-		`UPDATE payroll_companies SET name=?, legal_name=?, business_number=?, email=?, phone=?, address=?, province=?, pay_frequency=?, status=?, updated_at=?
+		`UPDATE payroll_companies SET name=?, legal_name=?, business_number=?, email=?, phone=?, address=?, city=?, province=?, postal_code=?, country=?, pay_frequency=?, status=?, updated_at=?
 		 WHERE id=?`,
 		patch.Name, patch.LegalName, patch.BusinessNumber,
-		patch.Email, patch.Phone, patch.Address, patch.Province,
+		patch.Email, patch.Phone, patch.Address, patch.City, patch.Province, patch.PostalCode, patch.Country,
 		patch.PayFrequency, patch.Status, now, id,
 	)
 	if err != nil {
