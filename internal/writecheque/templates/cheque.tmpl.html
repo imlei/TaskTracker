@@ -24,22 +24,23 @@
     /* ── Sheet: US Letter 8.5 × 11 in ── */
     .check-sheet {
       width: 8.5in;
-      min-height: 11in;
+      height: 11in;
       background: #fff;
+      overflow: hidden;
     }
 
-    /* ── Cheque face: 8.5 × 3.5 in ── */
+    /* ── Cheque face: 8.5 × 3.67 in (CPA: 11in ÷ 3) ── */
     .check-face {
       position: relative;
       width: 8.5in;
-      height: 3.5in;
+      height: 3.67in;
     }
     .check-face .abs { position: absolute; }
 
-    /* Company name + address — top left */
+    /* Company name + address — top left, 0.35in from top, 0.5in from left */
     .abs-company {
-      top: 0.12in; left: 0.5in;
-      max-width: 3.8in;
+      top: 0.35in; left: 0.5in;
+      max-width: 3.6in;
     }
     .company-name {
       font-size: 10pt; font-weight: 700; line-height: 1.3;
@@ -49,25 +50,25 @@
       font-size: 7.5pt; line-height: 1.35; color: #000; margin-top: 1px;
     }
 
-    /* Check number — top right */
+    /* Check number — top right, 0.35in from top */
     .abs-check-no {
-      top: 0.12in; right: 0.35in;
+      top: 0.35in; right: 0.4in;
       text-align: right;
       font-size: 10pt; font-weight: 600;
     }
     .abs-check-no .chk-label { font-size: 8pt; }
 
-    /* Date — right side */
+    /* Date — right side, ~0.85in from top */
     .abs-date {
-      top: 1.2in; right: 0.35in;
+      top: 0.85in; right: 0.4in;
       text-align: right; font-size: 9.5pt;
     }
     .abs-date .chk-label { font-size: 7.5pt; text-transform: uppercase; letter-spacing: .04em; }
 
-    /* Pay to the order of */
+    /* Pay to the order of — 1.4in from top, 1.0in from left (CPA standard) */
     .abs-payee {
-      top: 1.65in; left: 0.5in;
-      width: 6.2in;
+      top: 1.4in; left: 1.0in;
+      width: 5.7in;
     }
     .chk-label {
       font-size: 7.5pt; color: #000;
@@ -79,20 +80,20 @@
       padding: 0 2px 1px; word-break: break-word;
     }
 
-    /* Amount box — right of payee */
+    /* Amount box — 1.4in from top, right side (CPA: ~7.0in from left = 1.15in from right) */
     .abs-amount {
-      top: 1.65in; right: 0.35in;
-      width: 1.25in;
+      top: 1.4in; right: 0.35in;
+      width: 1.5in;
       border: 2px solid #000;
       padding: 2px 6px;
       font-size: 11pt; font-weight: 700;
       text-align: right; white-space: nowrap;
     }
 
-    /* Amount words */
+    /* Amount words — 1.85in from top, 0.5in from left (CPA: ~2.0in) */
     .abs-words {
-      top: 2.05in; left: 0.5in;
-      width: 7.65in;
+      top: 1.85in; left: 0.5in;
+      width: 7.6in;
       min-height: 0.35in;
       border: 1px solid #000;
       padding: 0.05in 0.1in;
@@ -100,9 +101,9 @@
       text-transform: uppercase; letter-spacing: .02em;
     }
 
-    /* Bank info — lower left (matches reference cheque layout) */
+    /* Bank info — lower left, 2.35in from top */
     .abs-bank {
-      top: 2.5in; left: 0.5in;
+      top: 2.35in; left: 0.5in;
       width: 3in;
     }
     .bank-name {
@@ -112,9 +113,9 @@
       font-size: 7pt; color: #000; line-height: 1.4; margin-top: 1px;
     }
 
-    /* Memo — same baseline as signature */
+    /* Memo — 2.85in from top */
     .abs-memo {
-      top: 2.55in; left: 3.7in;
+      top: 2.85in; left: 3.6in;
       width: 2.2in;
     }
     .abs-memo .chk-label { font-size: 7pt; }
@@ -123,9 +124,9 @@
       min-height: 1em; font-size: 9pt; padding: 0 2px;
     }
 
-    /* Signature — aligned with Memo */
+    /* Signature — 2.85in from top, aligned with memo */
     .abs-sig {
-      top: 2.55in; right: 0.35in;
+      top: 2.85in; right: 0.35in;
       width: 2.3in;
     }
     .sig-box {
@@ -137,11 +138,12 @@
       text-align: center; margin-top: 2px;
     }
 
-    /* MICR */
+    /* MICR band — CPA: baseline between 0.25in and 0.625in from bottom of cheque section */
     .abs-micr {
       position: absolute;
-      left: 0.25in; right: 0.25in; bottom: 0.2in;
-      height: 0.35in;
+      left: 0.25in; right: 0.25in;
+      bottom: 0.25in;
+      height: 0.4in;
       display: flex; align-items: flex-end; justify-content: center;
     }
     .micr-line {
@@ -157,37 +159,54 @@
       border-top: 2px dashed #999; margin: 0;
     }
 
-    /* Stubs */
+    /* ── Stubs: each 3.67in ── */
     .check-stub {
-      height: 3.75in;
-      padding: 0.2in 0.45in;
+      height: 3.67in;
+      padding: 0.2in 0.45in 0.15in;
+      display: flex; flex-direction: column;
     }
     .stub-head {
-      display: flex; justify-content: space-between;
-      font-size: 10pt; margin-bottom: 0.15in;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      font-size: 10pt; margin-bottom: 0.1in;
+      padding-bottom: 0.08in;
+      border-bottom: 1px solid #000;
     }
-    .stub-company { font-weight: 700; max-width: 70%; }
-    .stub-no { font-weight: 600; }
+    .stub-company { font-weight: 700; max-width: 60%; font-size: 9.5pt; }
+    .stub-no { font-weight: 600; font-size: 9.5pt; white-space: nowrap; }
     .stub-caption {
-      font-size: 8pt; color: #000;
-      text-transform: uppercase; margin-bottom: 4px;
+      font-size: 7.5pt; color: #555;
+      text-transform: uppercase; letter-spacing: .06em;
+      margin-bottom: 0.1in; font-weight: 600;
     }
-    .stub-body {
-      min-height: 2.4in;
-      border: 1px dashed #bbb; border-radius: 4px;
-      padding: 8px 10px;
-      font-size: 10pt; line-height: 1.4; white-space: pre-wrap;
+    /* Stub detail table */
+    .stub-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9pt;
+      margin-bottom: 0.1in;
     }
-    .stub-bank-info {
-      margin-top: 6px; font-size: 7.5pt; color: #555; line-height: 1.4;
+    .stub-table td {
+      padding: 3px 6px; border: 1px solid #ccc;
+      vertical-align: top; line-height: 1.4;
     }
+    .stub-table .lbl {
+      width: 1.1in; font-size: 7.5pt; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .03em;
+      color: #444; background: #f8f8f8;
+      white-space: nowrap;
+    }
+    .stub-table .val { color: #000; }
+    .stub-blank-rows {
+      flex: 1;
+      border: 1px solid #ccc;
+      border-top: none;
+    }
+    .stub-blank-row {
+      height: 0.22in;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .stub-blank-row:last-child { border-bottom: none; }
 
-    @page { size: letter; margin: 0; }
-    @media print {
-      html, body { background: #fff; overflow: visible; }
-      .check-sheet { border: none; margin: 0; }
-      .check-face { page-break-inside: avoid; }
-    }
   </style>
 </head>
 <body>
@@ -248,7 +267,7 @@
     {{/* Signature */}}
     <div class="abs abs-sig">
       <div class="sig-box"></div>
-      <div class="sig-label">Signature</div>
+      <div class="sig-label">Authorized Signature</div>
     </div>
 
     {{/* MICR */}}
@@ -260,32 +279,52 @@
 
   <hr class="perf-line" />
 
-  {{/* ── Stub 1: Remittance ── */}}
+  {{/* ── Stub 1: Remittance (for Payee) ── */}}
   <section class="check-stub">
     <div class="stub-head">
       <span class="stub-company">{{.CompanyName}}</span>
-      <span class="stub-no">No. {{.CheckNo}}</span>
+      <span class="stub-no">Cheque No. {{.CheckNo}}</span>
     </div>
-    <div class="stub-caption">Remittance / Detail</div>
-    <div class="stub-body">{{if .Payee}}Payee: {{.Payee}}
-{{end}}{{if .Memo}}Memo:  {{.Memo}}
-{{end}}{{if .AmountBox}}Amount: {{.AmountBox}}{{end}}</div>
-    {{if .BankName}}<div class="stub-bank-info">{{.BankName}}{{if .BankAddress}} · {{.BankAddress}}{{end}}{{if .BankCity}}, {{.BankCity}}{{end}}{{if .BankProvince}} {{.BankProvince}}{{end}}{{if .BankPostalCode}} {{.BankPostalCode}}{{end}}</div>{{end}}
+    <div class="stub-caption">Remittance Advice — Detach and retain this portion</div>
+    <table class="stub-table">
+      <tr><td class="lbl">Date</td><td class="val">{{.Date}}</td><td class="lbl">Amount</td><td class="val">{{.AmountBox}}</td></tr>
+      <tr><td class="lbl">Pay To</td><td class="val" colspan="3">{{.Payee}}</td></tr>
+      {{if .Memo}}<tr><td class="lbl">Memo</td><td class="val" colspan="3">{{.Memo}}</td></tr>{{end}}
+      {{if .Currency}}<tr><td class="lbl">Currency</td><td class="val" colspan="3">{{.Currency}}</td></tr>{{end}}
+    </table>
+    <div class="stub-blank-rows">
+      <div class="stub-blank-row"></div>
+      <div class="stub-blank-row"></div>
+      <div class="stub-blank-row"></div>
+      <div class="stub-blank-row"></div>
+      <div class="stub-blank-row"></div>
+      <div class="stub-blank-row"></div>
+    </div>
   </section>
 
   <hr class="perf-line" />
 
-  {{/* ── Stub 2: Record Copy ── */}}
+  {{/* ── Stub 2: Record Copy (Company Accounting) ── */}}
   <section class="check-stub">
     <div class="stub-head">
       <span class="stub-company">{{.CompanyName}}</span>
-      <span class="stub-no">No. {{.CheckNo}}</span>
+      <span class="stub-no">Cheque No. {{.CheckNo}}</span>
     </div>
-    <div class="stub-caption">Record Copy</div>
-    <div class="stub-body">{{if .Payee}}Payee: {{.Payee}}
-{{end}}{{if .Memo}}Memo:  {{.Memo}}
-{{end}}{{if .AmountBox}}Amount: {{.AmountBox}}{{end}}
-Date:   {{.Date}}</div>
+    <div class="stub-caption">Record Copy — Company Accounting</div>
+    <table class="stub-table">
+      <tr><td class="lbl">Date</td><td class="val">{{.Date}}</td><td class="lbl">Amount</td><td class="val">{{.AmountBox}}</td></tr>
+      <tr><td class="lbl">Pay To</td><td class="val" colspan="3">{{.Payee}}</td></tr>
+      {{if .Memo}}<tr><td class="lbl">Memo</td><td class="val" colspan="3">{{.Memo}}</td></tr>{{end}}
+      {{if .Currency}}<tr><td class="lbl">Currency</td><td class="val" colspan="3">{{.Currency}}</td></tr>{{end}}
+    </table>
+    <div class="stub-blank-rows">
+      <div class="stub-blank-row"></div>
+      <div class="stub-blank-row"></div>
+      <div class="stub-blank-row"></div>
+      <div class="stub-blank-row"></div>
+      <div class="stub-blank-row"></div>
+      <div class="stub-blank-row"></div>
+    </div>
   </section>
 
 </div>
