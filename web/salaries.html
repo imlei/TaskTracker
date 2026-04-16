@@ -231,7 +231,7 @@
       var companyId = params.get('company') || '';
 
       function withC(href) { return companyId ? href + '?company=' + encodeURIComponent(companyId) : href; }
-      document.getElementById('nav-home').href      = withC('dashboard.html');
+      document.getElementById('nav-home').href      = companyId ? 'company.html?company=' + encodeURIComponent(companyId) : 'dashboard.html';
       document.getElementById('nav-runSide').href   = withC('run-payroll.html');
       document.getElementById('nav-run').href       = withC('run-payroll.html');
       document.getElementById('nav-employees').href = withC('employees.html');
