@@ -472,16 +472,23 @@ function setInvoiceDialogMode(isMulti) {
   if (multiEl) multiEl.hidden = !isMulti;
 }
 
+/** 从 customersCache 查找客户的 email 和 address，用于预填发票对话框 */
+function getCustomerDetails(customerId) {
+  const c = customersCache.find((x) => String(x.id) === String(customerId));
+  return c ? { email: c.email || "", address: c.address || "" } : { email: "", address: "" };
+}
+
 function openInvoiceDialog(task) {
   invoiceMultiTasks = null;
   setInvoiceDialogMode(false);
   const today = todayLocalISO();
+  const cust = getCustomerDetails(task.customerId);
   document.getElementById("inv-task-id").value = task.id;
   document.getElementById("inv-bill-name").value = task.customerName || "";
-  document.getElementById("inv-bill-addr").value = "";
-  document.getElementById("inv-bill-email").value = "";
+  document.getElementById("inv-bill-addr").value = cust.address;
+  document.getElementById("inv-bill-email").value = cust.email;
   document.getElementById("inv-ship-name").value = task.customerName || "";
-  document.getElementById("inv-ship-addr").value = "";
+  document.getElementById("inv-ship-addr").value = cust.address;
   document.getElementById("inv-date").value = today;
   document.getElementById("inv-terms").value = "Net 30";
   document.getElementById("inv-due-date").value = addDaysISO(today, 30);
@@ -505,12 +512,13 @@ function openInvoiceDialogMulti(tasks) {
   setInvoiceDialogMode(true);
   const first = tasks[0];
   const today = todayLocalISO();
+  const cust = getCustomerDetails(first.customerId);
   document.getElementById("inv-task-id").value = first.id;
-  document.getElementById("inv-bill-name").value = first.companyName || "";
-  document.getElementById("inv-bill-addr").value = "";
-  document.getElementById("inv-bill-email").value = "";
-  document.getElementById("inv-ship-name").value = first.companyName || "";
-  document.getElementById("inv-ship-addr").value = "";
+  document.getElementById("inv-bill-name").value = first.customerName || "";   // 用 Customer，非 Task Name
+  document.getElementById("inv-bill-addr").value = cust.address;
+  document.getElementById("inv-bill-email").value = cust.email;
+  document.getElementById("inv-ship-name").value = first.customerName || "";
+  document.getElementById("inv-ship-addr").value = cust.address;
   document.getElementById("inv-date").value = today;
   document.getElementById("inv-terms").value = "Net 30";
   document.getElementById("inv-due-date").value = addDaysISO(today, 30);
