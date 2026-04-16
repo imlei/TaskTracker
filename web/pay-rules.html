@@ -3,223 +3,230 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Pay Rules — Payroll Works</title>
-    <link rel="stylesheet" href="theme.css" />
-    <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="forms.css" />
-    <link rel="stylesheet" href="pages.css" />
-    <style>
-      /* Tab bar */
-      .tab-bar { display:flex; gap:0; border-bottom:2px solid var(--border,#e2e8f0); margin-bottom:1.25rem; }
-      .tab-btn {
-        padding:0.5rem 1.25rem; font-size:0.85rem; font-weight:500;
-        background:none; border:none; border-bottom:2px solid transparent;
-        margin-bottom:-2px; cursor:pointer; color:var(--muted,#64748b);
-        transition:color .15s, border-color .15s;
-      }
-      .tab-btn.active { color:var(--primary,#2563eb); border-bottom-color:var(--primary,#2563eb); }
-      .tab-panel { display:none; }
-      .tab-panel.active { display:block; }
-
-      /* Earnings codes table */
-      .ec-table { width:100%; border-collapse:collapse; font-size:0.83rem; }
-      .ec-table th { background:#f8fafc; padding:0.45rem 0.6rem; text-align:left;
-                     font-size:0.75rem; text-transform:uppercase; letter-spacing:.04em;
-                     color:#475569; border-bottom:1px solid #e2e8f0; }
-      .ec-table td { padding:0.45rem 0.6rem; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
-      .ec-table tr:last-child td { border-bottom:none; }
-      .ec-table tr:hover td { background:#f8fafc; }
-      .chk-cell { text-align:center; }
-      .chk-cell input[type=checkbox] { width:14px; height:14px; cursor:pointer; accent-color:#2563eb; }
-      .ec-tag { display:inline-block; padding:0.15rem 0.45rem; border-radius:3px;
-                font-size:0.7rem; font-weight:600; background:#e0e7ff; color:#3730a3; }
-      .ec-disabled { opacity:0.45; }
-      .ec-name-input { width:100%; min-width:120px; font-size:0.83rem; }
-      .ec-code-input { width:70px; font-size:0.83rem; text-transform:uppercase; }
-      .ec-t4-input  { width:50px; font-size:0.83rem; }
-
-      /* Add-row button */
-      .add-row-btn { margin-top:0.75rem; }
-
-      /* Info panels for inactive tabs */
-      .info-panel { background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;
-                    padding:1.25rem 1.5rem; color:#475569; font-size:0.875rem; }
-      .info-panel h4 { margin:0 0 0.5rem; color:#1e293b; }
-
-      /* Modal */
-      .modal-backdrop {
-        display:none; position:fixed; inset:0; background:rgba(0,0,0,.45);
-        z-index:200; align-items:center; justify-content:center;
-      }
-      .modal-backdrop.open { display:flex; }
-      .modal-box {
-        background:#fff; border-radius:8px; padding:1.5rem;
-        width:min(420px,92vw); box-shadow:0 8px 40px rgba(0,0,0,.18);
-      }
-      .modal-title { font-size:1rem; font-weight:700; margin:0 0 1rem; }
-      .modal-footer { display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem; }
-    </style>
+    <title>Pay Rules — SimpleTask Payroll</title>
+    <script>(function(){var t=localStorage.getItem('pw-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link href="/vendor/daisyui-themes.css" rel="stylesheet" />
+    <link href="/vendor/daisyui-components.css" rel="stylesheet" />
+    <script src="/vendor/tailwind-browser.js"></script>
+    <style type="text/tailwindcss">@import "tailwindcss";</style>
   </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <a href="run-payroll.html" class="muted" id="backBrand" style="margin-right:.5rem">←</a>
-          <span>SimpleTask - Payroll</span>
-          <span class="muted">Payroll</span>
-          <span class="brand-flag" aria-hidden="true">🇨🇦</span>
-          <span class="tax-year"><span id="taxYear">2025</span></span>
-        </div>
-        <nav class="topbar-nav">
-          <a href="run-payroll.html" class="topbar-nav-item" id="nav-run">Payroll</a>
-        </nav>
-        <div class="topbar-actions">
-          <span class="muted" style="font-size:0.8rem" id="companyName">—</span>
-          <div class="avatar">PW</div>
-        </div>
-      </header>
+  <body class="bg-base-200 min-h-screen">
 
-      <aside class="sidebar">
-        <a href="dashboard.html" class="nav-item" id="nav-home"><span>⌂</span> Home</a>
-        <a href="run-payroll.html" class="nav-item" id="nav-runSide"><span>▤</span> Run Payroll</a>
-        <a href="#" class="nav-item" onclick="return false"><span>☰</span> Actions</a>
-        <a href="reports/payrun.html" class="nav-item" id="nav-reports"><span>▦</span> Reports</a>
-        <a href="employees.html" class="nav-item" id="nav-employees"><span>👤</span> Employees</a>
-        <a href="pay-rules.html" class="nav-item active" id="nav-payrules"><span>⚙</span> Pay Rules</a>
-      </aside>
-
-      <main class="main">
-        <div class="hero-banner">
-          <span>Settings · Pay Rules</span>
-          <span class="muted" id="heroCo">—</span>
-        </div>
-
-        <div class="content">
-          <!-- Tab bar -->
-          <div class="tab-bar" role="tablist">
-            <button class="tab-btn active" data-tab="earnings" role="tab">Earnings</button>
-            <button class="tab-btn" data-tab="deductions" role="tab">Deductions</button>
-            <button class="tab-btn" data-tab="benefits" role="tab">Benefits</button>
-            <button class="tab-btn" data-tab="vacation" role="tab">Vacation</button>
-          </div>
-
-          <!-- ── Earnings tab ────────────────────────────────────────────── -->
-          <div class="tab-panel active" id="tab-earnings">
-            <div class="table-toolbar" style="margin-bottom:.75rem">
-              <h3 style="margin:0">Earnings Codes</h3>
-              <button type="button" class="btn btn-primary btn-sm" id="btnAddCode">+ Add earnings code</button>
-            </div>
-            <p class="muted" style="font-size:.82rem; margin-bottom:1rem">
-              Define how each earnings type is treated for CPP, EI, and income tax.
-              These codes appear in the <em>Additional Earnings</em> panel when entering salaries.
-            </p>
-            <div id="alertBox" style="display:none; margin-bottom:.75rem"></div>
-            <div class="panel" id="codesPanel">
-              <table class="ec-table" id="codesTable">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Code</th>
-                    <th class="chk-cell">Enabled</th>
-                    <th class="chk-cell">CPP</th>
-                    <th class="chk-cell">EI</th>
-                    <th class="chk-cell">Tax Fed</th>
-                    <th class="chk-cell">Tax Prov</th>
-                    <th class="chk-cell">Non Cash</th>
-                    <th class="chk-cell">Vacationable</th>
-                    <th>T4 Box</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="codesTbody">
-                  <tr><td colspan="11" class="muted" style="padding:1rem">Loading…</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <p style="font-size:.75rem; color:#94a3b8; margin-top:.5rem">
-              Changes are saved immediately on checkbox/field change.
-            </p>
-          </div>
-
-          <!-- ── Deductions tab ─────────────────────────────────────────── -->
-          <div class="tab-panel" id="tab-deductions">
-            <div class="info-panel">
-              <h4>Deductions</h4>
-              <p>Voluntary deductions (RRSP, union dues, garnishments, etc.) will be configurable here in a future release.</p>
-            </div>
-          </div>
-
-          <!-- ── Benefits tab ──────────────────────────────────────────── -->
-          <div class="tab-panel" id="tab-benefits">
-            <div class="info-panel">
-              <h4>Benefits</h4>
-              <p>Group insurance, health spending accounts, and taxable benefit codes will be configurable here in a future release.</p>
-            </div>
-          </div>
-
-          <!-- ── Vacation tab ──────────────────────────────────────────── -->
-          <div class="tab-panel" id="tab-vacation">
-            <div class="info-panel">
-              <h4>Vacation Policy</h4>
-              <p>Accrual method, payout rules, and carryover limits will be configurable here in a future release.</p>
-            </div>
-          </div>
-
-          <div class="flow-footer">
-            <a href="run-payroll.html" class="btn" id="backLink">← Payroll</a>
-          </div>
-        </div>
-      </main>
-    </div>
-
-    <!-- Add Earnings Code modal -->
-    <div class="modal-backdrop" id="addModal">
-      <div class="modal-box">
-        <div class="modal-title">Add Earnings Code</div>
-        <div class="form-row">
-          <label class="field-label" for="newName">Name <span style="color:#ef4444">*</span></label>
-          <input type="text" id="newName" class="field-input" placeholder="e.g. Tips, Overtime 1.5x" />
-        </div>
-        <div class="form-row">
-          <label class="field-label" for="newCode">Code</label>
-          <input type="text" id="newCode" class="field-input" placeholder="e.g. TIPS, OT15 (auto-derived if blank)" style="text-transform:uppercase" />
-        </div>
-        <div class="form-row">
-          <label class="field-label" for="newT4Box">T4 Box</label>
-          <input type="text" id="newT4Box" class="field-input" placeholder="e.g. 14, 40 (optional)" style="max-width:120px" />
-        </div>
-        <fieldset class="fieldset" style="display:grid; grid-template-columns:repeat(3,1fr); gap:.25rem .75rem; padding:.75rem">
-          <legend class="field-label">Flags</legend>
-          <label class="radio-label"><input type="checkbox" id="newCPP" checked /> CPP</label>
-          <label class="radio-label"><input type="checkbox" id="newEI" checked /> EI</label>
-          <label class="radio-label"><input type="checkbox" id="newTaxFed" checked /> Tax Fed</label>
-          <label class="radio-label"><input type="checkbox" id="newTaxProv" checked /> Tax Prov</label>
-          <label class="radio-label"><input type="checkbox" id="newNonCash" /> Non Cash</label>
-          <label class="radio-label"><input type="checkbox" id="newVacationable" checked /> Vacationable</label>
-        </fieldset>
-        <div id="modalErr" class="error-msg" style="display:none; margin-top:.5rem"></div>
-        <div class="modal-footer">
-          <button type="button" class="btn" id="btnModalCancel">Cancel</button>
-          <button type="button" class="btn btn-primary" id="btnModalSave">Add Code</button>
+    <!-- Navbar -->
+    <div class="navbar bg-base-100 border-b border-base-300 px-4 min-h-12 sticky top-0 z-30 shadow-sm">
+      <div class="navbar-start gap-2">
+        <span class="font-bold text-sm tracking-wide">SimpleTask - Payroll</span>
+        <span class="text-base">🇨🇦</span>
+      </div>
+      <div class="navbar-center">
+        <span class="text-sm font-medium text-base-content/60">Settings · Pay Rules</span>
+      </div>
+      <div class="navbar-end gap-3">
+        <button onclick="toggleTheme()" class="btn btn-ghost btn-sm btn-circle" title="Toggle dark mode">
+          <svg id="iconSun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 5a7 7 0 100 14A7 7 0 0012 5z"/></svg>
+          <svg id="iconMoon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+        <span class="text-xs text-base-content/50 hidden md:inline" id="companyName">—</span>
+        <div class="avatar placeholder">
+          <div class="bg-primary text-primary-content rounded-full w-8 text-xs"><span id="topbar-avatar">PW</span></div>
         </div>
       </div>
     </div>
 
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside class="w-44 bg-base-100 border-r border-base-300 min-h-[calc(100vh-3rem)] hidden md:flex flex-col pt-3 shrink-0">
+        <nav class="flex flex-col gap-0.5 px-2">
+          <a id="nav-home" href="dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/60 hover:bg-base-200 hover:text-base-content transition-colors">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Home
+          </a>
+          <a id="nav-run" href="run-payroll.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/60 hover:bg-base-200 hover:text-base-content transition-colors">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Run Payroll
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/60 hover:bg-base-200 hover:text-base-content transition-colors">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+            Actions
+          </a>
+          <a id="nav-reports" href="reports/payrun.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/60 hover:bg-base-200 hover:text-base-content transition-colors">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Reports
+          </a>
+          <a id="nav-employees" href="employees.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/60 hover:bg-base-200 hover:text-base-content transition-colors">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Employees
+          </a>
+          <a id="nav-payrules" href="pay-rules.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-primary/10 text-primary">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Pay Rules
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Main -->
+      <main class="flex-1 p-5 min-w-0">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h1 class="text-lg font-bold">Pay Rules</h1>
+            <p class="text-xs text-base-content/50 mt-0.5" id="heroCo">—</p>
+          </div>
+        </div>
+
+        <!-- Alert -->
+        <div id="alertBox" class="hidden mb-4"></div>
+
+        <!-- Tabs -->
+        <div class="tabs tabs-bordered mb-5">
+          <button class="tab tab-active font-medium" data-tab="earnings">Earnings</button>
+          <button class="tab font-medium" data-tab="deductions">Deductions</button>
+          <button class="tab font-medium" data-tab="benefits">Benefits</button>
+          <button class="tab font-medium" data-tab="vacation">Vacation</button>
+        </div>
+
+        <!-- ── Earnings tab ────────────────────────────────────────────────── -->
+        <div id="tab-earnings">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <h2 class="text-sm font-semibold">Earnings Codes</h2>
+              <p class="text-xs text-base-content/50 mt-0.5">Define how each earnings type is treated for CPP, EI, and income tax.</p>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm gap-1" id="btnAddCode">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+              Add earnings code
+            </button>
+          </div>
+
+          <div class="bg-base-100 rounded-xl shadow-sm overflow-x-auto border border-base-300">
+            <table class="table table-sm w-full">
+              <thead>
+                <tr class="bg-base-300/50 text-xs font-semibold text-base-content/60 uppercase tracking-wide border-b border-base-300">
+                  <th class="pl-4 py-3 min-w-36">Name</th>
+                  <th class="py-3 w-20">Code</th>
+                  <th class="py-3 text-center w-16">Enabled</th>
+                  <th class="py-3 text-center w-14">CPP</th>
+                  <th class="py-3 text-center w-14">EI</th>
+                  <th class="py-3 text-center w-20">Tax Fed</th>
+                  <th class="py-3 text-center w-20">Tax Prov</th>
+                  <th class="py-3 text-center w-20">Non Cash</th>
+                  <th class="py-3 text-center w-24">Vacationable</th>
+                  <th class="py-3 w-20">T4 Box</th>
+                  <th class="py-3 w-10"></th>
+                </tr>
+              </thead>
+              <tbody id="codesTbody">
+                <tr><td colspan="11" class="text-center py-8 text-base-content/40 text-sm">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="text-xs text-base-content/40 mt-2">Changes are saved immediately on checkbox / field change.</p>
+        </div>
+
+        <!-- ── Deductions tab ─────────────────────────────────────────────── -->
+        <div id="tab-deductions" class="hidden">
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body">
+              <h2 class="card-title text-base">Deductions</h2>
+              <p class="text-sm text-base-content/60">Voluntary deductions (RRSP, union dues, garnishments, etc.) will be configurable here in a future release.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Benefits tab ──────────────────────────────────────────────── -->
+        <div id="tab-benefits" class="hidden">
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body">
+              <h2 class="card-title text-base">Benefits</h2>
+              <p class="text-sm text-base-content/60">Group insurance, health spending accounts, and taxable benefit codes will be configurable here in a future release.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Vacation tab ──────────────────────────────────────────────── -->
+        <div id="tab-vacation" class="hidden">
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body">
+              <h2 class="card-title text-base">Vacation Policy</h2>
+              <p class="text-sm text-base-content/60">Accrual method, payout rules, and carryover limits will be configurable here in a future release.</p>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- Add Earnings Code Modal -->
+    <dialog id="addModal" class="modal modal-bottom sm:modal-middle">
+      <div class="modal-box max-w-sm">
+        <h3 class="font-bold text-base mb-4">Add Earnings Code</h3>
+        <div class="flex flex-col gap-3">
+          <div class="form-control">
+            <label class="label py-0.5"><span class="label-text text-xs font-semibold">Name <span class="text-error">*</span></span></label>
+            <input type="text" id="newName" class="input input-bordered input-sm" placeholder="e.g. Tips, Overtime 1.5x" />
+          </div>
+          <div class="form-control">
+            <label class="label py-0.5"><span class="label-text text-xs">Code <span class="text-base-content/40">(auto-derived if blank)</span></span></label>
+            <input type="text" id="newCode" class="input input-bordered input-sm uppercase" placeholder="e.g. TIPS, OT15" />
+          </div>
+          <div class="form-control">
+            <label class="label py-0.5"><span class="label-text text-xs">T4 Box <span class="text-base-content/40">(optional)</span></span></label>
+            <input type="text" id="newT4Box" class="input input-bordered input-sm w-32" placeholder="e.g. 14, 40" />
+          </div>
+          <div>
+            <div class="text-xs font-semibold text-base-content/60 mb-2">Flags</div>
+            <div class="grid grid-cols-3 gap-2">
+              <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" id="newCPP" class="checkbox checkbox-sm checkbox-primary" checked /> CPP</label>
+              <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" id="newEI" class="checkbox checkbox-sm checkbox-primary" checked /> EI</label>
+              <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" id="newTaxFed" class="checkbox checkbox-sm checkbox-primary" checked /> Tax Fed</label>
+              <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" id="newTaxProv" class="checkbox checkbox-sm checkbox-primary" checked /> Tax Prov</label>
+              <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" id="newNonCash" class="checkbox checkbox-sm checkbox-primary" /> Non Cash</label>
+              <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" id="newVacationable" class="checkbox checkbox-sm checkbox-primary" checked /> Vacationable</label>
+            </div>
+          </div>
+          <div id="modalErr" class="alert alert-error text-xs py-2 hidden"></div>
+        </div>
+        <div class="modal-action mt-4 gap-2">
+          <button type="button" class="btn btn-ghost btn-sm" id="btnModalCancel">Cancel</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnModalSave">Add Code</button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
     <script>
+      function toggleTheme() {
+        var html = document.documentElement;
+        var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('pw-theme', next);
+        document.getElementById('iconSun').classList.toggle('hidden', next !== 'dark');
+        document.getElementById('iconMoon').classList.toggle('hidden', next === 'dark');
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        document.getElementById('iconSun').classList.toggle('hidden', !isDark);
+        document.getElementById('iconMoon').classList.toggle('hidden', isDark);
+      });
+
       var params    = new URLSearchParams(location.search);
       var companyId = params.get('company') || '';
 
       function withC(href) { return companyId ? href + '?company=' + encodeURIComponent(companyId) : href; }
       document.getElementById('nav-home').href      = withC('dashboard.html');
       document.getElementById('nav-run').href       = withC('run-payroll.html');
-      document.getElementById('nav-runSide').href   = withC('run-payroll.html');
       document.getElementById('nav-reports').href   = withC('reports/payrun.html');
       document.getElementById('nav-employees').href = withC('employees.html');
       document.getElementById('nav-payrules').href  = withC('pay-rules.html');
-      document.getElementById('backBrand').href     = withC('run-payroll.html');
-      document.getElementById('backLink').href      = withC('run-payroll.html');
 
-      document.getElementById('taxYear').textContent = new Date().getFullYear();
+      fetch('/api/me', { credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(me) {
+          if (!me.authenticated) { window.location.href = '/'; return; }
+          var av = document.getElementById('topbar-avatar');
+          if (av && me.user) av.textContent = me.user.slice(0, 2).toUpperCase();
+        }).catch(function() {});
 
       if (companyId) {
         fetch('/api/payroll/companies/' + encodeURIComponent(companyId), { credentials: 'same-origin' })
@@ -234,21 +241,22 @@
         loadCodes();
       } else {
         document.getElementById('codesTbody').innerHTML =
-          '<tr><td colspan="11" class="muted" style="padding:1rem">No company selected.</td></tr>';
+          '<tr><td colspan="11" class="text-center py-8 text-base-content/40 text-sm">No company selected.</td></tr>';
       }
 
-      // ── Tab switching ───────────────────────────────────────────────────────
-      document.querySelectorAll('.tab-btn').forEach(function(btn) {
+      // ── Tab switching ─────────────────────────────────────────────────────
+      document.querySelectorAll('.tab[data-tab]').forEach(function(btn) {
         btn.addEventListener('click', function() {
-          document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
-          document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
-          btn.classList.add('active');
-          var panel = document.getElementById('tab-' + btn.dataset.tab);
-          if (panel) panel.classList.add('active');
+          document.querySelectorAll('.tab[data-tab]').forEach(function(b) { b.classList.remove('tab-active'); });
+          ['earnings','deductions','benefits','vacation'].forEach(function(t) {
+            document.getElementById('tab-' + t).classList.add('hidden');
+          });
+          btn.classList.add('tab-active');
+          document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
         });
       });
 
-      // ── Earnings codes list ─────────────────────────────────────────────────
+      // ── Earnings codes ────────────────────────────────────────────────────
       var codes = [];
 
       function loadCodes() {
@@ -260,36 +268,37 @@
       function renderCodes() {
         var tbody = document.getElementById('codesTbody');
         if (!codes.length) {
-          tbody.innerHTML = '<tr><td colspan="11" class="muted" style="padding:1rem">No earnings codes yet. Click <strong>+ Add earnings code</strong> to start.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="11" class="text-center py-10 text-base-content/40 text-sm">No earnings codes yet — click <strong>Add earnings code</strong> to start.</td></tr>';
           return;
         }
 
-        tbody.innerHTML = codes.map(function(c, idx) {
-          var rowClass = c.enabled ? '' : 'ec-disabled';
-          return '<tr class="' + rowClass + '" data-id="' + esc(c.id) + '">' +
-            '<td><input type="text" class="field-input ec-name-input" data-field="name" value="' + esc(c.name) + '" /></td>' +
-            '<td><input type="text" class="field-input ec-code-input" data-field="code" value="' + esc(c.code) + '" style="text-transform:uppercase" /></td>' +
-            '<td class="chk-cell"><input type="checkbox" data-field="enabled"' + (c.enabled ? ' checked' : '') + ' /></td>' +
-            '<td class="chk-cell"><input type="checkbox" data-field="cpp"' + (c.cpp ? ' checked' : '') + ' /></td>' +
-            '<td class="chk-cell"><input type="checkbox" data-field="ei"' + (c.ei ? ' checked' : '') + ' /></td>' +
-            '<td class="chk-cell"><input type="checkbox" data-field="taxFed"' + (c.taxFed ? ' checked' : '') + ' /></td>' +
-            '<td class="chk-cell"><input type="checkbox" data-field="taxProv"' + (c.taxProv ? ' checked' : '') + ' /></td>' +
-            '<td class="chk-cell"><input type="checkbox" data-field="nonCash"' + (c.nonCash ? ' checked' : '') + ' /></td>' +
-            '<td class="chk-cell"><input type="checkbox" data-field="vacationable"' + (c.vacationable ? ' checked' : '') + ' /></td>' +
-            '<td><input type="text" class="field-input ec-t4-input" data-field="t4Box" value="' + esc(c.t4Box || '') + '" /></td>' +
-            '<td><button type="button" class="btn btn-sm" style="color:#ef4444" data-action="delete" data-id="' + esc(c.id) + '">✕</button></td>' +
+        tbody.innerHTML = codes.map(function(c) {
+          var disabledClass = c.enabled ? '' : 'opacity-40';
+          return '<tr class="hover:bg-base-200/40 border-b border-base-200 last:border-0 ' + disabledClass + '" data-id="' + esc(c.id) + '">' +
+            '<td class="pl-4 py-2"><input type="text" class="input input-xs w-36" data-field="name" value="' + esc(c.name) + '" /></td>' +
+            '<td class="py-2"><input type="text" class="input input-xs w-16 uppercase font-mono" data-field="code" value="' + esc(c.code) + '" /></td>' +
+            '<td class="py-2 text-center"><input type="checkbox" class="checkbox checkbox-xs checkbox-primary" data-field="enabled"' + (c.enabled ? ' checked' : '') + ' /></td>' +
+            '<td class="py-2 text-center"><input type="checkbox" class="checkbox checkbox-xs checkbox-primary" data-field="cpp"' + (c.cpp ? ' checked' : '') + ' /></td>' +
+            '<td class="py-2 text-center"><input type="checkbox" class="checkbox checkbox-xs checkbox-primary" data-field="ei"' + (c.ei ? ' checked' : '') + ' /></td>' +
+            '<td class="py-2 text-center"><input type="checkbox" class="checkbox checkbox-xs checkbox-primary" data-field="taxFed"' + (c.taxFed ? ' checked' : '') + ' /></td>' +
+            '<td class="py-2 text-center"><input type="checkbox" class="checkbox checkbox-xs checkbox-primary" data-field="taxProv"' + (c.taxProv ? ' checked' : '') + ' /></td>' +
+            '<td class="py-2 text-center"><input type="checkbox" class="checkbox checkbox-xs checkbox-primary" data-field="nonCash"' + (c.nonCash ? ' checked' : '') + ' /></td>' +
+            '<td class="py-2 text-center"><input type="checkbox" class="checkbox checkbox-xs checkbox-primary" data-field="vacationable"' + (c.vacationable ? ' checked' : '') + ' /></td>' +
+            '<td class="py-2"><input type="text" class="input input-xs w-14 font-mono" data-field="t4Box" value="' + esc(c.t4Box || '') + '" /></td>' +
+            '<td class="py-2 text-center"><button type="button" class="btn btn-ghost btn-xs btn-square text-error" data-action="delete" data-id="' + esc(c.id) + '" title="Delete">' +
+              '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>' +
+            '</button></td>' +
             '</tr>';
         }).join('');
 
-        // Wire auto-save on change
+        // Auto-save on change
         tbody.querySelectorAll('input').forEach(function(inp) {
           inp.addEventListener('change', function() {
             var row = inp.closest('tr');
-            var id  = row.dataset.id;
-            saveCode(id, row);
+            saveCode(row.dataset.id, row);
           });
         });
-        // Wire delete
+        // Delete
         tbody.querySelectorAll('[data-action="delete"]').forEach(function(btn) {
           btn.addEventListener('click', function() {
             var id = btn.dataset.id;
@@ -308,38 +317,32 @@
         function val(f) {
           var el = row.querySelector('[data-field="' + f + '"]');
           if (!el) return '';
-          if (el.type === 'checkbox') return el.checked;
-          return el.value;
+          return el.type === 'checkbox' ? el.checked : el.value;
         }
         return {
           companyId: companyId,
-          name: val('name'),
-          code: val('code'),
-          enabled: val('enabled'),
-          cpp: val('cpp'),
-          ei: val('ei'),
-          taxFed: val('taxFed'),
-          taxProv: val('taxProv'),
-          nonCash: val('nonCash'),
-          vacationable: val('vacationable'),
+          name: val('name'), code: val('code'),
+          enabled: val('enabled'), cpp: val('cpp'), ei: val('ei'),
+          taxFed: val('taxFed'), taxProv: val('taxProv'),
+          nonCash: val('nonCash'), vacationable: val('vacationable'),
           t4Box: val('t4Box')
         };
       }
 
       function saveCode(id, row) {
-        var payload = rowToPayload(row);
         fetch('/api/payroll/earnings-codes/' + encodeURIComponent(id), {
-          method: 'PUT',
-          credentials: 'same-origin',
+          method: 'PUT', credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(rowToPayload(row))
         }).then(function(r) {
           if (r.ok) { showAlert('Saved.', false); loadCodes(); }
           else r.text().then(function(t) { showAlert('Save failed: ' + t, true); });
         });
       }
 
-      // ── Add Code modal ──────────────────────────────────────────────────────
+      // ── Add Code Modal ────────────────────────────────────────────────────
+      var addModal = document.getElementById('addModal');
+
       document.getElementById('btnAddCode').addEventListener('click', function() {
         document.getElementById('newName').value = '';
         document.getElementById('newCode').value = '';
@@ -350,24 +353,23 @@
         document.getElementById('newTaxProv').checked = true;
         document.getElementById('newNonCash').checked = false;
         document.getElementById('newVacationable').checked = true;
-        document.getElementById('modalErr').style.display = 'none';
-        document.getElementById('addModal').classList.add('open');
+        document.getElementById('modalErr').classList.add('hidden');
+        addModal.showModal();
         document.getElementById('newName').focus();
       });
 
-      document.getElementById('btnModalCancel').addEventListener('click', closeModal);
-      document.getElementById('addModal').addEventListener('click', function(e) {
-        if (e.target === document.getElementById('addModal')) closeModal();
-      });
-
-      function closeModal() { document.getElementById('addModal').classList.remove('open'); }
+      document.getElementById('btnModalCancel').addEventListener('click', function() { addModal.close(); });
 
       document.getElementById('btnModalSave').addEventListener('click', function() {
         var name = document.getElementById('newName').value.trim();
-        if (!name) { showModalErr('Name is required'); return; }
+        if (!name) {
+          var err = document.getElementById('modalErr');
+          err.textContent = 'Name is required';
+          err.classList.remove('hidden');
+          return;
+        }
         var payload = {
-          companyId: companyId,
-          name: name,
+          companyId: companyId, name: name,
           code: document.getElementById('newCode').value.trim().toUpperCase(),
           enabled: true,
           cpp: document.getElementById('newCPP').checked,
@@ -380,39 +382,37 @@
         };
         document.getElementById('btnModalSave').disabled = true;
         fetch('/api/payroll/earnings-codes', {
-          method: 'POST',
-          credentials: 'same-origin',
+          method: 'POST', credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         }).then(function(r) {
           if (!r.ok) return r.text().then(function(t) { throw new Error(t); });
           return r.json();
         }).then(function() {
-          closeModal();
+          addModal.close();
           loadCodes();
           showAlert('Earnings code added.', false);
         }).catch(function(err) {
-          showModalErr(err.message || 'Failed to add code');
+          var el = document.getElementById('modalErr');
+          el.textContent = err.message || 'Failed to add code';
+          el.classList.remove('hidden');
         }).finally(function() {
           document.getElementById('btnModalSave').disabled = false;
         });
       });
 
-      // ── Helpers ────────────────────────────────────────────────────────────
+      // ── Helpers ───────────────────────────────────────────────────────────
       function showAlert(msg, isErr) {
         var el = document.getElementById('alertBox');
+        el.className = isErr ? 'alert alert-error text-sm py-2 px-4 mb-4' : 'alert alert-success text-sm py-2 px-4 mb-4';
         el.textContent = msg;
-        el.className = isErr ? 'error-msg' : 'success-msg';
-        el.style.display = 'block';
-        setTimeout(function() { el.style.display = 'none'; }, 3500);
+        el.classList.remove('hidden');
+        clearTimeout(el._t);
+        el._t = setTimeout(function() { el.classList.add('hidden'); }, 3500);
       }
-      function showModalErr(msg) {
-        var el = document.getElementById('modalErr');
-        el.textContent = msg;
-        el.style.display = 'block';
-      }
+
       function esc(s) {
-        return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       }
     </script>
   </body>

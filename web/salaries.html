@@ -93,7 +93,7 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
               Save All
             </button>
-            <button type="button" class="btn btn-sm btn-primary" id="btnCalculate">
+            <button type="button" class="btn btn-sm btn-primary btn-disabled" id="btnCalculate" disabled>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
               Calculate
             </button>
@@ -134,7 +134,7 @@
         <!-- Footer nav -->
         <div class="flex justify-between mt-6">
           <a id="backLink" href="run-payroll.html" class="btn btn-ghost btn-sm">← Select Pay Cycle</a>
-          <button type="button" class="btn btn-primary btn-sm" id="btnCalcFooter">
+          <button type="button" class="btn btn-primary btn-sm btn-disabled" id="btnCalcFooter" disabled>
             Calculate →
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           </button>
@@ -368,11 +368,18 @@
 
         // Wire input changes
         tbody.querySelectorAll('input[data-field]').forEach(function(inp) {
-          inp.addEventListener('change', function() {
+          inp.addEventListener('input', function() {
             var idx   = parseInt(inp.dataset.idx, 10);
             var field = inp.dataset.field;
-            entries[idx][field]  = parseFloat(inp.value) || 0;
-            entries[idx]._dirty  = true;
+            entries[idx][field] = parseFloat(inp.value) || 0;
+            entries[idx]._dirty = true;
+            // Auto-recalculate grossPay when hours or rate changes
+            if (field === 'hours' || field === 'payRate') {
+              var newGross = Math.round(entries[idx].hours * entries[idx].payRate * 100) / 100;
+              entries[idx].grossPay = newGross;
+              var gpInp = tbody.querySelector('[data-idx="' + idx + '"][data-field="grossPay"]');
+              if (gpInp) gpInp.value = newGross.toFixed(2);
+            }
             var row = document.getElementById('row-' + idx);
             if (row) row.classList.add('bg-warning/5');
             updateTotal();
@@ -401,6 +408,11 @@
         var n = Object.keys(selectedRows).length;
         document.getElementById('btnApproveSelected').classList.toggle('hidden', n === 0);
         document.getElementById('selectedCount').textContent = n;
+        var noSel = n === 0;
+        document.getElementById('btnCalculate').disabled  = noSel;
+        document.getElementById('btnCalcFooter').disabled = noSel;
+        document.getElementById('btnCalculate').classList.toggle('btn-disabled', noSel);
+        document.getElementById('btnCalcFooter').classList.toggle('btn-disabled', noSel);
       }
 
       function updateTotal() {
