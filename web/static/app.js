@@ -480,12 +480,87 @@ function getCustomerDetails(customerId) {
     : { name: "", email: "", address: "" };
 }
 
+/**
+ * 根据 task.selectedPriceIds 从 pricesCache 推导该任务的货币。
+ * 若含多种货币，返回金额总量最大的那种；无法判断则返回 "CAD"。
+ */
+function getTaskCurrency(task) {
+  const ids = Array.isArray(task.selectedPriceIds) ? task.selectedPriceIds : [];
+  const pc = asArray(pricesCache);
+  const totals = {};
+  for (const id of ids) {
+    const p = pc.find((x) => x.id === id);
+    if (p && p.currency) {
+      totals[p.currency] = (totals[p.currency] || 0) + (p.amount != null ? Number(p.amount) : 0);
+    }
+  }
+  const keys = Object.keys(totals);
+  if (keys.length === 1) return keys[0];
+  if (keys.length > 1) return keys.reduce((a, b) => (totals[a] >= totals[b] ? a : b));
+  return "CAD";
+}
+
+/**
+ * 当发票对话框货币切换时，对 multi-body 里每行做汇率换算并更新 DOM。
+ * 已转换金额存在 row.dataset.convertedAmt，供 submit 时读取。
+ */
+async function applyInvoiceFxConversion(targetCur, date) {
+  const tbody = document.getElementById("inv-multi-body");
+  if (!tbody) return;
+  const rows = [...tbody.querySelectorAll("tr[data-orig-cur]")];
+  if (!rows.length) return;
+
+  // 收集需要转换的来源货币
+  const needed = new Set(rows.map((r) => r.dataset.origCur).filter((c) => c !== targetCur));
+
+  // 批量查汇率
+  const rates = {};
+  for (const fromCur of needed) {
+    try {
+      const d = await api(
+        `/api/exchange-rates/convert?from=${fromCur}&to=${targetCur}&amount=1&fixed=from&date=${encodeURIComponent(date)}`
+      );
+      rates[fromCur] = Number(d.amountTo) || 1;
+    } catch {
+      rates[fromCur] = 1;
+    }
+  }
+
+  // 更新每行
+  for (const row of rows) {
+    const origCur = row.dataset.origCur;
+    const origAmt = Number(row.dataset.origAmt) || 0;
+    const converted =
+      origCur === targetCur
+        ? origAmt
+        : Math.round(origAmt * (rates[origCur] || 1) * 100) / 100;
+    row.dataset.convertedAmt = String(converted);
+    const rateCell = row.querySelector(".inv-rate-cell");
+    const amtCell = row.querySelector(".inv-amt-cell");
+    if (rateCell) rateCell.textContent = fmtNum(converted);
+    if (amtCell) amtCell.textContent = fmtNum(converted);
+  }
+
+  // 汇率说明
+  const info = document.getElementById("inv-fx-rate-info");
+  if (info) {
+    if (needed.size > 0) {
+      info.textContent = [...needed]
+        .map((c) => `1 ${c} = ${fmtNum(rates[c] || 1)} ${targetCur}`)
+        .join("；");
+    } else {
+      info.textContent = "";
+    }
+  }
+}
+
 function openInvoiceDialog(task) {
   invoiceMultiTasks = null;
   setInvoiceDialogMode(false);
   const today = todayLocalISO();
   const cust = getCustomerDetails(task.customerId);
   const billName = cust.name || task.customerName || "";
+  const taskCur = getTaskCurrency(task);
   document.getElementById("inv-task-id").value = task.id;
   document.getElementById("inv-bill-name").value = billName;
   document.getElementById("inv-bill-addr").value = cust.address;
@@ -495,12 +570,14 @@ function openInvoiceDialog(task) {
   document.getElementById("inv-date").value = today;
   document.getElementById("inv-terms").value = "Net 30";
   document.getElementById("inv-due-date").value = addDaysISO(today, 30);
-  document.getElementById("inv-currency").value = "CAD";
+  document.getElementById("inv-currency").value = taskCur;
   document.getElementById("inv-tax-rate").value = 0;
   document.getElementById("inv-desc").value = "Consulting Services";
   document.getElementById("inv-detail").value = task.service1 || "";
   document.getElementById("inv-qty").value = 1;
   document.getElementById("inv-rate").value = Number(task.price1 || 0);
+  const info = document.getElementById("inv-fx-rate-info");
+  if (info) info.textContent = "";
   dlgInvoice.showModal();
 }
 
@@ -517,6 +594,23 @@ function openInvoiceDialogMulti(tasks) {
   const today = todayLocalISO();
   const cust = getCustomerDetails(first.customerId);
   const billName = cust.name || first.customerName || "";
+
+  // 每个 task 的原始货币和金额
+  const taskMeta = tasks.map((t) => ({
+    task: t,
+    currency: getTaskCurrency(t),
+    amount: Number(t.price1) || 0,
+  }));
+
+  // 汇总各币种总额，选主货币
+  const totByCur = {};
+  for (const m of taskMeta) {
+    totByCur[m.currency] = (totByCur[m.currency] || 0) + m.amount;
+  }
+  const uniqueCurs = Object.keys(totByCur);
+  const mixed = uniqueCurs.length > 1;
+  const defaultCur = uniqueCurs.reduce((a, b) => (totByCur[a] >= totByCur[b] ? a : b));
+
   document.getElementById("inv-task-id").value = first.id;
   document.getElementById("inv-bill-name").value = billName;
   document.getElementById("inv-bill-addr").value = cust.address;
@@ -526,27 +620,58 @@ function openInvoiceDialogMulti(tasks) {
   document.getElementById("inv-date").value = today;
   document.getElementById("inv-terms").value = "Net 30";
   document.getElementById("inv-due-date").value = addDaysISO(today, 30);
-  document.getElementById("inv-currency").value = "CAD";
+  document.getElementById("inv-currency").value = defaultCur;
   document.getElementById("inv-tax-rate").value = 0;
+
+  // 多币种提示横幅
+  const banner = document.getElementById("inv-fx-banner");
+  if (banner) {
+    if (mixed) {
+      const summary = uniqueCurs.map((c) => `${c} ${fmtNum(totByCur[c])}`).join(" + ");
+      banner.textContent = `⚠ 含多种货币：${summary}。切换发票货币后自动换算。`;
+      banner.hidden = false;
+    } else {
+      banner.hidden = true;
+    }
+  }
+  const info = document.getElementById("inv-fx-rate-info");
+  if (info) info.textContent = "";
+
+  // 构建 multi-body 表格行，携带原始货币/金额 data 属性
   const tbody = document.getElementById("inv-multi-body");
   if (tbody) {
     tbody.innerHTML = "";
-    for (const t of tasks) {
-      const rate = Number(t.price1) || 0;
+    for (const m of taskMeta) {
       const tr = document.createElement("tr");
+      tr.dataset.origCur = m.currency;
+      tr.dataset.origAmt = String(m.amount);
+      tr.dataset.convertedAmt = String(m.amount); // 初始值=原始值
       tr.innerHTML = `
-        <td>${escapeHtml(t.id)}</td>
-        <td>${escapeHtml(t.service1 || "")}</td>
+        <td>${escapeHtml(m.task.id)}</td>
+        <td>${escapeHtml(m.task.service1 || "")}</td>
         <td>1</td>
-        <td>${escapeHtml(String(rate))}</td>
-        <td>${escapeHtml(String(rate))}</td>`;
+        <td class="inv-rate-cell">${escapeHtml(fmtNum(m.amount))}</td>
+        <td class="inv-amt-cell">${escapeHtml(fmtNum(m.amount))}</td>`;
       tbody.appendChild(tr);
     }
   }
+
+  // 若混合货币，立即换算非主货币行
+  if (mixed) {
+    applyInvoiceFxConversion(defaultCur, today).catch((e) => console.error(e));
+  }
+
   dlgInvoice.showModal();
 }
 
 document.getElementById("invoice-cancel")?.addEventListener("click", () => dlgInvoice.close());
+
+// 切换发票货币时，对 multi-task 明细做实时汇率换算
+document.getElementById("inv-currency")?.addEventListener("change", function () {
+  if (!invoiceMultiTasks || invoiceMultiTasks.length <= 1) return;
+  const date = document.getElementById("inv-date")?.value || todayLocalISO();
+  applyInvoiceFxConversion(this.value, date).catch((e) => console.error(e));
+});
 
 formInvoice?.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -556,8 +681,13 @@ formInvoice?.addEventListener("submit", async (e) => {
   let taskIds;
   if (invoiceMultiTasks && invoiceMultiTasks.length > 1) {
     taskIds = invoiceMultiTasks.map((t) => t.id);
-    items = invoiceMultiTasks.map((t) => {
-      const rate = Number(t.price1) || 0;
+    // 读取 DOM 中已换算过的金额（applyInvoiceFxConversion 写入 dataset.convertedAmt）
+    const rows = [...document.querySelectorAll("#inv-multi-body tr[data-orig-cur]")];
+    items = invoiceMultiTasks.map((t, i) => {
+      const row = rows[i];
+      const rate = row
+        ? parseFloat(row.dataset.convertedAmt) || 0
+        : Number(t.price1) || 0;
       return {
         description: "Consulting Services",
         detail: (t.service1 || "").trim(),
@@ -1304,13 +1434,14 @@ document.getElementById("customer-edit-cancel")?.addEventListener("click", () =>
 document.getElementById("btn-invoices-back-payment")?.addEventListener("click", () => setInvoiceView("list"));
 document.getElementById("btn-invoices-back-new")?.addEventListener("click", () => setInvoiceView("list"));
 
-document.getElementById("btn-invoicing-go")?.addEventListener("click", () => {
+document.getElementById("btn-invoicing-go")?.addEventListener("click", async () => {
   const selected = [...document.querySelectorAll(".new-inv-cb:checked")]
     .map((x) => tasksCache.find((t) => t.id === x.dataset.taskId))
     .filter(Boolean);
   if (selected.length === 0) return;
   const custIds = new Set(selected.map((t) => (t.customerId || "").trim()));
   if (custIds.size !== 1 || [...custIds][0] === "") return;
+  await ensurePricesLoaded(); // 需要 pricesCache 来判断每个 task 的货币
   openInvoiceDialogMulti(selected);
 });
 

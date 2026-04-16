@@ -489,11 +489,12 @@
       <label>Due Date <input id="inv-due-date" type="date" /></label>
       <label>Currency
         <select id="inv-currency">
-          <option value="USD">USD</option>
           <option value="CAD">CAD</option>
+          <option value="USD">USD</option>
           <option value="CNY">CNY</option>
         </select>
       </label>
+      <p id="inv-fx-rate-info" class="hint" style="margin:2px 0 6px;color:#0891b2;min-height:1em;"></p>
       <label>Tax Rate(%) <input id="inv-tax-rate" type="number" step="0.01" min="0" value="0" /></label>
       <div id="inv-single-line-fields">
         <label>Description <input id="inv-desc" value="Consulting Services" /></label>
@@ -502,6 +503,7 @@
         <label>Rate <input id="inv-rate" type="number" step="0.01" min="0" value="0" /></label>
       </div>
       <div id="inv-multi-line-block" hidden>
+        <p id="inv-fx-banner" class="hint" hidden style="color:#b45309;background:#fef3c7;padding:6px 8px;border-radius:4px;margin-bottom:6px;"></p>
         <p class="hint">以下明细将合并到一张发票（每行对应一个任务）：</p>
         <div class="table-wrap inv-multi-table-wrap">
           <table class="data">
