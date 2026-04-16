@@ -206,6 +206,12 @@ func (s *Store) CalculatePeriod(periodID string, rates calculator.TaxYear) ([]mo
 
 	updated := make([]models.PayrollEntry, 0, len(entries))
 	for _, e := range entries {
+		// Only calculate entries that have been explicitly approved; skip drafts.
+		if e.Status != "approved" {
+			updated = append(updated, e)
+			continue
+		}
+
 		info := empCache[e.EmployeeID]
 
 		// Contractors: no CPP/EI/tax deductions
@@ -220,7 +226,7 @@ func (s *Store) CalculatePeriod(periodID string, rates calculator.TaxYear) ([]mo
 			e.CPPEmployer = 0
 			e.CPP2Employer = 0
 			e.EIEmployer = 0
-			e.Status = "draft"
+			e.Status = "calculated"
 		} else {
 			// Get YTD before this period
 			ytd := s.GetYTDBeforePeriod(e.EmployeeID, periodID, payYear)
@@ -292,7 +298,7 @@ func (s *Store) CalculatePeriod(periodID string, rates calculator.TaxYear) ([]mo
 			e.CPPEmployer = result.CPPEmployer
 			e.CPP2Employer = result.CPP2Employer
 			e.EIEmployer = result.EIEmployer
-			e.Status = "draft"
+			e.Status = "calculated"
 
 			// Store calc snapshot
 			snap := map[string]any{

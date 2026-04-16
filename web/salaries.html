@@ -244,6 +244,13 @@
       var entries       = [];   // loaded payroll entries
       var selectedRows  = {};   // { idx: true }
 
+      // Load earnings codes immediately if companyId is in URL (don't wait for period chain)
+      if (companyId) {
+        fetch('/api/payroll/earnings-codes?company_id=' + encodeURIComponent(companyId), { credentials: 'same-origin' })
+          .then(function(r) { return r.ok ? r.json() : []; })
+          .then(function(list) { earningsCodes = (list || []).filter(function(c) { return c.enabled; }); });
+      }
+
       if (!periodId) {
         document.getElementById('entriesTbody').innerHTML =
           '<tr><td colspan="9" class="text-center py-6 text-error">No period selected.</td></tr>';
@@ -445,7 +452,7 @@
       // ── Save & Calculate ──────────────────────────────────────────────────
       function saveAll(cb) {
         var payload = entries.map(function(e) {
-          return { employeeId: e.employeeId, hours: e.hours, payRate: e.payRate, grossPay: e.grossPay };
+          return { employeeId: e.employeeId, hours: e.hours, payRate: e.payRate, grossPay: e.grossPay, status: e.status || 'draft' };
         });
         document.getElementById('tableCard').classList.add('opacity-60', 'pointer-events-none');
         fetch('/api/payroll/periods/' + encodeURIComponent(periodId) + '/entries', {
@@ -492,11 +499,23 @@
       document.getElementById('btnCalcFooter').addEventListener('click', function() { saveAll(function() { calculate(); }); });
 
       document.getElementById('btnApproveSelected').addEventListener('click', function() {
-        // Mark selected entries status = approved via save
+        var payload = [];
         Object.keys(selectedRows).forEach(function(i) {
-          entries[parseInt(i,10)]._dirty = true;
+          var idx = parseInt(i, 10);
+          entries[idx].status = 'approved';
+          entries[idx]._dirty = false;
+          payload.push({ employeeId: entries[idx].employeeId, hours: entries[idx].hours,
+                         payRate: entries[idx].payRate, grossPay: entries[idx].grossPay, status: 'approved' });
         });
-        showAlert('Approval noted. Calculate to finalize.', false);
+        if (!payload.length) return;
+        fetch('/api/payroll/periods/' + encodeURIComponent(periodId) + '/entries', {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+          .then(function(r) { return r.ok ? r.json() : r.text().then(function(t) { throw new Error(t); }); })
+          .then(function() { renderTable(); showAlert('Selected entries approved.', false); })
+          .catch(function(err) { showAlert('Approve failed: ' + err.message, true); });
       });
 
       // ── Alert helper ──────────────────────────────────────────────────────
