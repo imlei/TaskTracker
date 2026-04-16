@@ -230,7 +230,7 @@
 
       function renderPage(p, entries) {
         if (p) {
-          if (p.payDate) document.getElementById('taxYear').textContent = p.payDate.slice(0, 4);
+          var elYear = document.getElementById('taxYear'); if (elYear && p.payDate) elYear.textContent = p.payDate.slice(0, 4);
           document.getElementById('successSub').textContent = 'Pay date ' + (p.payDate || '—') + ' · ' + (p.payFrequency || '') + ' · Period finalized';
           document.getElementById('detPeriod').textContent  = (p.periodStart || '—') + ' → ' + (p.periodEnd || '—');
           document.getElementById('detPayDate').textContent = p.payDate || '—';
