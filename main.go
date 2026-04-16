@@ -25,6 +25,9 @@ var payrollFS embed.FS
 //go:embed web/admin
 var adminFS embed.FS
 
+//go:embed web/writecheque
+var writechequeFS embed.FS
+
 func main() {
 	dataDir := os.Getenv("DATA_DIR")
 	if dataDir == "" {
@@ -60,7 +63,7 @@ func main() {
 		log.Fatal("TLS_CERT_FILE and TLS_KEY_FILE must both be set for HTTPS, or leave both empty for HTTP")
 	}
 
-	srv := &api.Server{Store: st, Mail: mailer, BaseURL: baseURL}
+	srv := api.NewServer(st, mailer, baseURL)
 	authCfg, err := auth.NewAuth(db, dataDir)
 	if err != nil {
 		log.Fatal(err)
@@ -112,6 +115,16 @@ func main() {
 	mux.Handle("/admin/", http.StripPrefix("/admin", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-cache, must-revalidate")
 		adminServer.ServeHTTP(w, r)
+	})))
+
+	writechequeSub, err := fs.Sub(writechequeFS, "web/writecheque")
+	if err != nil {
+		log.Fatal(err)
+	}
+	writechequeServer := http.FileServer(http.FS(writechequeSub))
+	mux.Handle("/writecheque/", http.StripPrefix("/writecheque", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache, must-revalidate")
+		writechequeServer.ServeHTTP(w, r)
 	})))
 
 	handler := api.RecoverMiddleware(auth.Middleware(authCfg, mux))

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Write Cheque</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+    .layout {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 12px 16px 24px;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+    .sidebar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      padding: 12px;
+      position: sticky;
+      top: 12px;
+    }
+    .side-menu { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .side-menu button {
+      text-align: left; padding: 8px 10px;
+      border: 1px solid var(--border); background: var(--bg);
+      border-radius: 6px; cursor: pointer; color: var(--text); font-weight: 600;
+    }
+    .side-menu button.active {
+      background: rgba(126,91,239,.2);
+      border-color: var(--link-accent); color: #fff;
+    }
+    .content-panel {
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--surface); padding: 12px; margin-bottom: 12px;
+    }
+    .content-panel h3 { margin: 0 0 10px; font-size: .95rem; color: var(--text); }
+
+    /* Bank list */
+    .bank-list-main { display: flex; flex-direction: column; gap: 8px; }
+    .bank-item-row {
+      border: 1px solid var(--border); border-radius: 6px; padding: 10px;
+      display: grid; grid-template-columns: 1.4fr 1fr 0.7fr 1fr auto;
+      align-items: center; gap: 8px; background: var(--bg);
+    }
+    .bank-col-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .bank-col-value { font-size: 14px; color: var(--text); word-break: break-all; }
+    .bank-row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+    /* Bank form */
+    .bank-form { display: grid; gap: 8px; }
+    .bank-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+    .bank-form input, .bank-form select, .bank-form textarea {
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 13px; font-family: inherit; background: var(--bg); color: var(--text);
+    }
+    .bank-form-section { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+    .bank-form-section-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; font-weight: 600; }
+    .bank-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .bank-form-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .bank-form-actions button, .toolbar button {
+      padding: 8px 14px; border: 1px solid var(--border);
+      background: transparent; border-radius: 6px; cursor: pointer; color: var(--text);
+    }
+    .toolbar .primary, .bank-form-actions .primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* Main pane */
+    .main-pane { min-width: 0; }
+    .toolbar {
+      margin: 0 0 12px; padding: 0;
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    }
+    .toolbar-spacer { flex: 1; }
+
+    /* Form panel */
+    .form-panel {
+      margin: 0 0 16px; padding: 16px 20px;
+      background: var(--surface); border-radius: 8px;
+      border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    .form-panel h2 { margin: 0 0 12px; font-size: 1rem; color: var(--text); }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px 16px;
+    }
+    .form-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+    .form-grid input, .form-grid select {
+      padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 14px; background: var(--bg); color: var(--text);
+    }
+    .form-panel .hint { margin: 12px 0 0; font-size: 12px; color: var(--muted); }
+
+    /* Preview iframe */
+    .check-wrap { margin: 0; padding: 0; overflow-x: auto; }
+    .check-preview {
+      width: 8.5in;
+      height: 11in;
+      border: 1px solid #ccc;
+      background: #fff;
+      display: block;
+    }
+    .bank-field-us[hidden], .bank-field-ca[hidden], .bank-field-eu[hidden] { display: none !important; }
+
+    @media (max-width: 1024px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+    }
+    @media (max-width: 1200px) {
+      .bank-item-row { grid-template-columns: 1fr 1fr; }
+      .bank-row-actions { grid-column: 1 / -1; justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="side-menu">
+      <button type="button" id="menu-write-cheque">Write Cheque</button>
+      <button type="button" id="menu-bank-list" class="active">Bank Account List</button>
+      <button type="button" id="menu-bank-add">Add New Acct</button>
+    </div>
+  </aside>
+
+  <div class="main-pane">
+
+    <!-- Bank Account List -->
+    <section id="panel-bank-list-main" class="content-panel">
+      <h3>Bank Account List</h3>
+      <div id="check-bank-list" class="bank-list-main"></div>
+    </section>
+
+    <!-- Add / Edit Bank Account -->
+    <section id="panel-bank-add-main" class="content-panel" hidden>
+      <h3 id="bank-form-title">Add New Acct</h3>
+      <input type="hidden" id="new-bank-id" value="" />
+      <div class="bank-form">
+        <label>Account Name <input type="text" id="new-bank-label" maxlength="80" placeholder="e.g. Operating CAD" /></label>
+
+        <!-- Company (shared with Payroll) -->
+        <label>Company Name
+          <select id="new-bank-company">
+            <option value="">— Not linked —</option>
+          </select>
+        </label>
+
+        <label>Bank Name <input type="text" id="new-bank-name" maxlength="80" placeholder="e.g. RBC" /></label>
+
+        <!-- Bank Address -->
+        <div class="bank-form-section">
+          <div class="bank-form-section-title">Bank Address</div>
+          <div class="bank-form-grid">
+            <label style="grid-column:1/-1">Street Address <input type="text" id="new-bank-address" maxlength="120" placeholder="123 Main St" /></label>
+            <label>City <input type="text" id="new-bank-city" maxlength="80" /></label>
+            <label>Province
+              <select id="new-bank-province">
+                <option value="">—</option>
+                <option value="AB">Alberta (AB)</option>
+                <option value="BC">British Columbia (BC)</option>
+                <option value="MB">Manitoba (MB)</option>
+                <option value="NB">New Brunswick (NB)</option>
+                <option value="NL">Newfoundland (NL)</option>
+                <option value="NS">Nova Scotia (NS)</option>
+                <option value="NT">Northwest Territories (NT)</option>
+                <option value="NU">Nunavut (NU)</option>
+                <option value="ON">Ontario (ON)</option>
+                <option value="PE">Prince Edward Island (PE)</option>
+                <option value="QC">Quebec (QC)</option>
+                <option value="SK">Saskatchewan (SK)</option>
+                <option value="YT">Yukon (YT)</option>
+              </select>
+            </label>
+            <label>Postal Code <input type="text" id="new-bank-postal" maxlength="10" placeholder="V1A 2B3" /></label>
+          </div>
+        </div>
+
+        <!-- MICR / Account Details -->
+        <div class="bank-form-section">
+          <div class="bank-form-section-title">Account &amp; MICR Details</div>
+          <label>Country
+            <select id="new-bank-country">
+              <option value="CA">Canada</option>
+              <option value="US">United States</option>
+              <option value="EU">Europe</option>
+            </select>
+          </label>
+          <label class="bank-field-ca">Institution (CA) <input type="text" id="new-bank-institution" maxlength="8" /></label>
+          <label class="bank-field-ca">Transit (CA) <input type="text" id="new-bank-transit" maxlength="8" /></label>
+          <label class="bank-field-us" hidden>Routing ABA (US) <input type="text" id="new-bank-routing" maxlength="12" /></label>
+          <label class="bank-field-eu" hidden>IBAN (EU) <input type="text" id="new-bank-iban" maxlength="80" /></label>
+          <label class="bank-field-eu" hidden>SWIFT/BIC (EU) <input type="text" id="new-bank-swift" maxlength="80" /></label>
+          <label>Account <input type="text" id="new-bank-account" maxlength="80" /></label>
+          <label>Cheque Number <input type="text" id="new-bank-cheque" maxlength="20" value="000001" /></label>
+          <label>Currency
+            <select id="new-bank-currency">
+              <option value="CAD">CAD</option>
+              <option value="USD">USD</option>
+              <option value="CNY">CNY</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </label>
+          <label>MICR Override <textarea id="new-bank-micr" rows="2" maxlength="500"></textarea></label>
+        </div>
+
+        <div class="bank-form-actions">
+          <button type="button" id="btn-bank-cancel">Cancel</button>
+          <button type="button" id="btn-bank-delete" hidden>Delete</button>
+          <button type="button" id="btn-add-bank" class="primary">Save</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Write Cheque panel -->
+    <section id="panel-write-cheque-main" hidden>
+      <div class="toolbar">
+        <button type="button" id="btn-back">返回系统</button>
+        <button type="button" id="btn-cheque-next">将支票号 +1 写回设置</button>
+        <button type="button" class="primary" id="btn-print">打印 / 导出 PDF</button>
+        <span class="toolbar-spacer"></span>
+      </div>
+      <div class="form-panel">
+        <h2>打印前可修改</h2>
+        <div class="form-grid">
+          <label>Date <input type="date" id="fld-date" /></label>
+          <label>Pay to the order of <input type="text" id="fld-payee" autocomplete="organization" /></label>
+          <label>Amount <input type="number" id="fld-amount" step="0.01" min="0" /></label>
+          <label>Currency
+            <select id="fld-currency">
+              <option value="CAD">CAD</option>
+              <option value="USD">USD</option>
+              <option value="CNY">CNY</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </label>
+          <label>Cheque # <input type="text" id="fld-cheque" maxlength="24" autocomplete="off" /></label>
+          <label>Bank Account
+            <select id="fld-bank"></select>
+          </label>
+          <label style="grid-column:1/-1">Memo <input type="text" id="fld-memo" /></label>
+        </div>
+        <p class="hint" id="check-micr-banner"></p>
+        <p class="hint">
+          <strong>打印：</strong>请选择「实际大小 / 100%」，<strong>不要</strong>使用「适合页面」或缩放。
+          MICR 须使用 E-13B 字体与磁墨；底边 0.625″ 内为银行扫描区。
+        </p>
+      </div>
+      <div class="check-wrap">
+        <iframe id="cheque-preview" class="check-preview" src="about:blank" title="Cheque preview"></iframe>
+      </div>
+    </section>
+
+  </div>
+</div>
+<script src="/writecheque/check.js"></script>
+</body>
+</html>

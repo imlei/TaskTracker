@@ -14,12 +14,23 @@ import (
 	"simpletask/internal/mail"
 	"simpletask/internal/models"
 	"simpletask/internal/store"
+	"simpletask/internal/writecheque"
 )
 
 type Server struct {
-	Store   *store.Store
-	Mail    *mail.Mailer
-	BaseURL string
+	Store        *store.Store
+	Mail         *mail.Mailer
+	BaseURL      string
+	chequeHandler *writecheque.Handler
+}
+
+func NewServer(st *store.Store, mailer *mail.Mailer, baseURL string) *Server {
+	return &Server{
+		Store:   st,
+		Mail:    mailer,
+		BaseURL: baseURL,
+		chequeHandler: &writecheque.Handler{Store: st},
+	}
 }
 
 type priceSaveResponse struct {
@@ -793,4 +804,8 @@ func Register(mux *http.ServeMux, s *Server) {
 
 	// Admin-only payroll settings (rates + plans)
 	mux.HandleFunc("/api/admin/payroll-settings/", s.handleAdminPayrollSettings)
+
+	// Write cheque: server-side rendered preview / direct print
+	mux.HandleFunc("/api/writecheque/preview", s.chequeHandler.HandlePreview)
+	mux.HandleFunc("/api/writecheque/print", s.chequeHandler.HandlePrint)
 }

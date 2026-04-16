@@ -324,15 +324,20 @@ type PayrollEntryEarning struct {
 type BankAccount struct {
 	ID                   string `json:"id"`
 	Label                string `json:"label"`
+	CompanyID            string `json:"companyId"`   // 关联 payroll company（可空）
 	BankName             string `json:"bankName"`
+	BankAddress          string `json:"bankAddress"`
+	BankCity             string `json:"bankCity"`
+	BankProvince         string `json:"bankProvince"`
+	BankPostalCode       string `json:"bankPostalCode"`
 	MICRCountry          string `json:"micrCountry"` // CA | US | EU
-	BankInstitution       string `json:"bankInstitution"`
-	BankTransit           string `json:"bankTransit"`
-	BankRoutingABA        string `json:"bankRoutingAba"`
-	BankAccount           string `json:"bankAccount"`
+	BankInstitution      string `json:"bankInstitution"`
+	BankTransit          string `json:"bankTransit"`
+	BankRoutingABA       string `json:"bankRoutingAba"`
+	BankAccount          string `json:"bankAccount"`
 	BankIBAN             string `json:"bankIban"`
 	BankSWIFT            string `json:"bankSwift"`
-	BankChequeNumber      string `json:"bankChequeNumber"`
-	MICRLineOverride      string `json:"micrLineOverride"`
+	BankChequeNumber     string `json:"bankChequeNumber"`
+	MICRLineOverride     string `json:"micrLineOverride"`
 	DefaultChequeCurrency string `json:"defaultChequeCurrency"`
 }

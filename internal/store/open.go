@@ -572,6 +572,11 @@ CREATE TABLE IF NOT EXISTS bank_accounts (
 		{Name: "bank_name", DDL: "ALTER TABLE bank_accounts ADD COLUMN bank_name TEXT NOT NULL DEFAULT ''"},
 		{Name: "bank_iban", DDL: "ALTER TABLE bank_accounts ADD COLUMN bank_iban TEXT NOT NULL DEFAULT ''"},
 		{Name: "bank_swift", DDL: "ALTER TABLE bank_accounts ADD COLUMN bank_swift TEXT NOT NULL DEFAULT ''"},
+		{Name: "company_id", DDL: "ALTER TABLE bank_accounts ADD COLUMN company_id TEXT NOT NULL DEFAULT ''"},
+		{Name: "bank_address", DDL: "ALTER TABLE bank_accounts ADD COLUMN bank_address TEXT NOT NULL DEFAULT ''"},
+		{Name: "bank_city", DDL: "ALTER TABLE bank_accounts ADD COLUMN bank_city TEXT NOT NULL DEFAULT ''"},
+		{Name: "bank_province", DDL: "ALTER TABLE bank_accounts ADD COLUMN bank_province TEXT NOT NULL DEFAULT ''"},
+		{Name: "bank_postal_code", DDL: "ALTER TABLE bank_accounts ADD COLUMN bank_postal_code TEXT NOT NULL DEFAULT ''"},
 	}
 	existing := map[string]bool{}
 	rows, e := db.Query(`PRAGMA table_info(bank_accounts)`)

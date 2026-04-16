@@ -66,7 +66,7 @@ document.querySelectorAll(".tab").forEach((btn) => {
     if (tab === "cheque") {
       const fr = document.getElementById("iframe-cheque");
       if (fr && !fr.getAttribute("src")) {
-        fr.src = "/check.html?embed=1";
+        fr.src = "/writecheque/";
       }
     }
   });
@@ -962,7 +962,7 @@ function renderInvoices() {
     const chkBtn = tr.querySelector('[data-act="check"]');
     if (chkBtn) {
       chkBtn.addEventListener("click", () => {
-        window.open(`/check.html?id=${encodeURIComponent(inv.id)}`, "_blank");
+        window.open(`/writecheque/?id=${encodeURIComponent(inv.id)}`, "_blank");
       });
     }
     tr.querySelector('[data-act="edit-task"]').addEventListener("click", async () => {

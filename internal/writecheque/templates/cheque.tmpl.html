@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cheque {{.CheckNo}}</title>
+  <style>
+    @font-face {
+      font-family: "MicrE13B";
+      src: local("GnuMICR"), local("E13B"), local("MICR"),
+        url("/fonts/micr-e13b.woff2") format("woff2"),
+        url("/fonts/micr-e13b.ttf") format("truetype");
+      font-weight: normal;
+      font-style: normal;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: #000;
+      font-family: "Segoe UI", system-ui, Arial, sans-serif;
+    }
+
+    /* ── Sheet: US Letter 8.5 × 11 in ── */
+    .check-sheet {
+      width: 8.5in;
+      min-height: 11in;
+      margin: 0 auto;
+      background: #fff;
+      position: relative;
+    }
+
+    /* ── Cheque face: 8.5 × 3.5 in ── */
+    .check-face {
+      position: relative;
+      width: 8.5in;
+      height: 3.5in;
+      overflow: visible;
+    }
+    .check-face .abs { position: absolute; }
+
+    .abs-company {
+      top: 0.12in; left: 0.5in;
+      max-width: 4in;
+      font-size: 10pt; font-weight: 700; line-height: 1.25;
+    }
+    .abs-check-no {
+      top: 0.5in; left: 7.5in;
+      width: 0.85in; text-align: right;
+      font-size: 10pt; font-weight: 600;
+    }
+    .abs-date {
+      top: 1.25in; left: 6.75in;
+      width: 1.35in; text-align: right;
+      font-size: 10pt;
+    }
+    .abs-payee {
+      top: 1.7in; left: 0.75in;
+      width: 6.2in;
+    }
+    .chk-label {
+      font-size: 8pt; color: #000;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .payee-line {
+      border-bottom: 1px solid #000;
+      min-height: 1.15em;
+      font-size: 11pt;
+      padding: 0 2px 1px;
+      word-break: break-word;
+    }
+    .abs-amount {
+      top: 1.7in; left: 7.1in;
+      width: 1.15in;
+      border: 2px solid #000;
+      padding: 2px 6px;
+      font-size: 11pt; font-weight: 700;
+      text-align: right; white-space: nowrap;
+    }
+    .abs-words {
+      top: 2.1in; left: 0.5in;
+      width: 6.55in; min-height: 0.38in;
+      border: 1px solid #000;
+      padding: 0.06in 0.1in;
+      font-size: 8pt; line-height: 1.25;
+      text-transform: uppercase; letter-spacing: 0.02em;
+    }
+    .abs-memo {
+      top: 2.55in; left: 0.5in;
+      width: 4.2in;
+    }
+    .abs-memo .chk-label { font-size: 7pt; }
+    .memo-line {
+      border-bottom: 1px solid #000;
+      min-height: 1em; font-size: 9pt; padding: 0 2px;
+    }
+    .abs-sig {
+      top: 2.8in; left: 5.5in;
+      width: 2.5in;
+    }
+    .abs-sig .sig-box {
+      border-bottom: 1px solid #000;
+      min-height: 1.5em;
+    }
+    .abs-sig .sig-label {
+      font-size: 8pt; color: #000;
+      text-align: center; margin-top: 2px;
+    }
+    .abs-micr {
+      left: 0.25in; right: 0.25in; bottom: 0.25in;
+      height: 0.35in;
+      position: absolute;
+      display: flex; align-items: flex-end; justify-content: center;
+    }
+    .micr-line {
+      font-family: "MicrE13B", "Courier New", Courier, monospace;
+      font-size: 11pt; letter-spacing: 0.03em;
+      text-align: center; white-space: nowrap;
+      line-height: 1; width: 100%;
+    }
+
+    /* ── Perforation lines ── */
+    .perf-line {
+      height: 0; border: none;
+      border-top: 2px dashed #999;
+      margin: 0;
+    }
+
+    /* ── Stubs ── */
+    .check-stub {
+      height: 3.75in;
+      padding: 0.2in 0.45in;
+    }
+    .stub-head {
+      display: flex; justify-content: space-between;
+      font-size: 10pt; margin-bottom: 0.2in;
+    }
+    .stub-company { font-weight: 700; max-width: 70%; }
+    .stub-no { font-weight: 600; }
+    .stub-caption {
+      font-size: 8pt; color: #000;
+      text-transform: uppercase; margin-bottom: 4px;
+    }
+    .stub-body {
+      min-height: 2.5in;
+      border: 1px dashed #bbb;
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-size: 10pt; line-height: 1.4;
+      white-space: pre-wrap;
+    }
+    .stub-bank-info {
+      margin-top: 8px;
+      font-size: 8pt; color: #555; line-height: 1.4;
+    }
+
+    @page { size: letter; margin: 0; }
+    @media print {
+      html, body { background: #fff; }
+      .no-print { display: none !important; }
+      .check-sheet { border: none; margin: 0; }
+      .check-face { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="check-sheet" id="check-sheet">
+
+  {{/* ── Cheque Face ── */}}
+  <section class="check-face" aria-label="Cheque face">
+    <div class="abs abs-company">{{.CompanyName}}</div>
+    <div class="abs abs-check-no">
+      <span class="chk-label">No.</span> {{.CheckNo}}
+    </div>
+    <div class="abs abs-date">
+      <span class="chk-label">Date </span>{{.Date}}
+    </div>
+    <div class="abs abs-payee">
+      <div class="chk-label">Pay to the order of</div>
+      <div class="payee-line">{{.Payee}}</div>
+    </div>
+    <div class="abs abs-amount">{{.AmountBox}}</div>
+    <div class="abs abs-words">{{.AmountWords}}</div>
+    <div class="abs abs-memo">
+      <span class="chk-label">Memo</span>
+      <div class="memo-line">{{.Memo}}</div>
+    </div>
+    <div class="abs abs-sig">
+      <div class="sig-box"></div>
+      <div class="sig-label">Signature</div>
+    </div>
+    <div class="abs abs-micr">
+      <div class="micr-line">{{.MICRLine}}</div>
+    </div>
+  </section>
+
+  <hr class="perf-line" aria-hidden="true" />
+
+  {{/* ── Stub 1: Remittance ── */}}
+  <section class="check-stub" aria-label="Remittance stub">
+    <div class="stub-head">
+      <span class="stub-company">{{.CompanyName}}</span>
+      <span class="stub-no">No. {{.CheckNo}}</span>
+    </div>
+    <div class="stub-caption">Remittance / Detail</div>
+    <div class="stub-body">{{if .Payee}}Payee: {{.Payee}}
+{{end}}{{if .Memo}}Memo: {{.Memo}}
+{{end}}{{if .AmountBox}}Amount: {{.AmountBox}}{{end}}</div>
+    {{if .BankName}}<div class="stub-bank-info">{{.BankName}}{{if .BankAddress}} · {{.BankAddress}}{{end}}{{if .BankCity}}, {{.BankCity}}{{end}}{{if .BankProvince}} {{.BankProvince}}{{end}}{{if .BankPostalCode}} {{.BankPostalCode}}{{end}}</div>{{end}}
+  </section>
+
+  <hr class="perf-line" aria-hidden="true" />
+
+  {{/* ── Stub 2: Record Copy ── */}}
+  <section class="check-stub" aria-label="Record copy">
+    <div class="stub-head">
+      <span class="stub-company">{{.CompanyName}}</span>
+      <span class="stub-no">No. {{.CheckNo}}</span>
+    </div>
+    <div class="stub-caption">Record Copy</div>
+    <div class="stub-body">{{if .Payee}}Payee: {{.Payee}}
+{{end}}{{if .Memo}}Memo: {{.Memo}}
+{{end}}{{if .AmountBox}}Amount: {{.AmountBox}}{{end}}
+Date: {{.Date}}</div>
+  </section>
+
+</div>
+</body>
+</html>

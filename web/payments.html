@@ -95,6 +95,7 @@
                   <th>Payment Type</th>
                   <th class="text-right">Net Pay</th>
                   <th>Ref #</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody id="paymentsTbody">
@@ -282,6 +283,10 @@
             '</td>' +
             '<td class="text-right font-mono font-semibold text-success">' + fmt(e.netPay) + '</td>' +
             '<td><input type="text" class="input input-bordered input-xs w-24 font-mono" placeholder="Ref #" /></td>' +
+            '<td>' + (paymentTypes[e.id] === 'cheque'
+              ? '<a href="' + buildChequeURL(e) + '" target="_blank" rel="noopener" class="btn btn-xs btn-outline">Print Cheque</a>'
+              : '') +
+            '</td>' +
             '</tr>';
         }).join('');
 
@@ -337,6 +342,17 @@
 
       function fmt(v) { return '$' + (parseFloat(v)||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
       function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      function buildChequeURL(entry) {
+        var p = new URLSearchParams();
+        p.set('payee', entry.employeeName || entry.employeeId || '');
+        p.set('amount', (parseFloat(entry.netPay) || 0).toFixed(2));
+        p.set('memo', 'Payroll Period ' + (periodId || ''));
+        var payDate = document.getElementById('paymentDate') ? document.getElementById('paymentDate').value : '';
+        if (payDate) p.set('date', payDate);
+        p.set('currency', 'CAD');
+        return '/writecheque/?' + p.toString();
+      }
 
       function showAlert(msg, isErr) {
         var el = document.getElementById('alertBox');
