@@ -144,12 +144,18 @@
           </div>
         </div>
 
+        <!-- Draft warning -->
+        <div id="draftWarning" class="hidden alert alert-warning text-xs py-2 px-4 mt-3">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Some entries are still in <strong>Draft</strong> — go back to Salaries, select all employees, and click <strong>Calculate</strong> first.
+        </div>
+
         <!-- Footer nav -->
         <div class="flex justify-between mt-2">
           <a id="backLink" href="salaries.html" class="btn btn-ghost btn-sm">← Salaries</a>
           <div class="flex gap-2">
             <button type="button" class="btn btn-outline btn-sm btn-error" id="btnRecalc">↺ Recalculate</button>
-            <button type="button" class="btn btn-primary btn-sm" id="btnNext">Payments →</button>
+            <button type="button" class="btn btn-primary btn-sm btn-disabled" id="btnNext" disabled title="Calculate entries first">Payments →</button>
           </div>
         </div>
       </main>
@@ -301,7 +307,6 @@
             if (p.payDate) document.getElementById('taxYear').textContent = p.payDate.slice(0, 4);
             if (periodStatus === 'finalized') {
               document.getElementById('finalizedBanner').classList.remove('hidden');
-              document.getElementById('btnNext').disabled = false;
             }
             if (p.companyId) {
               fetch('/api/payroll/companies/' + encodeURIComponent(p.companyId), { credentials: 'same-origin' })
@@ -386,6 +391,23 @@
         document.getElementById('erEI').textContent   = fmt(T.erEI);
         var remit = T.cpp + T.erCPP + T.erCPP2 + T.ei + T.erEI + T.fed + T.prov;
         document.getElementById('erTotal').textContent = fmt(remit);
+
+        // Enable Payments → only when all entries are calculated / approved / finalized
+        var hasDraft = list.some(function(e) {
+          return !e.status || e.status === 'draft';
+        });
+        var btnNext = document.getElementById('btnNext');
+        if (hasDraft) {
+          btnNext.disabled = true;
+          btnNext.classList.add('btn-disabled');
+          btnNext.title = 'All entries must be calculated before proceeding';
+          document.getElementById('draftWarning').classList.remove('hidden');
+        } else {
+          btnNext.disabled = false;
+          btnNext.classList.remove('btn-disabled');
+          btnNext.title = '';
+          document.getElementById('draftWarning').classList.add('hidden');
+        }
       }
 
       // ── Per-employee detail modal ─────────────────────────────────────────
