@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Company Dashboard — Payroll</title>
+    <script>(function(){var t=localStorage.getItem('pw-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link href="/vendor/daisyui-themes.css" rel="stylesheet" />
+    <link href="/vendor/daisyui-components.css" rel="stylesheet" />
+    <script src="/vendor/tailwind-browser.js"></script>
+    <script src="/vendor/chart.min.js"></script>
+    <style type="text/tailwindcss">@import "tailwindcss";</style>
+  </head>
+  <body class="bg-base-200 min-h-screen">
+
+    <!-- Top Navbar -->
+    <div class="navbar bg-primary text-primary-content px-4 min-h-12 sticky top-0 z-30 shadow-md">
+      <div class="navbar-start gap-3">
+        <a href="dashboard.html" class="font-extrabold text-base tracking-tight hover:opacity-80">SimpleTask - Payroll</a>
+        <div class="divider divider-horizontal m-0 opacity-40"></div>
+        <a href="dashboard.html" class="text-sm opacity-80 hover:opacity-100">Payroll</a>
+        <span class="opacity-40 text-sm">›</span>
+        <span class="text-sm font-medium truncate max-w-48" id="nav-company-name">Loading…</span>
+      </div>
+      <div class="navbar-end gap-2">
+        <button onclick="toggleTheme()" class="btn btn-ghost btn-sm btn-circle" title="Toggle dark mode">
+          <svg id="iconSun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 5a7 7 0 100 14A7 7 0 0012 5z"/></svg>
+          <svg id="iconMoon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-sm btn-circle font-bold" title="Help">?</button>
+        <div class="avatar placeholder">
+          <div class="bg-primary-content text-primary rounded-full w-8 text-xs font-bold">
+            <span id="topbar-avatar">PW</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex">
+
+      <!-- Left Sidebar -->
+      <aside class="w-44 bg-base-100 border-r border-base-300 min-h-[calc(100vh-3rem)] hidden md:flex flex-col pt-3 shrink-0">
+        <nav class="flex flex-col gap-0.5 px-2" id="sidebar-nav">
+
+          <a id="nav-home" href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-primary/10 text-primary">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Home
+          </a>
+
+          <a id="nav-payroll" href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/60 hover:bg-base-200 hover:text-base-content transition-colors">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Run Payroll
+          </a>
+
+          <a id="nav-reports" href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/60 hover:bg-base-200 hover:text-base-content transition-colors">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Reports
+          </a>
+
+          <a id="nav-employees" href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/60 hover:bg-base-200 hover:text-base-content transition-colors">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Employees
+          </a>
+
+          <a id="nav-actions" href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/60 hover:bg-base-200 hover:text-base-content transition-colors">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Actions
+          </a>
+
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 p-5 min-w-0">
+
+        <!-- Company name header -->
+        <div class="mb-5">
+          <div class="flex items-start gap-3">
+            <div>
+              <h1 class="text-2xl font-bold tracking-tight" id="company-name">—</h1>
+              <div class="flex items-center gap-2 mt-1 text-xs text-base-content/50" id="company-meta">
+                <span id="company-bn"></span>
+                <span id="company-province-badge"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Latest period info bar -->
+          <div id="period-bar" class="hidden mt-3 flex items-center gap-4 bg-base-100 border border-base-300 rounded-xl px-4 py-2.5 text-xs text-base-content/60">
+            <span>Last payroll period:</span>
+            <span class="font-medium text-base-content" id="period-dates">—</span>
+            <span>Pay date:</span>
+            <span class="font-medium text-base-content" id="period-paydate">—</span>
+            <span id="period-status-badge"></span>
+          </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+          <div class="bg-base-100 border border-base-300 rounded-xl p-4">
+            <p class="text-xs text-base-content/50 uppercase tracking-wide font-semibold mb-1">Active Employees</p>
+            <p class="text-3xl font-bold text-primary" id="stat-employees">—</p>
+          </div>
+          <div class="bg-base-100 border border-base-300 rounded-xl p-4">
+            <p class="text-xs text-base-content/50 uppercase tracking-wide font-semibold mb-1">Latest Period</p>
+            <p class="text-sm font-semibold mt-1" id="stat-period-label">No periods yet</p>
+          </div>
+          <div class="bg-base-100 border border-base-300 rounded-xl p-4">
+            <p class="text-xs text-base-content/50 uppercase tracking-wide font-semibold mb-1">Last Gross Pay</p>
+            <p class="text-xl font-bold" id="stat-last-gross">—</p>
+          </div>
+          <div class="bg-base-100 border border-base-300 rounded-xl p-4">
+            <p class="text-xs text-base-content/50 uppercase tracking-wide font-semibold mb-1">Pay Frequency</p>
+            <p class="text-sm font-semibold mt-1" id="stat-frequency">—</p>
+          </div>
+        </div>
+
+        <!-- Payroll cost history chart -->
+        <div class="bg-base-100 border border-base-300 rounded-xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-sm font-bold">Payroll Cost History</h2>
+              <p class="text-xs text-base-content/40 mt-0.5">Gross pay by pay period (last 12 months)</p>
+            </div>
+          </div>
+          <div id="chart-placeholder" class="hidden flex flex-col items-center justify-center py-16 text-base-content/30">
+            <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            <p class="text-sm font-medium">No payroll history yet</p>
+            <p class="text-xs mt-1">Run your first payroll to see data here.</p>
+          </div>
+          <div id="chart-wrap" class="hidden" style="height:260px;position:relative;">
+            <canvas id="payrollChart"></canvas>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <script>
+      // ── Theme ─────────────────────────────────────────────────────────────
+      function toggleTheme() {
+        var html = document.documentElement;
+        var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('pw-theme', next);
+        document.getElementById('iconSun').classList.toggle('hidden', next !== 'dark');
+        document.getElementById('iconMoon').classList.toggle('hidden', next === 'dark');
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        document.getElementById('iconSun').classList.toggle('hidden', !isDark);
+        document.getElementById('iconMoon').classList.toggle('hidden', isDark);
+      });
+
+      // ── Init ──────────────────────────────────────────────────────────────
+      var companyID = new URLSearchParams(location.search).get('company') || '';
+      if (!companyID) { location.href = 'dashboard.html'; }
+
+      // Wire sidebar links
+      var q = '?company=' + encodeURIComponent(companyID);
+      document.getElementById('nav-home').href      = 'company.html' + q;
+      document.getElementById('nav-payroll').href   = 'salaries.html' + q;
+      document.getElementById('nav-reports').href   = 'summary.html' + q;
+      document.getElementById('nav-employees').href = 'employees.html' + q;
+      document.getElementById('nav-actions').href   = '#';
+
+      // ── Auth ──────────────────────────────────────────────────────────────
+      fetch('/api/me', { credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(me) {
+          if (!me.authenticated) { window.location.href = '/login.html'; return; }
+          var av = document.getElementById('topbar-avatar');
+          if (av && me.user) av.textContent = me.user.slice(0, 2).toUpperCase();
+        })
+        .catch(function() {});
+
+      // ── Load summary ──────────────────────────────────────────────────────
+      apiFetch('/api/payroll/companies/' + encodeURIComponent(companyID) + '/summary')
+        .then(function(data) { renderDashboard(data); })
+        .catch(function(err) {
+          document.getElementById('company-name').textContent = 'Error: ' + err.message;
+        });
+
+      function renderDashboard(data) {
+        var c = data.company || {};
+
+        // Navbar + title
+        var name = c.name || '—';
+        document.getElementById('nav-company-name').textContent = name;
+        document.getElementById('company-name').textContent = name;
+        document.title = name + ' — Payroll';
+
+        // Meta (BN + province)
+        var metaEl = document.getElementById('company-meta');
+        var parts = [];
+        if (c.businessNumber) parts.push('BN ' + esc(c.businessNumber));
+        if (c.province) parts.push('<span class="badge badge-outline badge-xs">' + esc(c.province) + '</span>');
+        metaEl.innerHTML = parts.join(' · ');
+
+        // Stats
+        document.getElementById('stat-employees').textContent = data.activeEmployees != null ? data.activeEmployees : '—';
+        document.getElementById('stat-frequency').textContent = freqLabel(c.payFrequency);
+
+        // Latest period
+        var lp = data.latestPeriod;
+        if (lp) {
+          document.getElementById('period-bar').classList.remove('hidden');
+          document.getElementById('period-dates').textContent = fmtDate(lp.periodStart) + ' – ' + fmtDate(lp.periodEnd);
+          document.getElementById('period-paydate').textContent = fmtDate(lp.payDate);
+          document.getElementById('period-status-badge').innerHTML = statusBadge(lp.status);
+          document.getElementById('stat-period-label').textContent = fmtDate(lp.payDate);
+          document.getElementById('stat-period-label').insertAdjacentHTML('afterend',
+            '<div class="mt-0.5">' + statusBadge(lp.status) + '</div>');
+        } else {
+          document.getElementById('stat-period-label').textContent = 'No periods yet';
+        }
+
+        // Chart
+        var costs = (data.monthlyCosts || []).slice().reverse(); // oldest → newest
+        if (costs.length === 0) {
+          document.getElementById('chart-placeholder').classList.remove('hidden');
+          document.getElementById('stat-last-gross').textContent = '—';
+        } else {
+          document.getElementById('chart-wrap').classList.remove('hidden');
+          // Last period gross from most recent cost entry (reversed, so last item)
+          var lastCost = costs[costs.length - 1];
+          document.getElementById('stat-last-gross').textContent = 'CAD ' + fmt2(lastCost.grossPay);
+          renderChart(costs);
+        }
+      }
+
+      function renderChart(costs) {
+        var labels = costs.map(function(m) { return m.month; });
+        var grossData = costs.map(function(m) { return m.grossPay; });
+        var netData   = costs.map(function(m) { return m.netPay; });
+
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var gridColor  = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+        var textColor  = isDark ? 'rgba(255,255,255,0.5)'  : 'rgba(0,0,0,0.5)';
+        var ctx = document.getElementById('payrollChart').getContext('2d');
+
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Gross Pay',
+                data: grossData,
+                backgroundColor: 'rgba(99,102,241,0.75)',
+                borderRadius: 4,
+                order: 1,
+              },
+              {
+                label: 'Net Pay',
+                data: netData,
+                backgroundColor: 'rgba(99,102,241,0.25)',
+                borderRadius: 4,
+                order: 2,
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: textColor, font: { size: 11 }, boxWidth: 12 } },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) {
+                    return ctx.dataset.label + ': CAD ' + fmt2(ctx.raw);
+                  }
+                }
+              }
+            },
+            scales: {
+              x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } } },
+              y: {
+                grid: { color: gridColor },
+                ticks: {
+                  color: textColor, font: { size: 11 },
+                  callback: function(v) { return 'CAD ' + fmt2(v); }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // ── Helpers ───────────────────────────────────────────────────────────
+      function apiFetch(path, opts) {
+        opts = opts || {};
+        return fetch(path, Object.assign({ credentials: 'same-origin',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {}) }, opts))
+          .then(function(r) {
+            return r.text().then(function(text) {
+              if (!r.ok) {
+                var msg = text;
+                try { msg = JSON.parse(text).error || text; } catch(e) {}
+                throw new Error(msg || r.statusText);
+              }
+              return text ? JSON.parse(text) : null;
+            });
+          });
+      }
+
+      function freqLabel(f) {
+        var m = { biweekly: 'Bi-weekly (26/yr)', semimonthly: 'Semi-monthly (24/yr)',
+                  monthly: 'Monthly (12/yr)', weekly: 'Weekly (52/yr)' };
+        return m[f] || f || '—';
+      }
+
+      function statusBadge(s) {
+        var cls = { open: 'badge-warning', calculated: 'badge-info',
+                    finalized: 'badge-success', draft: 'badge-ghost' };
+        return '<span class="badge badge-sm ' + (cls[s] || 'badge-ghost') + '">' + esc(s || '—') + '</span>';
+      }
+
+      function fmtDate(d) {
+        if (!d) return '—';
+        return d.slice(0, 10);
+      }
+
+      function fmt2(v) {
+        return Number(v || 0).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      function esc(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+          .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+    </script>
+  </body>
+</html>

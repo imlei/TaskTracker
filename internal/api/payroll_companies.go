@@ -46,13 +46,30 @@ func (s *Server) handlePayrollCompanies(w http.ResponseWriter, r *http.Request) 
 }
 
 // GET    /api/payroll/companies/{id}
+// GET    /api/payroll/companies/{id}/summary
 // PUT    /api/payroll/companies/{id}
 // DELETE /api/payroll/companies/{id}
 func (s *Server) handlePayrollCompanyByID(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/api/payroll/companies/")
-	id = strings.TrimSpace(id)
+	rest := strings.TrimPrefix(r.URL.Path, "/api/payroll/companies/")
+	parts := strings.SplitN(rest, "/", 2)
+	id := strings.TrimSpace(parts[0])
 	if id == "" {
 		http.NotFound(w, r)
+		return
+	}
+
+	// Sub-route: /summary
+	if len(parts) == 2 && parts[1] == "summary" && r.Method == http.MethodGet {
+		sum, err := s.Store.GetCompanySummary(id)
+		if errors.Is(err, store.ErrNotFound) {
+			http.NotFound(w, r)
+			return
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, http.StatusOK, sum)
 		return
 	}
 

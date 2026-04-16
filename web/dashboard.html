@@ -273,6 +273,7 @@
         }
 
         tbody.innerHTML = list.map(function(c) {
+          var compUrl = 'company.html?company='    + encodeURIComponent(c.id);
           var empUrl  = 'employees.html?company=' + encodeURIComponent(c.id);
           var payUrl  = 'run-payroll.html?company=' + encodeURIComponent(c.id);
           var isActive = c.status !== 'inactive';
@@ -283,7 +284,7 @@
           return '<tr class="hover:bg-base-200/40 border-b border-base-200 last:border-0">' +
             // Company name — clickable link
             '<td class="pl-4 py-3">' +
-              '<a href="' + empUrl + '" class="font-semibold text-sm text-primary hover:underline">' +
+              '<a href="' + compUrl + '" class="font-semibold text-sm text-primary hover:underline">' +
                 esc(c.name) +
               '</a>' +
               (c.legalName && c.legalName !== c.name
