@@ -199,6 +199,7 @@
       document.getElementById('nav-reports').href   = withC('reports/payrun.html');
       document.getElementById('btnNewRun').href     = withC('run-payroll.html');
       document.getElementById('backBrand').href     = withC('run-payroll.html');
+      document.getElementById('nav-dashboard').href  = companyId ? 'company.html?company=' + encodeURIComponent(companyId) : 'dashboard.html';
       document.getElementById('btnPayslips').href   = withC('reports/cheques-payslips.html');
 
       var periodInfo = null;
@@ -235,7 +236,10 @@
           document.getElementById('detPeriod').textContent  = (p.periodStart || '—') + ' → ' + (p.periodEnd || '—');
           document.getElementById('detPayDate').textContent = p.payDate || '—';
           if (p.companyId) {
-            fetch('/api/payroll/companies/' + encodeURIComponent(p.companyId), { credentials: 'same-origin' })
+            var cid = p.companyId;
+            document.getElementById('nav-dashboard').href = 'company.html?company=' + encodeURIComponent(cid);
+            document.getElementById('btnNewRun').href     = 'run-payroll.html?company=' + encodeURIComponent(cid);
+            fetch('/api/payroll/companies/' + encodeURIComponent(cid), { credentials: 'same-origin' })
               .then(function(r){ return r.ok ? r.json() : null; })
               .then(function(c){ if (c) document.getElementById('companyName').textContent = c.name || c.legalName || ''; });
           }
