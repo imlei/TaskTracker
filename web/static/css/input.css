@@ -1,0 +1,31 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* Custom theme configuration to match existing SimpleTask design */
+@theme {
+  --color-primary: #3d8bfd;
+  --color-secondary: #8b9cb3;
+  --color-accent: #22c55e;
+  --color-warning: #f97316;
+  --color-info: #06b6d4;
+  --color-error: #ef4444;
+  
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Preserve some existing custom styles */
+body {
+  @apply bg-gray-900 text-gray-100 min-h-screen;
+}
+
+/* Table customizations for data tables */
+.table-wrap {
+  @apply overflow-x-auto;
+}
+
+/* Status badge custom colors */
+.status-pending { @apply badge badge-warning; }
+.status-done { @apply badge badge-success; }
+.status-invoiced { @apply badge badge-info; }
+.status-sent { @apply badge badge-primary; }
+.status-paid { @apply badge badge-accent; }

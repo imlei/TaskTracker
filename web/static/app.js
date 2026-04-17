@@ -75,6 +75,11 @@ document.querySelectorAll(".tab").forEach((btn) => {
 // --- Tasks ---
 let tasksCache = [];
 let customersCache = [];
+let taskPage = 1;
+let taskPageSize = 20;
+
+/** 状态优先级：Pending → Done → Invoiced → Sent → Paid */
+const statusPriority = { Pending: 0, Done: 1, Invoiced: 2, Sent: 3, Paid: 4 };
 
 /** 界面展示用客户名：有 displayName 用其，否则全名 name */
 function customerDisplayLabel(c) {
@@ -160,16 +165,31 @@ function renderTasks() {
   const filter = $("#filter-status").value;
   const body = $("#tasks-body");
   body.innerHTML = "";
-  const rows = asArray(tasksCache)
+  
+  // 筛选：排除 Paid，按状态筛选
+  const filtered = asArray(tasksCache)
     .filter((t) => t.status !== "Paid")
-    .filter((t) => !filter || t.status === filter)
-    .sort((a, b) => {
-      const pa = a.status === "Pending" ? 0 : 1;
-      const pb = b.status === "Pending" ? 0 : 1;
-      if (pa !== pb) return pa - pb;
-      return String(a.id).localeCompare(String(b.id));
-    });
-  for (const t of rows) {
+    .filter((t) => !filter || t.status === filter);
+  
+  // 排序：Pending → Done → Invoiced → Sent → Paid
+  const sorted = filtered.sort((a, b) => {
+    const pa = statusPriority[a.status] ?? 9;
+    const pb = statusPriority[b.status] ?? 9;
+    if (pa !== pb) return pa - pb;       // 先按状态优先级
+    return String(a.id).localeCompare(String(b.id)); // 同状态按 ID
+  });
+  
+  // 分页
+  const total = sorted.length;
+  const totalPages = Math.ceil(total / taskPageSize) || 1;
+  if (taskPage > totalPages) taskPage = totalPages;
+  if (taskPage < 1) taskPage = 1;
+  const start = (taskPage - 1) * taskPageSize;
+  const end = start + taskPageSize;
+  const pageRows = sorted.slice(start, end);
+  
+  // 渲染当前页
+  for (const t of pageRows) {
     const tr = document.createElement("tr");
     const done = t.status === "Done";
     const canDelete = t.status === "Pending";
@@ -177,6 +197,7 @@ function renderTasks() {
     const cn = escapeHtml(t.companyName || "");
     const statusCls = t.status === "Done" ? "status-done"
                     : t.status === "Invoiced" ? "status-invoiced"
+                    : t.status === "Sent" ? "status-sent"
                     : "status-pending";
     tr.innerHTML = `
       <td>${escapeHtml(t.id)}</td>
@@ -203,9 +224,43 @@ function renderTasks() {
     tr.querySelector('[data-act="del"]').addEventListener("click", () => deleteTask(t.id));
     body.appendChild(tr);
   }
+  
+  // 更新分页信息
+  const pageInfo = document.getElementById("tasks-page-info");
+  if (pageInfo) pageInfo.textContent = `共 ${total} 条`;
+  
+  const pageCurrent = document.getElementById("tasks-page-current");
+  if (pageCurrent) pageCurrent.textContent = taskPage;
+  
+  const btnPrev = document.getElementById("tasks-prev");
+  const btnNext = document.getElementById("tasks-next");
+  if (btnPrev) btnPrev.disabled = taskPage <= 1;
+  if (btnNext) btnNext.disabled = taskPage >= totalPages;
 }
 
-$("#filter-status").addEventListener("change", renderTasks);
+// 分页控件事件监听
+document.getElementById("tasks-prev")?.addEventListener("click", () => {
+  if (taskPage > 1) {
+    taskPage--;
+    renderTasks();
+  }
+});
+
+document.getElementById("tasks-next")?.addEventListener("click", () => {
+  taskPage++;
+  renderTasks();
+});
+
+document.getElementById("tasks-page-size")?.addEventListener("change", (e) => {
+  taskPageSize = parseInt(e.target.value) || 20;
+  taskPage = 1; // 切换每页条数时重置到第1页
+  renderTasks();
+});
+
+$("#filter-status").addEventListener("change", () => {
+  taskPage = 1; // 切换筛选时重置到第1页
+  renderTasks();
+});
 
 $("#btn-new-task").addEventListener("click", () => openTaskDialog(null));
 
