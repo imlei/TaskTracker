@@ -557,6 +557,16 @@ async function applyInvoiceFxConversion(targetCur, date) {
   }
 }
 
+/** 将 Task Name（companyName）、Task（service1）、备注（note）合并为发票 DESCRIPTION */
+function composeTaskDescription(t) {
+  const parts = [
+    (t.companyName || "").trim(),
+    (t.service1 || "").trim(),
+    (t.note || "").trim(),
+  ].filter(Boolean);
+  return parts.join(" | ");
+}
+
 function openInvoiceDialog(task) {
   invoiceMultiTasks = null;
   setInvoiceDialogMode(false);
@@ -575,7 +585,7 @@ function openInvoiceDialog(task) {
   document.getElementById("inv-due-date").value = addDaysISO(today, 30);
   document.getElementById("inv-currency").value = taskCur;
   document.getElementById("inv-tax-rate").value = 0;
-  document.getElementById("inv-desc").value = "Consulting Services";
+  document.getElementById("inv-desc").value = composeTaskDescription(task);
   document.getElementById("inv-detail").value = task.service1 || "";
   document.getElementById("inv-qty").value = 1;
   document.getElementById("inv-rate").value = Number(task.price1 || 0);
@@ -650,7 +660,7 @@ function openInvoiceDialogMulti(tasks) {
       tr.dataset.origAmt = String(m.amount);
       tr.dataset.convertedAmt = String(m.amount); // 初始值=原始值
       tr.innerHTML = `
-        <td>${escapeHtml(m.task.id)}</td>
+        <td>${escapeHtml(composeTaskDescription(m.task))}</td>
         <td>${escapeHtml(m.task.service1 || "")}</td>
         <td>1</td>
         <td class="inv-rate-cell">${escapeHtml(fmtNum(m.amount))}</td>
@@ -692,7 +702,7 @@ formInvoice?.addEventListener("submit", async (e) => {
         ? parseFloat(row.dataset.convertedAmt) || 0
         : Number(t.price1) || 0;
       return {
-        description: "Consulting Services",
+        description: composeTaskDescription(t),
         detail: (t.service1 || "").trim(),
         taxLabel,
         qty: 1,
@@ -908,6 +918,7 @@ function renderNewInvoiceView() {
       <td>${escapeHtml(t.service1 || "")}</td>
       <td>${fmtNum(t.price1)}</td>
       <td><span class="${doneCls ? "status-done" : "status-pending"}">${escapeHtml(t.status)}</span></td>
+      <td>${escapeHtml(t.note || "")}</td>
       <td class="row-actions">
         <button type="button" class="ghost small" data-act="edit-from-inv">编辑</button>
       </td>`;
