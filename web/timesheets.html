@@ -3,145 +3,246 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Timesheets — Payroll Works</title>
-    <link rel="stylesheet" href="theme.css" />
-    <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="pages.css" />
+    <title>Timesheets — SimpleTask</title>
+    <script>(function(){var t=localStorage.getItem('pw-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link href="/vendor/daisyui-themes.css" rel="stylesheet" />
+    <link href="/vendor/daisyui-components.css" rel="stylesheet" />
+    <script src="/vendor/tailwind-browser.js"></script>
+    <style type="text/tailwindcss">@import "tailwindcss";</style>
   </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <a href="dashboard.html" class="muted">←</a>
-          <span>SimpleTask - Payroll</span>
-          <span class="muted">Payroll</span>
-          <span class="brand-flag" aria-hidden="true">🇨🇦</span>
-          <span class="tax-year"><span>2026</span></span>
-        </div>
-        <nav class="topbar-nav">
-          <a href="run-payroll.html" class="topbar-nav-item active">Payroll</a>
-        </nav>
-        <div class="topbar-actions">
-          <span class="muted" style="font-size: 0.8rem">RORO HOLDING LTD</span>
-          <div class="avatar">LH</div>
-        </div>
-      </header>
+  <body class="bg-base-200 min-h-screen">
 
-      <aside class="sidebar">
-        <a href="dashboard.html" class="nav-item"><span>⌂</span> Home</a>
-        <a href="run-payroll.html" class="nav-item active"><span>▤</span> Run Payroll</a>
-        <a href="#" class="nav-item" onclick="return false"><span>☰</span> Actions</a>
-        <a href="reports/payrun.html" class="nav-item"><span>▦</span> Reports</a>
-        <a href="employees.html" class="nav-item"><span>👤</span> Employees</a>
+    <!-- Navbar -->
+    <div class="navbar bg-base-100 border-b border-base-300 px-4 min-h-12 sticky top-0 z-30 shadow-sm">
+      <div class="navbar-start gap-2">
+        <a id="backBrand" href="run-payroll.html" class="btn btn-ghost btn-sm text-base-content/60">←</a>
+        <span class="font-bold text-sm tracking-wide">SimpleTask - Payroll</span>
+        <span class="text-base">🇨🇦</span>
+      </div>
+      <div class="navbar-center">
+        <a id="nav-run" href="run-payroll.html" class="btn btn-ghost btn-sm font-medium">Payroll</a>
+      </div>
+      <div class="navbar-end gap-3">
+        <span class="text-sm text-base-content/60" id="companyName">—</span>
+        <button onclick="toggleTheme()" class="btn btn-ghost btn-sm btn-circle" title="Toggle dark mode">
+          <svg id="iconSun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 5a7 7 0 100 14A7 7 0 0012 5z"/></svg>
+          <svg id="iconMoon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+        <div class="avatar avatar-placeholder">
+          <div class="bg-primary text-primary-content rounded-full w-8 text-xs"><span>PW</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside class="w-56 bg-base-100 border-r border-base-300 min-h-[calc(100vh-3rem)] hidden md:flex flex-col gap-1 p-3 shrink-0">
+        <a id="nav-home" href="dashboard.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Home
+        </a>
+
+        <div class="text-xs font-semibold text-base-content/40 px-2 pt-3 pb-1 uppercase tracking-wider">Payroll</div>
+        <a id="nav-runSide" href="run-payroll.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal bg-primary/10 text-primary">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          Payroll Runs
+        </a>
+        <a id="nav-reports" href="reports/payrun.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Reports
+        </a>
+
+        <div class="text-xs font-semibold text-base-content/40 px-2 pt-3 pb-1 uppercase tracking-wider">Management</div>
+        <a id="nav-employees" href="employees.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Employees
+        </a>
+        <a id="nav-payrules" href="pay-rules.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+          Pay Rules
+        </a>
+
+        <div class="text-xs font-semibold text-base-content/40 px-2 pt-3 pb-1 uppercase tracking-wider">Actions</div>
+        <a id="nav-yearend-task" href="year-end-task.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Year End Task
+        </a>
+        <a id="nav-roe" href="roe.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          Record of Employment
+        </a>
+
+        <div class="mt-auto -mx-3 -mb-3 px-3 py-3 border-t border-base-300">
+          <p class="text-xs text-base-content/40 font-medium">SimpleTask v0.0.18</p>
+          <a href="https://github.com/imlei/SimpleTask/issues" target="_blank" rel="noopener"
+             class="text-xs text-base-content/40 hover:text-primary transition-colors">Report a bug</a>
+        </div>
       </aside>
 
-      <main class="main">
-        <div class="hero-banner">
-          <span>Enter employee hours</span>
-          <span class="muted">Pay period · sample</span>
+      <!-- Main -->
+      <main class="flex-1 p-4 md:p-6 min-w-0">
+        <div class="mb-4">
+          <h1 class="text-xl font-bold">Timesheets</h1>
+          <p class="text-sm text-base-content/60 mt-0.5" id="heroPeriod">Enter employee hours</p>
         </div>
-        <div class="content">
-          <div class="payroll-steps-label">Payroll steps</div>
-          <div class="stepper">
-            <div class="step">Select pay cycle</div>
-            <div class="step">Salaries</div>
-            <div class="step active">Timesheets</div>
-            <div class="step">Calculate</div>
-            <div class="step">Review</div>
-            <div class="step">Payments</div>
-            <div class="step">Summary</div>
-          </div>
 
-          <div class="layout-2col">
-            <div style="min-width: 0">
-              <div class="table-toolbar">
-                <h2>Enter employee hours</h2>
-                <div style="display: flex; gap: 0.5rem">
-                  <button type="button" class="btn btn-sm">Daily</button>
-                  <button type="button" class="btn btn-sm">Import</button>
-                </div>
-              </div>
-              <div class="table-toolbar">
-                <div class="bulk-actions">
-                  <button type="button" class="btn btn-sm">✓ Approve</button>
-                  <button type="button" class="btn btn-sm">💾 Save</button>
-                  <button type="button" class="btn btn-sm">🗑 Delete</button>
-                </div>
-                <div class="search-inline">
-                  <input type="search" placeholder="Name or ID" />
-                  <button type="button" class="btn btn-primary">Search</button>
-                </div>
-              </div>
+        <!-- Stepper -->
+        <ul class="steps steps-horizontal w-full max-w-3xl mb-6 text-xs">
+          <li class="step step-neutral">Pay Cycle</li>
+          <li class="step step-neutral">Salaries</li>
+          <li class="step step-primary font-semibold">Timesheets</li>
+          <li class="step">Calculate</li>
+          <li class="step">Review</li>
+          <li class="step">Payments</li>
+          <li class="step">Summary</li>
+        </ul>
 
-              <div class="panel">
-                <table class="data">
-                  <thead>
-                    <tr>
-                      <th><input type="checkbox" /></th>
-                      <th>#</th>
-                      <th>Employee</th>
-                      <th>ID</th>
-                      <th>Earnings type</th>
-                      <th>Hours</th>
-                      <th>Rate</th>
-                      <th>Total</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><input type="checkbox" /></td>
-                      <td>1</td>
-                      <td>OU, HONGCHENG</td>
-                      <td class="mono">000002</td>
-                      <td>
-                        <select class="input" style="font-size: 0.8rem">
-                          <option>Regular Hours</option>
-                        </select>
-                      </td>
-                      <td><input class="cell-input" value="75.83334" /></td>
-                      <td><input class="cell-input" value="18.00" /></td>
-                      <td class="mono">$1,365.00</td>
-                      <td><button type="button" class="icon-btn">💾</button> <button type="button" class="icon-btn">+</button></td>
-                    </tr>
-                    <tr>
-                      <td><input type="checkbox" /></td>
-                      <td>2</td>
-                      <td>SAWAENGPON, JIRAYU</td>
-                      <td class="mono">000016</td>
-                      <td>
-                        <select class="input" style="font-size: 0.8rem">
-                          <option>Regular Hours</option>
-                        </select>
-                      </td>
-                      <td><input class="cell-input" value="43.33" /></td>
-                      <td><input class="cell-input" value="17.42" /></td>
-                      <td class="mono">$754.86</td>
-                      <td><button type="button" class="icon-btn">💾</button> <button type="button" class="icon-btn">+</button></td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div class="pagination-bar">
-                  <span>← 1 / 1 →</span>
-                  <span>Per page <select class="input"><option>10</option></select></span>
-                </div>
-                <div class="footer-summary" style="padding: 0.75rem 1rem">
-                  Total gross approved: <strong>$0.00</strong> for 0 employees
-                </div>
+        <!-- Toolbar -->
+        <div class="card bg-base-100 shadow-sm mb-4">
+          <div class="card-body p-4">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+              <div class="flex items-center gap-2">
+                <button type="button" class="btn btn-ghost btn-sm">Daily</button>
+                <button type="button" class="btn btn-ghost btn-sm">Import</button>
               </div>
-
-              <div class="flow-footer">
-                <a href="salaries.html" class="btn">← Salaries</a>
-                <a href="calculate.html" class="btn btn-primary" style="text-decoration: none">Calculate →</a>
+              <div class="flex items-center gap-2">
+                <button type="button" class="btn btn-ghost btn-sm gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  Approve
+                </button>
+                <button type="button" class="btn btn-ghost btn-sm gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                  Save
+                </button>
+                <div class="join">
+                  <input type="search" placeholder="Name or ID" class="input input-sm input-bordered join-item w-40" />
+                  <button type="button" class="btn btn-sm btn-primary join-item">Search</button>
+                </div>
               </div>
             </div>
-            <aside class="tips-box">
-              <strong>Quick tips</strong><br />
-              Switch to Daily view for per-day entry. Import CSV when available.
-            </aside>
           </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card bg-base-100 shadow-sm overflow-x-auto mb-4">
+          <table class="table table-sm">
+            <thead class="bg-base-200 text-xs uppercase tracking-wide text-base-content/60">
+              <tr>
+                <th><input type="checkbox" class="checkbox checkbox-sm" /></th>
+                <th>#</th>
+                <th>Employee</th>
+                <th>ID</th>
+                <th>Earnings Type</th>
+                <th class="text-right">Hours</th>
+                <th class="text-right">Rate</th>
+                <th class="text-right">Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="hover">
+                <td><input type="checkbox" class="checkbox checkbox-sm" /></td>
+                <td class="text-base-content/50">1</td>
+                <td class="font-medium">OU, HONGCHENG</td>
+                <td class="font-mono text-xs text-base-content/60">000002</td>
+                <td>
+                  <select class="select select-xs select-bordered w-36">
+                    <option>Regular Hours</option>
+                    <option>Overtime</option>
+                  </select>
+                </td>
+                <td class="text-right"><input type="number" class="input input-xs input-bordered w-24 text-right" value="75.83" /></td>
+                <td class="text-right"><input type="number" class="input input-xs input-bordered w-24 text-right" value="18.00" /></td>
+                <td class="text-right font-mono text-sm">$1,365.00</td>
+                <td>
+                  <button type="button" class="btn btn-ghost btn-xs btn-circle" title="Save">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                  </button>
+                </td>
+              </tr>
+              <tr class="hover">
+                <td><input type="checkbox" class="checkbox checkbox-sm" /></td>
+                <td class="text-base-content/50">2</td>
+                <td class="font-medium">SAWAENGPON, JIRAYU</td>
+                <td class="font-mono text-xs text-base-content/60">000016</td>
+                <td>
+                  <select class="select select-xs select-bordered w-36">
+                    <option>Regular Hours</option>
+                    <option>Overtime</option>
+                  </select>
+                </td>
+                <td class="text-right"><input type="number" class="input input-xs input-bordered w-24 text-right" value="43.33" /></td>
+                <td class="text-right"><input type="number" class="input input-xs input-bordered w-24 text-right" value="17.42" /></td>
+                <td class="text-right font-mono text-sm">$754.86</td>
+                <td>
+                  <button type="button" class="btn btn-ghost btn-xs btn-circle" title="Save">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="text-xs text-base-content/50 border-t border-base-200">
+                <td colspan="7" class="px-4 py-2">Total gross approved: <strong class="text-base-content">$2,119.86</strong> · 2 employees</td>
+                <td colspan="2" class="px-4 py-2 text-right">
+                  <span class="text-base-content/40">1 / 1</span>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Footer nav -->
+        <div class="flex items-center justify-between">
+          <a id="btnBack" href="salaries.html" class="btn btn-ghost btn-sm gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Salaries
+          </a>
+          <a id="btnNext" href="calculate.html" class="btn btn-primary btn-sm gap-1">
+            Calculate
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
         </div>
       </main>
     </div>
+
+    <script>
+      const p = new URLSearchParams(location.search);
+      const companyId = p.get('company') || p.get('company_id') || '';
+
+      function withC(href) { return companyId ? href + (href.includes('?') ? '&' : '?') + 'company=' + encodeURIComponent(companyId) : href; }
+
+      document.getElementById('backBrand').href        = withC('run-payroll.html');
+      document.getElementById('nav-run').href          = withC('run-payroll.html');
+      document.getElementById('nav-home').href         = companyId ? 'company.html?company=' + encodeURIComponent(companyId) : 'dashboard.html';
+      document.getElementById('nav-runSide').href      = withC('run-payroll.html');
+      document.getElementById('nav-reports').href      = withC('reports/payrun.html');
+      document.getElementById('nav-employees').href    = withC('employees.html');
+      document.getElementById('nav-payrules').href     = withC('pay-rules.html');
+      document.getElementById('nav-yearend-task').href = withC('year-end-task.html');
+      document.getElementById('nav-roe').href          = withC('roe.html');
+      document.getElementById('btnBack').href          = withC('salaries.html');
+      document.getElementById('btnNext').href          = withC('calculate.html');
+
+      if (companyId) {
+        fetch('/api/payroll/companies/' + encodeURIComponent(companyId))
+          .then(r => r.ok ? r.json() : null)
+          .then(c => { if (c) document.getElementById('companyName').textContent = c.name || c.legalName || companyId; })
+          .catch(() => {});
+      }
+
+      (function () {
+        const t = document.documentElement.getAttribute('data-theme');
+        document.getElementById('iconSun').classList.toggle('hidden', t !== 'dark');
+        document.getElementById('iconMoon').classList.toggle('hidden', t === 'dark');
+      })();
+      function toggleTheme() {
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pw-theme', next);
+        document.getElementById('iconSun').classList.toggle('hidden', next !== 'dark');
+        document.getElementById('iconMoon').classList.toggle('hidden', next === 'dark');
+      }
+    </script>
   </body>
 </html>
