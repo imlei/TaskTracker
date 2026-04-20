@@ -41,7 +41,7 @@
 
       <!-- Left Sidebar -->
       <aside class="w-56 bg-base-100 border-r border-base-300 min-h-[calc(100vh-3rem)] hidden md:flex flex-col gap-1 p-3 shrink-0">
-        <a id="nav-home" href="dashboard.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal bg-primary/10 text-primary">
+        <a id="nav-home" href="dashboard.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
           Home
         </a>
@@ -51,10 +51,12 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
           Payroll Runs
         </a>
-        <a id="nav-reports" href="reports/payrun.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          Reports
-        </a>
+
+        <div class="text-xs font-semibold text-base-content/40 px-2 pt-3 pb-1 uppercase tracking-wider">Reports</div>
+        <a id="nav-payrun" href="reports/payrun.html" class="btn btn-ghost btn-sm justify-start font-normal w-full pl-5">Pay run</a>
+        <a id="nav-remittance" href="reports/remittance.html" class="btn btn-ghost btn-sm justify-start font-normal w-full pl-5">Remittance</a>
+        <a id="nav-payslips" href="reports/cheques-payslips.html" class="btn btn-ghost btn-sm justify-start font-normal w-full pl-5">Cheques / Payslips</a>
+        <a id="nav-accountant" href="reports/accountant/index.html" class="btn btn-ghost btn-sm justify-start font-normal w-full pl-5">Accountant</a>
 
         <div class="text-xs font-semibold text-base-content/40 px-2 pt-3 pb-1 uppercase tracking-wider">Management</div>
         <a id="nav-employees" href="employees.html" class="btn btn-ghost btn-sm justify-start gap-2 font-normal">
@@ -78,7 +80,7 @@
 
         <div class="mt-auto -mx-3 -mb-3 px-3 py-3 border-t border-base-300">
           <p class="text-xs text-base-content/40 font-medium">SimpleTask v0.0.18</p>
-          <a href="https://github.com/imlei/SimpleTask/issues" target="_blank" rel="noopener"
+          <a href="https://github.com/taxdeep/SimpleTask/issues" target="_blank" rel="noopener"
              class="text-xs text-base-content/40 hover:text-primary transition-colors">Report a bug</a>
         </div>
       </aside>
@@ -162,7 +164,10 @@
       var q = '?company=' + encodeURIComponent(companyID);
       document.getElementById('nav-home').href         = 'company.html' + q;
       document.getElementById('nav-runSide').href      = 'run-payroll.html' + q;
-      document.getElementById('nav-reports').href      = 'reports/payrun.html' + q;
+      document.getElementById('nav-payrun').href       = 'reports/payrun.html' + q;
+      document.getElementById('nav-remittance').href   = 'reports/remittance.html' + q;
+      document.getElementById('nav-payslips').href     = 'reports/cheques-payslips.html' + q;
+      document.getElementById('nav-accountant').href   = 'reports/accountant/index.html' + q;
       document.getElementById('nav-employees').href    = 'employees.html' + q;
       document.getElementById('nav-payrules').href     = 'pay-rules.html' + q;
       document.getElementById('nav-yearend-task').href = 'year-end-task.html' + q;
