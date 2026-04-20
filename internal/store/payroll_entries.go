@@ -142,6 +142,35 @@ func (s *Store) UpsertPayrollEntry(e models.PayrollEntry) (models.PayrollEntry, 
 	return e, err
 }
 
+// OverrideEntryDeductions directly updates statutory deduction values on a
+// calculated/finalized entry, bypassing the normal "preserve calculated" guard.
+func (s *Store) OverrideEntryDeductions(id string, fed, prov, ei, cpp, cpp2, totalDed, netPay float64) (models.PayrollEntry, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	now := time.Now().UTC().Format(time.RFC3339)
+	_, err := s.db.Exec(`
+		UPDATE payroll_entries SET
+		  federal_tax=?, provincial_tax=?, ei_ee=?, cpp_ee=?, cpp2_ee=?,
+		  total_deductions=?, net_pay=?, updated_at=?
+		WHERE id=?`,
+		fed, prov, ei, cpp, cpp2, totalDed, netPay, now, id,
+	)
+	if err != nil {
+		return models.PayrollEntry{}, err
+	}
+	var e models.PayrollEntry
+	err = s.db.QueryRow(`
+		SELECT id, period_id, employee_id, company_id, hours, pay_rate, gross_pay,
+		       cpp_ee, cpp2_ee, ei_ee, federal_tax, provincial_tax,
+		       total_deductions, net_pay, status
+		FROM payroll_entries WHERE id=?`, id).Scan(
+		&e.ID, &e.PeriodID, &e.EmployeeID, &e.CompanyID, &e.Hours, &e.PayRate, &e.GrossPay,
+		&e.CPPEmployee, &e.CPP2Employee, &e.EIEmployee, &e.FederalTax, &e.ProvincialTax,
+		&e.TotalDeductions, &e.NetPay, &e.Status,
+	)
+	return e, err
+}
+
 // ListPayrollEntries returns all entries for a period, joined with employee name.
 // GetPayrollEntry returns a single entry by ID (used for ownership checks).
 func (s *Store) GetPayrollEntry(id string) (models.PayrollEntry, error) {

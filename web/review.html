@@ -605,7 +605,7 @@
         var totalDed = newFed + newProv + newEI + newCPP;
         var newNet  = gross - totalDed;
 
-        var body = Object.assign({}, e, {
+        var body = {
           federalTax:      newFed,
           provincialTax:   newProv,
           eiEmployee:      newEI,
@@ -613,10 +613,10 @@
           cpp2Employee:    parseFloat(e.cpp2Employee) || 0,
           totalDeductions: totalDed,
           netPay:          newNet,
-        });
+        };
 
         document.getElementById('detailSaveBtn').disabled = true;
-        fetch('/api/payroll/periods/' + encodeURIComponent(periodId) + '/entries', {
+        fetch('/api/payroll/entries/' + encodeURIComponent(e.id) + '/override', {
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },

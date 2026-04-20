@@ -177,6 +177,39 @@ func (s *Server) handleEntryEarnings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Sub-route: POST /api/payroll/entries/{id}/override
+	if len(parts) == 2 && parts[1] == "override" {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		var body struct {
+			FederalTax      float64 `json:"federalTax"`
+			ProvincialTax   float64 `json:"provincialTax"`
+			EIEmployee      float64 `json:"eiEmployee"`
+			CPPEmployee     float64 `json:"cppEmployee"`
+			CPP2Employee    float64 `json:"cpp2Employee"`
+			TotalDeductions float64 `json:"totalDeductions"`
+			NetPay          float64 `json:"netPay"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		updated, err := s.Store.OverrideEntryDeductions(
+			entryID,
+			body.FederalTax, body.ProvincialTax, body.EIEmployee,
+			body.CPPEmployee, body.CPP2Employee,
+			body.TotalDeductions, body.NetPay,
+		)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		writeJSON(w, http.StatusOK, updated)
+		return
+	}
+
 	switch r.Method {
 	case http.MethodGet:
 		list := s.Store.ListEntryEarnings(entryID)
