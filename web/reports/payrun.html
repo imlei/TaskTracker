@@ -260,7 +260,7 @@
       document.getElementById('st').addEventListener('change', render);
 
       document.getElementById('y').value = new Date().getFullYear().toString();
-      document.getElementById('taxYear').textContent = new Date().getFullYear();
+      (document.getElementById('taxYear')||{}).textContent = new Date().getFullYear();
 
       // Delete period function
       function deletePeriod(periodId, force) {

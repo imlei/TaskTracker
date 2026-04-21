@@ -228,7 +228,7 @@
         var start = new Date(end); start.setDate(start.getDate() - 13);
         document.getElementById('periodStart').value = fmt(start);
         document.getElementById('periodEnd').value   = fmt(end);
-        document.getElementById('taxYear').textContent = today.getFullYear();
+        (document.getElementById('taxYear')||{}).textContent = today.getFullYear();
       })();
 
       if (companyId) {

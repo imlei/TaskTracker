@@ -337,7 +337,7 @@
             document.getElementById('heroPeriod').textContent =
               (p.payrollType || 'Regular') + ' · ' + (p.payFrequency || '') +
               ' · Pay date ' + (p.payDate || '');
-            if (p.payDate) document.getElementById('taxYear').textContent = p.payDate.slice(0, 4);
+            if (p.payDate) (document.getElementById('taxYear')||{}).textContent = p.payDate.slice(0, 4);
             if (periodStatus === 'finalized') {
               document.getElementById('finalizedBanner').classList.remove('hidden');
             }

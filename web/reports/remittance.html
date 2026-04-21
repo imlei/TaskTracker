@@ -155,7 +155,7 @@
       // Default month = current
       var now = new Date();
       document.getElementById('monthSel').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-      document.getElementById('taxYear').textContent = now.getFullYear();
+      (document.getElementById('taxYear')||{}).textContent = now.getFullYear();
 
       if (companyId) {
         fetch('/api/payroll/companies/' + encodeURIComponent(companyId), { credentials: 'same-origin' })

@@ -172,7 +172,7 @@
       document.getElementById('nav-remittance').href  = withC('remittance.html');
       document.getElementById('nav-payslips').href    = withC('cheques-payslips.html');
       document.getElementById('nav-accountant').href  = withC('accountant/index.html');
-      document.getElementById('taxYear').textContent  = new Date().getFullYear();
+      (document.getElementById('taxYear')||{}).textContent  = new Date().getFullYear();
 
       fetch('/api/me', { credentials: 'same-origin' })
         .then(function(r) { return r.ok ? r.json() : null; })

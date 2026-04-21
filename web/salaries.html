@@ -295,7 +295,7 @@
             document.getElementById('heroPeriod').textContent =
               (p.payrollType || 'Regular') + ' · ' + (p.payFrequency || '') +
               ' · Pay date ' + (p.payDate || '');
-            if (p.payDate) document.getElementById('taxYear').textContent = p.payDate.slice(0, 4);
+            var tyEl = document.getElementById('taxYear'); if (p.payDate && tyEl) tyEl.textContent = p.payDate.slice(0, 4);
             var cid = p.companyId || companyId;
             if (cid) {
               fetch('/api/payroll/companies/' + encodeURIComponent(cid), { credentials: 'same-origin' })
