@@ -63,6 +63,9 @@ func (s *Store) UpsertPayrollEntry(e models.PayrollEntry) (models.PayrollEntry, 
 		if e.Status == "" {
 			e.Status = "draft"
 		}
+		if e.PaymentType == "" {
+			e.PaymentType = "cheque"
+		}
 		snap := "{}"
 		if e.CalcSnapshotJSON != "" {
 			snap = e.CalcSnapshotJSON
@@ -73,13 +76,13 @@ func (s *Store) UpsertPayrollEntry(e models.PayrollEntry) (models.PayrollEntry, 
 			   cpp_ee, cpp2_ee, ei_ee, federal_tax, provincial_tax,
 			   total_deductions, net_pay, cpp_er, cpp2_er, ei_er,
 			   ytd_gross, ytd_cpp_ee, ytd_cpp2_ee, ytd_ei_ee,
-			   calc_snapshot_json, status, created_at, updated_at)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+			   calc_snapshot_json, payment_type, status, created_at, updated_at)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 			e.ID, e.PeriodID, e.EmployeeID, e.CompanyID, e.Hours, e.PayRate, e.GrossPay,
 			e.CPPEmployee, e.CPP2Employee, e.EIEmployee, e.FederalTax, e.ProvincialTax,
 			e.TotalDeductions, e.NetPay, e.CPPEmployer, e.CPP2Employer, e.EIEmployer,
 			e.YTDGross, e.YTDCPPEe, e.YTDCPP2Ee, e.YTDEIEe,
-			snap, e.Status, e.CreatedAt, e.UpdatedAt,
+			snap, e.PaymentType, e.Status, e.CreatedAt, e.UpdatedAt,
 		)
 		return e, err
 	}
@@ -93,20 +96,40 @@ func (s *Store) UpsertPayrollEntry(e models.PayrollEntry) (models.PayrollEntry, 
 	}
 
 	// Fetch existing entry to check status
-	var existingStatus string
+	var existingStatus, existingPaymentType, existingSnapshot string
 	var existingCPPEe, existingCPP2Ee, existingEIEe, existingFedTax, existingProvTax float64
 	var existingTotalDed, existingNetPay, existingCPPEr, existingCPP2Er, existingEIEr float64
+	var existingYTDGross, existingYTDCPPEe, existingYTDCPP2Ee, existingYTDEIEe float64
 	_ = s.db.QueryRow(`
 		SELECT status, cpp_ee, cpp2_ee, ei_ee, federal_tax, provincial_tax,
-		       total_deductions, net_pay, cpp_er, cpp2_er, ei_er
+		       total_deductions, net_pay, cpp_er, cpp2_er, ei_er,
+		       ytd_gross, ytd_cpp_ee, ytd_cpp2_ee, ytd_ei_ee,
+		       COALESCE(payment_type,'cheque'), calc_snapshot_json
 		FROM payroll_entries WHERE id=?`, existingID).Scan(
 		&existingStatus, &existingCPPEe, &existingCPP2Ee, &existingEIEe, &existingFedTax, &existingProvTax,
 		&existingTotalDed, &existingNetPay, &existingCPPEr, &existingCPP2Er, &existingEIEr,
+		&existingYTDGross, &existingYTDCPPEe, &existingYTDCPP2Ee, &existingYTDEIEe,
+		&existingPaymentType, &existingSnapshot,
 	)
+	if e.CalcSnapshotJSON == "" {
+		snap = existingSnapshot
+	}
+	if e.Status == "" {
+		e.Status = existingStatus
+	}
+	if e.PaymentType == "" {
+		e.PaymentType = existingPaymentType
+	}
 
 	// Preserve calculated deduction values if entry was already calculated
 	// and the incoming values are all zeros (which happens from saveAll)
 	if existingStatus == "calculated" || existingStatus == "finalized" {
+		if e.YTDGross == 0 && e.YTDCPPEe == 0 && e.YTDCPP2Ee == 0 && e.YTDEIEe == 0 {
+			e.YTDGross = existingYTDGross
+			e.YTDCPPEe = existingYTDCPPEe
+			e.YTDCPP2Ee = existingYTDCPP2Ee
+			e.YTDEIEe = existingYTDEIEe
+		}
 		// Only update hours, pay_rate, gross_pay, ytd_*, status, updated_at
 		_, err := s.db.Exec(`
 			UPDATE payroll_entries SET
@@ -114,13 +137,13 @@ func (s *Store) UpsertPayrollEntry(e models.PayrollEntry) (models.PayrollEntry, 
 			  cpp_ee=?, cpp2_ee=?, ei_ee=?, federal_tax=?, provincial_tax=?,
 			  total_deductions=?, net_pay=?, cpp_er=?, cpp2_er=?, ei_er=?,
 			  ytd_gross=?, ytd_cpp_ee=?, ytd_cpp2_ee=?, ytd_ei_ee=?,
-			  calc_snapshot_json=?, status=?, updated_at=?
+			  calc_snapshot_json=?, payment_type=?, status=?, updated_at=?
 			WHERE id=?`,
 			e.Hours, e.PayRate, e.GrossPay,
 			existingCPPEe, existingCPP2Ee, existingEIEe, existingFedTax, existingProvTax,
 			existingTotalDed, existingNetPay, existingCPPEr, existingCPP2Er, existingEIEr,
 			e.YTDGross, e.YTDCPPEe, e.YTDCPP2Ee, e.YTDEIEe,
-			snap, e.Status, now, existingID,
+			snap, e.PaymentType, e.Status, now, existingID,
 		)
 		return e, err
 	}
@@ -132,13 +155,13 @@ func (s *Store) UpsertPayrollEntry(e models.PayrollEntry) (models.PayrollEntry, 
 		  cpp_ee=?, cpp2_ee=?, ei_ee=?, federal_tax=?, provincial_tax=?,
 		  total_deductions=?, net_pay=?, cpp_er=?, cpp2_er=?, ei_er=?,
 		  ytd_gross=?, ytd_cpp_ee=?, ytd_cpp2_ee=?, ytd_ei_ee=?,
-		  calc_snapshot_json=?, status=?, updated_at=?
+		  calc_snapshot_json=?, payment_type=?, status=?, updated_at=?
 		WHERE id=?`,
 		e.Hours, e.PayRate, e.GrossPay,
 		e.CPPEmployee, e.CPP2Employee, e.EIEmployee, e.FederalTax, e.ProvincialTax,
 		e.TotalDeductions, e.NetPay, e.CPPEmployer, e.CPP2Employer, e.EIEmployer,
 		e.YTDGross, e.YTDCPPEe, e.YTDCPP2Ee, e.YTDEIEe,
-		snap, e.Status, now, existingID,
+		snap, e.PaymentType, e.Status, now, existingID,
 	)
 	return e, err
 }
@@ -198,7 +221,7 @@ func (s *Store) ListPayrollEntries(periodID string) []models.PayrollEntry {
 		       e.total_deductions, e.net_pay,
 		       e.cpp_er, e.cpp2_er, e.ei_er,
 		       e.ytd_gross, e.ytd_cpp_ee, e.ytd_cpp2_ee, e.ytd_ei_ee,
-		       e.calc_snapshot_json, e.status,
+		       e.calc_snapshot_json, COALESCE(e.payment_type,'cheque'), e.status,
 		       e.created_at, e.updated_at
 		FROM payroll_entries e
 		LEFT JOIN payroll_employees pe ON pe.id = e.employee_id
@@ -220,7 +243,7 @@ func (s *Store) ListPayrollEntries(periodID string) []models.PayrollEntry {
 			&e.TotalDeductions, &e.NetPay,
 			&e.CPPEmployer, &e.CPP2Employer, &e.EIEmployer,
 			&e.YTDGross, &e.YTDCPPEe, &e.YTDCPP2Ee, &e.YTDEIEe,
-			&e.CalcSnapshotJSON, &e.Status,
+			&e.CalcSnapshotJSON, &e.PaymentType, &e.Status,
 			&e.CreatedAt, &e.UpdatedAt,
 		); err != nil {
 			continue

@@ -288,6 +288,8 @@ type PayrollEntry struct {
 	// Calculation audit trail (JSON blob of rates+inputs used)
 	CalcSnapshotJSON string `json:"calcSnapshotJson,omitempty"`
 
+	PaymentType string `json:"paymentType,omitempty"` // cheque | deposit
+
 	Status    string `json:"status"` // draft | approved
 	CreatedAt string `json:"createdAt,omitempty"`
 	UpdatedAt string `json:"updatedAt,omitempty"`
