@@ -222,23 +222,27 @@
       // Fallback defaults; replaced below when the company has previous pay runs.
       setFallbackDates();
 
+      var companyDefaultFrequency = '';
+
       if (companyId) {
         fetch('/api/payroll/companies/' + encodeURIComponent(companyId), { credentials: 'same-origin' })
           .then(function (r) { return r.ok ? r.json() : null; })
           .then(function (c) {
             if (c) {
               document.getElementById('companyName').textContent = c.name || c.legalName || companyId;
-              applyCompanyFrequency(c.payFrequency);
+              companyDefaultFrequency = normalizeFrequency(c.payFrequency, 0);
+              applyCompanyFrequency(companyDefaultFrequency);
             }
-          });
-        loadPeriods();
+            return loadPeriods();
+          })
+          .catch(loadPeriods);
       } else {
         document.getElementById('periodsTbody').innerHTML =
           '<tr><td colspan="6" class="text-center py-4 text-base-content/40">No company selected.</td></tr>';
       }
 
       function loadPeriods() {
-        fetch('/api/payroll/periods?company_id=' + encodeURIComponent(companyId), { credentials: 'same-origin' })
+        return fetch('/api/payroll/periods?company_id=' + encodeURIComponent(companyId), { credentials: 'same-origin' })
           .then(function (r) { return r.ok ? r.json() : []; })
           .then(function(list) {
             applyNextPeriodDefaults(list || []);
@@ -257,7 +261,7 @@
       }
 
       function applyCompanyFrequency(freq) {
-        var normalized = String(freq || '').toLowerCase();
+        var normalized = normalizeFrequency(freq, 0);
         var value = '';
         if (normalized === 'weekly') value = '52|Weekly';
         else if (normalized === 'biweekly' || normalized === 'bi-weekly') value = '26|Bi-weekly';
@@ -270,7 +274,7 @@
         var last = latestPeriodByEndDate(list);
         if (!last || !last.periodEnd) return;
 
-        var freq = normalizePeriodFrequency(last);
+        var freq = companyDefaultFrequency || normalizePeriodFrequency(last);
         if (freq) applyCompanyFrequency(freq);
 
         var next = nextPeriodAfter(parseDate(last.periodEnd), freq);
@@ -289,15 +293,19 @@
       }
 
       function normalizePeriodFrequency(p) {
-        var raw = String((p && p.payFrequency) || '').toLowerCase();
+        return normalizeFrequency((p && p.payFrequency) || '', p && p.paysPerYear);
+      }
+
+      function normalizeFrequency(rawValue, paysPerYear) {
+        var raw = String(rawValue || '').toLowerCase();
         if (raw === 'weekly') return 'weekly';
         if (raw === 'bi-weekly' || raw === 'biweekly') return 'biweekly';
         if (raw === 'semi-monthly' || raw === 'semimonthly') return 'semimonthly';
         if (raw === 'monthly') return 'monthly';
-        if (p && p.paysPerYear === 52) return 'weekly';
-        if (p && p.paysPerYear === 26) return 'biweekly';
-        if (p && p.paysPerYear === 24) return 'semimonthly';
-        if (p && p.paysPerYear === 12) return 'monthly';
+        if (paysPerYear === 52) return 'weekly';
+        if (paysPerYear === 26) return 'biweekly';
+        if (paysPerYear === 24) return 'semimonthly';
+        if (paysPerYear === 12) return 'monthly';
         return '';
       }
 
