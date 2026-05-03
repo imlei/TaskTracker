@@ -36,7 +36,8 @@ func (s *Store) GetYTDBeforePeriod(employeeID, periodID, payYear string) YTDSnap
 		JOIN payroll_periods p ON p.id = e.period_id
 		WHERE e.employee_id = ?
 		  AND e.period_id <> ?
-		  AND e.status IN ('draft','approved')
+		  AND e.status IN ('calculated','finalized')
+		  AND p.status IN ('calculated','finalized')
 		  AND substr(p.pay_date, 1, 4) = ?`,
 		employeeID, periodID, payYear,
 	).Scan(&snap.Gross, &snap.CPPEe, &snap.CPP2Ee, &snap.EIEe)
