@@ -219,23 +219,17 @@
       document.getElementById('nav-roe').href         = withC('roe.html');
       document.getElementById('backLink').href     = withC('dashboard.html');
 
-      // Auto-fill dates: today as pay date, last 14-day window as period
-      (function () {
-        var today = new Date();
-        function fmt(d) { return d.toISOString().slice(0, 10); }
-        document.getElementById('payDate').value = fmt(today);
-        var end = new Date(today); end.setDate(end.getDate() - 1);
-        var start = new Date(end); start.setDate(start.getDate() - 13);
-        document.getElementById('periodStart').value = fmt(start);
-        document.getElementById('periodEnd').value   = fmt(end);
-        (document.getElementById('taxYear')||{}).textContent = today.getFullYear();
-      })();
+      // Fallback defaults; replaced below when the company has previous pay runs.
+      setFallbackDates();
 
       if (companyId) {
         fetch('/api/payroll/companies/' + encodeURIComponent(companyId), { credentials: 'same-origin' })
           .then(function (r) { return r.ok ? r.json() : null; })
           .then(function (c) {
-            if (c) document.getElementById('companyName').textContent = c.name || c.legalName || companyId;
+            if (c) {
+              document.getElementById('companyName').textContent = c.name || c.legalName || companyId;
+              applyCompanyFrequency(c.payFrequency);
+            }
           });
         loadPeriods();
       } else {
@@ -246,7 +240,106 @@
       function loadPeriods() {
         fetch('/api/payroll/periods?company_id=' + encodeURIComponent(companyId), { credentials: 'same-origin' })
           .then(function (r) { return r.ok ? r.json() : []; })
-          .then(renderPeriods);
+          .then(function(list) {
+            applyNextPeriodDefaults(list || []);
+            renderPeriods(list || []);
+          });
+      }
+
+      function setFallbackDates() {
+        var today = new Date();
+        document.getElementById('payDate').value = fmtDate(today);
+        var end = addDays(today, -1);
+        var start = addDays(end, -13);
+        document.getElementById('periodStart').value = fmtDate(start);
+        document.getElementById('periodEnd').value   = fmtDate(end);
+        (document.getElementById('taxYear')||{}).textContent = today.getFullYear();
+      }
+
+      function applyCompanyFrequency(freq) {
+        var normalized = String(freq || '').toLowerCase();
+        var value = '';
+        if (normalized === 'weekly') value = '52|Weekly';
+        else if (normalized === 'biweekly' || normalized === 'bi-weekly') value = '26|Bi-weekly';
+        else if (normalized === 'semimonthly' || normalized === 'semi-monthly') value = '24|Semi-monthly';
+        else if (normalized === 'monthly') value = '12|Monthly';
+        if (value) document.getElementById('payFreq').value = value;
+      }
+
+      function applyNextPeriodDefaults(list) {
+        var last = latestPeriodByEndDate(list);
+        if (!last || !last.periodEnd) return;
+
+        var freq = normalizePeriodFrequency(last);
+        if (freq) applyCompanyFrequency(freq);
+
+        var next = nextPeriodAfter(parseDate(last.periodEnd), freq);
+        if (!next) return;
+
+        document.getElementById('periodStart').value = fmtDate(next.start);
+        document.getElementById('periodEnd').value   = fmtDate(next.end);
+        document.getElementById('payDate').value     = fmtDate(next.end);
+        (document.getElementById('taxYear')||{}).textContent = next.end.getFullYear();
+      }
+
+      function latestPeriodByEndDate(list) {
+        return (list || []).filter(function(p) { return p.periodEnd; }).sort(function(a, b) {
+          return parseDate(b.periodEnd) - parseDate(a.periodEnd);
+        })[0] || null;
+      }
+
+      function normalizePeriodFrequency(p) {
+        var raw = String((p && p.payFrequency) || '').toLowerCase();
+        if (raw === 'weekly') return 'weekly';
+        if (raw === 'bi-weekly' || raw === 'biweekly') return 'biweekly';
+        if (raw === 'semi-monthly' || raw === 'semimonthly') return 'semimonthly';
+        if (raw === 'monthly') return 'monthly';
+        if (p && p.paysPerYear === 52) return 'weekly';
+        if (p && p.paysPerYear === 26) return 'biweekly';
+        if (p && p.paysPerYear === 24) return 'semimonthly';
+        if (p && p.paysPerYear === 12) return 'monthly';
+        return '';
+      }
+
+      function nextPeriodAfter(lastEnd, freq) {
+        if (!lastEnd || isNaN(lastEnd.getTime())) return null;
+        var start = addDays(lastEnd, 1);
+        var end;
+        if (freq === 'semimonthly') {
+          end = start.getDate() <= 15
+            ? new Date(start.getFullYear(), start.getMonth(), 15)
+            : lastDayOfMonth(start);
+        } else if (freq === 'monthly') {
+          end = lastDayOfMonth(start);
+        } else if (freq === 'weekly') {
+          end = addDays(start, 6);
+        } else {
+          end = addDays(start, 13);
+        }
+        return { start: start, end: end };
+      }
+
+      function parseDate(s) {
+        var m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!m) return new Date(NaN);
+        return new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+      }
+
+      function fmtDate(d) {
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, '0');
+        var day = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+      }
+
+      function addDays(d, days) {
+        var copy = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        copy.setDate(copy.getDate() + days);
+        return copy;
+      }
+
+      function lastDayOfMonth(d) {
+        return new Date(d.getFullYear(), d.getMonth() + 1, 0);
       }
 
       function renderPeriods(list) {
