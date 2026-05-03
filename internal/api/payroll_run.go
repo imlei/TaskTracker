@@ -47,7 +47,11 @@ func (s *Server) handlePayrollPeriods(w http.ResponseWriter, r *http.Request) {
 		if p.PaysPerYear == 0 {
 			p.PaysPerYear = 26
 		}
-		created := s.Store.CreatePayrollPeriod(p)
+		created, err := s.Store.CreatePayrollPeriod(p)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		writeJSON(w, http.StatusCreated, created)
 
 	default:

@@ -124,7 +124,7 @@
 
         var companyName = company ? (company.name || company.legalName) : '—';
         var companyBN   = company ? (company.businessNumber || '') : '';
-        var companyAddr = company ? (company.address || '') : '';
+        var companyAddr = company ? formatCompanyAddress(company) : [];
 
         var payDate  = period ? period.payDate     : '—';
         var pStart   = period ? period.periodStart : '—';
@@ -150,7 +150,7 @@
             '<div class="stub-company">',
               '<div>' + esc(companyName) + '</div>',
               companyBN ? '<div class="bn">BN: ' + esc(companyBN) + '</div>' : '',
-              companyAddr ? '<div class="bn">' + esc(companyAddr) + '</div>' : '',
+              companyAddr.map(function (line) { return '<div class="bn">' + esc(line) + '</div>'; }).join(''),
             '</div>',
             '<div class="stub-title">',
               '<div class="label">PAY STUB</div>',
@@ -216,6 +216,25 @@
 
       function esc(s) {
         return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+
+      function formatCompanyAddress(company) {
+        if (!company) return [];
+
+        var lines = [];
+        if (company.address) lines.push(company.address);
+
+        var city = company.city || '';
+        var province = company.province || '';
+        var postalCode = company.postalCode || '';
+        var locality = [
+          city,
+          [province, postalCode].filter(Boolean).join(' '),
+        ].filter(Boolean).join(', ');
+        if (locality) lines.push(locality);
+
+        if (company.country && company.country !== 'Canada') lines.push(company.country);
+        return lines;
       }
     </script>
   </body>

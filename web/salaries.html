@@ -282,16 +282,23 @@
         document.getElementById('entriesTbody').innerHTML =
           '<tr><td colspan="9" class="text-center py-6 text-error">No period selected.</td></tr>';
       } else {
-        loadPeriodInfo();
-        initEntries();
+        loadPeriodInfo().then(function(ok) {
+          if (ok !== false) initEntries();
+        });
       }
 
       // ── Period & company bootstrap ────────────────────────────────────────
       function loadPeriodInfo() {
-        fetch('/api/payroll/periods/' + encodeURIComponent(periodId), { credentials: 'same-origin' })
+        return fetch('/api/payroll/periods/' + encodeURIComponent(periodId), { credentials: 'same-origin' })
           .then(function(r) { return r.ok ? r.json() : null; })
           .then(function(p) {
-            if (!p) return;
+            if (!p) return false;
+            if (companyId && p.companyId && p.companyId !== companyId) {
+              document.getElementById('entriesTbody').innerHTML =
+                '<tr><td colspan="9" class="text-center py-6 text-error">This pay period belongs to a different company.</td></tr>';
+              showAlert('This pay period belongs to another company. Please start from this company payroll page.', true);
+              return false;
+            }
             document.getElementById('heroPeriod').textContent =
               (p.payrollType || 'Regular') + ' · ' + (p.payFrequency || '') +
               ' · Pay date ' + (p.payDate || '');
@@ -305,6 +312,7 @@
                 .then(function(r) { return r.ok ? r.json() : []; })
                 .then(function(list) { earningsCodes = (list || []).filter(function(c) { return c.enabled; }); });
             }
+            return true;
           });
       }
 

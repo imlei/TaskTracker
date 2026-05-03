@@ -270,8 +270,8 @@ func (s *Store) CountPayrollEmployees(companyID string) int {
 	return n
 }
 
-func (s *Store) nextEmployeeID(companyID string) string {
-	rows, err := s.db.Query(`SELECT id FROM payroll_employees WHERE company_id = ? AND id LIKE 'EMP%'`, companyID)
+func (s *Store) nextEmployeeID(_ string) string {
+	rows, err := s.db.Query(`SELECT id FROM payroll_employees WHERE id LIKE 'EMP%'`)
 	if err != nil {
 		return "EMP00001"
 	}
